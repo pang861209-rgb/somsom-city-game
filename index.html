@@ -27,6 +27,9 @@
   #jumpBtn { position:absolute; left:10px; bottom:10px; display:none; opacity:.92; }
   #muteBtn { position:absolute; top:46px; right:10px; display:none; opacity:.85; padding:5px 9px; font-size:13px; }
   .quote { font-size:14px; color:#5a4a3a; background:#f3ede2; border-radius:8px; padding:8px 12px; }
+  #result { overflow:hidden; }
+  .confetti { position:absolute; top:-14px; width:10px; height:14px; border-radius:3px; animation:confFall 2.8s ease-in forwards; pointer-events:none; }
+  @keyframes confFall { to { transform:translateY(760px) rotate(560deg); opacity:.15; } }
 </style>
 </head>
 <body>
@@ -54,10 +57,12 @@
     <img id="resultImg" src="">
     <div class="quote" id="resQuote"></div>
     <div id="resScore" style="font-size:20px;font-weight:800;"></div>
+    <div id="resDetail" class="sub"></div>
     <div id="resBest" class="sub"></div>
-    <div style="display:flex;gap:10px;">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
       <button onclick="ui.retry()">다시 도전</button>
       <button onclick="ui.toSelect()">캐릭터 변경</button>
+      <button onclick="shareCard()">📸 자랑하기</button>
     </div>
   </div>
 </div>
@@ -133,6 +138,16 @@ for (const k in CHARS) {
   fallbacks[k] = sd;
 }
 
+// 표정 변형 SD (피격/승리) — 없으면 기본 스프라이트 폴백
+const spritesFace = { hit: {}, win: {} };
+for (const k in CHARS) {
+  for (const f of ['hit', 'win']) {
+    const im = new Image(); im.src = `assets/sd_${k}_${f}.png`;
+    const target = CHARS[k].w * 1.7 * DPR * 1.4;
+    im.onload = () => { try { spritesFace[f][k] = downscale(keyOutWhiteBg(im), target); } catch(e) { spritesFace[f][k] = im; } };
+  }
+}
+
 // 배경 & 아이템 이미지 (없으면 코드 드로잉으로 폴백)
 const bgImg = new Image(); let bgReady = false;
 bgImg.src = 'assets/bg_alley.png';
@@ -154,6 +169,7 @@ function newState(key) {
     shellUntil: 0, shellCdUntil: 0, over: false, overAt: 0, hitstop: 0, moveT: 0,
     jy: 0, jvy: 0, air: false, introT: 1.8,
     bubble: null, recordShown: false, prevBest: +(localStorage.getItem('somsom_best_' + key) || 0),
+    acorns: 0, ginkgos: 0,
   };
 }
 
@@ -323,10 +339,10 @@ function loop(now) {
       o.dead = true;
       const harmful = s.c.flip ? (o.type === 'branch') : (o.type === 'ginkgo');
       if (o.type === 'acorn') {
-        s.score += 50; s.scorePop = 0.3; sfx('coin');
+        s.score += 50; s.scorePop = 0.3; s.acorns++; sfx('coin');
         burst(s, o.x, o.y, ['#b5824a','#e8c14a','#fff'], 10, 130, 60); floatTxt(s, o.x, o.y-12, '+50', '#b08a3a');
       } else if (s.c.flip && o.type === 'ginkgo') {
-        s.score += 30; s.scorePop = 0.3; sfx('ding');
+        s.score += 30; s.scorePop = 0.3; s.ginkgos++; sfx('ding');
         burst(s, o.x, o.y, ['#e8c14a','#f3e29a'], 8, 110, 50); floatTxt(s, o.x, o.y-12, '+30 그래~', '#b08a3a');
       } else if (harmful) {
         if (shell) { floatTxt(s, px, py - s.c.h/2 - 14, '딱!', '#3a7a5a'); burst(s, o.x, o.y, ['#9ab87a'], 6, 90, 30); sfx('thud'); }
@@ -437,7 +453,10 @@ function draw(s, now, shell) {
   ctx.globalAlpha = 1;
 
   // player
-  const im = sprites[s.key] || fallbacks[s.key];
+  let face = null;                                          // 표정 스왑
+  if (s.hitFlash > 0 || s.over) face = 'hit';
+  else if (s.bubble && s.bubble.txt === s.c.record) face = 'win';
+  const im = (face && spritesFace[face][s.key]) || sprites[s.key] || fallbacks[s.key];
   const bob = (s.dir !== 0 && !s.air) ? Math.sin(s.moveT*16) * 2.5 : 0;
   const stretch = s.air ? Math.min(0.12, Math.abs(s.jvy)/4000) : 0;   // 공중 스트레치
   const sq = 1 - s.squash*0.5 + stretch;
@@ -541,13 +560,60 @@ function endGame() {
   const bk = 'somsom_best_' + s.key, best = Math.max(score, +(localStorage.getItem(bk) || 0));
   localStorage.setItem(bk, best);
   $('resTitle').textContent = best === score && score > 0 ? '🎉 최고 기록!' : '게임 오버';
-  const spr = sprites[s.key];
+  const isNewBest = best === score && score > 0;
+  const spr = (isNewBest ? spritesFace.win[s.key] : spritesFace.hit[s.key]) || sprites[s.key];
   $('resultImg').src = spr && spr.toDataURL ? spr.toDataURL() : c.img;
   $('resQuote').textContent = '"' + c.lose + '"';
   $('resScore').textContent = score + '점';
+  $('resDetail').textContent = '생존 ' + s.t.toFixed(1) + '초 · 도토리 ' + s.acorns + '개' + (c.flip ? ' · 은행 ' + s.ginkgos + '개' : '');
   $('resBest').textContent = c.name + ' 최고기록: ' + best + '점';
+  lastResult = { key: s.key, score, best, isNewBest, detail: $('resDetail').textContent };
+  // 신기록 콘페티
+  document.querySelectorAll('#result .confetti').forEach(e => e.remove());
+  if (isNewBest) {
+    const cols = ['#e8c14a','#e8915a','#8a6fa8','#7fa05b','#d2452a','#375380'];
+    for (let i = 0; i < 26; i++) {
+      const sp = document.createElement('div');
+      sp.className = 'confetti';
+      sp.style.left = Math.random()*100 + '%';
+      sp.style.background = cols[i % cols.length];
+      sp.style.animationDelay = (Math.random()*0.9) + 's';
+      $('result').appendChild(sp);
+      setTimeout(() => sp.remove(), 4200);
+    }
+  }
   ui.show('result');
   buildGrid();
+}
+
+let lastResult = null;
+async function shareCard() {
+  if (!lastResult) return;
+  const c = CHARS[lastResult.key];
+  const SC = 2, cw = 420, ch = 560;
+  const cv2 = document.createElement('canvas'); cv2.width = cw*SC; cv2.height = ch*SC;
+  const x = cv2.getContext('2d'); x.scale(SC, SC);
+  x.fillStyle = '#fdfbf5'; x.fillRect(0, 0, cw, ch);
+  x.strokeStyle = '#222'; x.lineWidth = 3; x.strokeRect(10, 10, cw-20, ch-20);
+  x.textAlign = 'center';
+  x.fillStyle = '#5a4a3a'; x.font = '800 24px sans-serif';
+  x.fillText('🍂 솜솜시티: 은행 주의보', cw/2, 56);
+  const spr = (lastResult.isNewBest ? spritesFace.win[lastResult.key] : spritesFace.hit[lastResult.key]) || sprites[lastResult.key];
+  if (spr) { const h = 200, w = h * spr.width / spr.height; x.drawImage(spr, cw/2 - w/2, 84, w, h); }
+  x.font = '700 20px sans-serif'; x.fillText(c.name, cw/2, 318);
+  x.font = '800 46px sans-serif'; x.fillStyle = '#b08a3a'; x.fillText(lastResult.score + '점', cw/2, 372);
+  if (lastResult.isNewBest) { x.font = '800 18px sans-serif'; x.fillStyle = '#d2452a'; x.fillText('🎉 신기록 달성!', cw/2, 402); }
+  x.font = '14px sans-serif'; x.fillStyle = '#5a4a3a'; x.fillText(lastResult.detail, cw/2, 436);
+  x.font = '13px sans-serif'; x.fillText('"' + c.lose + '"', cw/2, 466);
+  x.font = '12px sans-serif'; x.fillStyle = '#9a8b7a';
+  x.fillText('pang861209-rgb.github.io/somsom-city-game', cw/2, 524);
+  const blob = await new Promise(r => cv2.toBlob(r, 'image/png'));
+  const file = new File([blob], 'somsom_score.png', { type: 'image/png' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: '솜솜시티: 은행 주의보' }); return; } catch (e) {}
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'somsom_score.png'; a.click();
 }
 
 function buildGrid() {
