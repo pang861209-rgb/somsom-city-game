@@ -21,7 +21,14 @@
   .card .nm { font-weight:800; font-size:13px; }
   .card .ab { font-size:10px; color:#7a6a5a; min-height:26px; }
   .card .bs { font-size:10px; color:#b08a3a; font-weight:700; }
-  #titleImg { width:88%; border-radius:10px; border:2px solid #222; }
+  #title { overflow:hidden; justify-content:space-between; padding:34px 18px 26px; }
+  #titleBg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0; }
+  #titleTop, #startBtn { position:relative; z-index:1; }
+  #titleLogo { font-size:30px; color:#5a4a3a;
+    text-shadow:-2px -2px 0 #fdfbf5, 2px -2px 0 #fdfbf5, -2px 2px 0 #fdfbf5, 2px 2px 0 #fdfbf5, 0 3px 0 #fdfbf5; }
+  #titleSub { font-size:13px; color:#7a6a5a; margin-top:8px;
+    text-shadow:-1px -1px 0 #fdfbf5, 1px -1px 0 #fdfbf5, -1px 1px 0 #fdfbf5, 1px 1px 0 #fdfbf5; }
+  #startBtn { font-size:19px; padding:13px 44px; background:#f6eed8; }
   #resultImg { height:130px; }
   #shellBtn { position:absolute; right:10px; bottom:10px; display:none; opacity:.92; }
   #jumpBtn { position:absolute; left:10px; bottom:10px; display:none; opacity:.92; }
@@ -46,10 +53,12 @@
   <button id="muteBtn">🔊</button>
 
   <div id="title" class="screen">
-    <h1>🍂 솜솜시티: 은행 주의보</h1>
-    <div class="sub">가을이 왔다. 은행나무 골목을 무사히 버텨라!<br>(프로토타입 M0.5 — SD 스프라이트 적용)</div>
-    <img id="titleImg" src="assets/01_group_lineup.png" alt="솜솜시티 친구들">
-    <button onclick="ui.toSelect()">시작하기</button>
+    <img id="titleBg" src="assets/title_main.png" onerror="this.onerror=null;this.src='assets/01_group_lineup.png';this.style.objectFit='contain';" alt="솜솜시티 친구들">
+    <div id="titleTop">
+      <h1 id="titleLogo">🍂 솜솜시티: 은행 주의보</h1>
+      <div id="titleSub">가을이 왔다. 은행나무 골목을 무사히 버텨라!</div>
+    </div>
+    <button id="startBtn" onclick="ui.toSelect()">시작하기</button>
   </div>
 
   <div id="select" class="screen hidden">
