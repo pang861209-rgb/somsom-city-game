@@ -28,6 +28,12 @@
   #muteBtn { position:absolute; top:46px; right:10px; display:none; opacity:.85; padding:5px 9px; font-size:13px; }
   .quote { font-size:14px; color:#5a4a3a; background:#f3ede2; border-radius:8px; padding:8px 12px; }
   #result { overflow:hidden; }
+  #nameRow input { border:2px solid #222; border-radius:10px; padding:9px 12px; font-size:15px; width:130px; background:#fff; }
+  .rankrow { display:flex; align-items:center; gap:10px; padding:7px 10px; border-bottom:1px dashed #d8cdb8; font-size:14px; color:#5a4a3a; text-align:left; }
+  .rankrow img { width:34px; height:34px; object-fit:contain; }
+  .rankrow .rname { font-weight:800; flex:1; }
+  .rankrow .rscore { font-weight:800; color:#b08a3a; }
+  .rankrow.me { background:#f6eed8; border-radius:8px; }
   .confetti { position:absolute; top:-14px; width:10px; height:14px; border-radius:3px; animation:confFall 2.8s ease-in forwards; pointer-events:none; }
   @keyframes confFall { to { transform:translateY(760px) rotate(560deg); opacity:.15; } }
 </style>
@@ -50,6 +56,14 @@
     <h1>캐릭터 선택</h1>
     <div class="sub">←→ 이동 · ↑ 점프로 은행을 피하고 도토리를 모으세요.<br>점프력은 캐릭터마다 다릅니다 (끼토가 최고!) · 라칠친 할머니는 반대로 은행을 줍습니다!</div>
     <div class="grid" id="charGrid"></div>
+    <button onclick="ui.showRanking()">🏆 솜솜 랭킹</button>
+  </div>
+
+  <div id="ranking" class="screen hidden">
+    <h1>🏆 솜솜 랭킹</h1>
+    <div class="sub">전 세계 솜솜시티 주민들의 기록</div>
+    <div id="rankList" style="width:100%;max-height:420px;overflow-y:auto;"></div>
+    <button onclick="ui.toSelect()">닫기</button>
   </div>
 
   <div id="result" class="screen hidden">
@@ -59,6 +73,10 @@
     <div id="resScore" style="font-size:20px;font-weight:800;"></div>
     <div id="resDetail" class="sub"></div>
     <div id="resBest" class="sub"></div>
+    <div id="nameRow" style="display:none;gap:8px;align-items:center;">
+      <input id="nameInput" maxlength="8" placeholder="이름 (8자)">
+      <button id="submitBtn" onclick="submitScore()">🏆 랭킹 등록</button>
+    </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
       <button onclick="ui.retry()">다시 도전</button>
       <button onclick="ui.toSelect()">캐릭터 변경</button>
@@ -541,7 +559,24 @@ function useShell() {
 // ---------- UI ----------
 const $ = id => document.getElementById(id);
 const ui = {
-  show(id) { for (const sc of ['title','select','result']) $(sc).classList.toggle('hidden', sc !== id); },
+  show(id) { for (const sc of ['title','select','result','ranking']) $(sc).classList.toggle('hidden', sc !== id); },
+  async showRanking(list, me) {
+    ui.show('ranking');
+    const box = $('rankList');
+    box.innerHTML = '<div class="sub" style="padding:20px;">불러오는 중...</div>';
+    if (!list) list = await lbGet();
+    if (list === null) { box.innerHTML = '<div class="sub" style="padding:20px;">랭킹 서버에 연결할 수 없어요 😢</div>'; return; }
+    if (!list.length) { box.innerHTML = '<div class="sub" style="padding:20px;">아직 기록이 없어요. 1호 주민이 되어보세요!</div>'; return; }
+    box.innerHTML = '';
+    list.slice(0, 10).forEach((e, i) => {
+      const c = CHARS[e.c] || CHARS.kkito;
+      const row = document.createElement('div');
+      row.className = 'rankrow' + (me && e.n === me && e.s === (lastResult && lastResult.score) ? ' me' : '');
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1) + '위';
+      row.innerHTML = `<span style="width:36px;font-weight:800;">${medal}</span><img src="${c.sd}" onerror="this.src='${c.img}'"><span class="rname">${String(e.n).slice(0,8).replace(/[<>&]/g,'')}</span><span class="sub">${c.name}</span><span class="rscore">${(+e.s||0)}점</span>`;
+      box.appendChild(row);
+    });
+  },
   toSelect() { ui.show('select'); cancelAnimationFrame(raf); state = null; stopBgm(); $('shellBtn').style.display='none'; $('jumpBtn').style.display='none'; $('muteBtn').style.display='none'; },
   start(key) {
     curKey = key; ui.show('none'); state = newState(key);
@@ -568,6 +603,9 @@ function endGame() {
   $('resDetail').textContent = '생존 ' + s.t.toFixed(1) + '초 · 도토리 ' + s.acorns + '개' + (c.flip ? ' · 은행 ' + s.ginkgos + '개' : '');
   $('resBest').textContent = c.name + ' 최고기록: ' + best + '점';
   lastResult = { key: s.key, score, best, isNewBest, detail: $('resDetail').textContent };
+  $('nameRow').style.display = (isNewBest ? 'flex' : 'none');                  // 신기록일 때만 랭킹 등록
+  $('nameInput').value = localStorage.getItem('somsom_name') || '';
+  $('submitBtn').disabled = false; $('submitBtn').textContent = '🏆 랭킹 등록';
   // 신기록 콘페티
   document.querySelectorAll('#result .confetti').forEach(e => e.remove());
   if (isNewBest) {
@@ -584,6 +622,32 @@ function endGame() {
   }
   ui.show('result');
   buildGrid();
+}
+
+// ---------- 공유 랭킹보드 ----------
+const LB_URL = 'https://kvdb.io/LfnWmv9zB3g5o5iE5XNDhi/scores';
+async function lbGet() {
+  try {
+    const r = await fetch(LB_URL, { cache: 'no-store' });
+    const j = await r.json();
+    return Array.isArray(j) ? j : [];
+  } catch (e) { return null; }
+}
+async function submitScore() {
+  if (!lastResult) return;
+  const name = ($('nameInput').value || '').trim().slice(0, 8) || '솜솜이';
+  localStorage.setItem('somsom_name', name);
+  $('submitBtn').disabled = true; $('submitBtn').textContent = '등록 중...';
+  const list = await lbGet();
+  if (list === null) { $('submitBtn').textContent = '연결 실패 — 다시 시도'; $('submitBtn').disabled = false; return; }
+  list.push({ n: name, c: lastResult.key, s: lastResult.score, t: Date.now() });
+  list.sort((a, b) => (+b.s || 0) - (+a.s || 0));
+  const top = list.slice(0, 50);
+  try {
+    await fetch(LB_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(top) });
+  } catch (e) { $('submitBtn').textContent = '연결 실패 — 다시 시도'; $('submitBtn').disabled = false; return; }
+  sfx('record');
+  ui.showRanking(top, name);
 }
 
 let lastResult = null;
