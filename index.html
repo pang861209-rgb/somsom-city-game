@@ -180,7 +180,7 @@ const bgImg = new Image(); let bgReady = false;
 bgImg.src = 'assets/bg_alley.png';
 bgImg.onload = () => { bgReady = true; };
 const props = {};
-for (const [pk, src, tw] of [['ginkgo','assets/prop_ginkgo.png',90], ['acorn','assets/prop_acorn.png',80], ['branch','assets/prop_branch.png',110]]) {
+for (const [pk, src, tw] of [['ginkgo','assets/prop_ginkgo.png',130], ['acorn','assets/prop_acorn.png',120], ['branch','assets/prop_branch.png',160]]) {
   const im = new Image(); im.src = src;
   im.onload = () => { try { props[pk] = downscale(keyOutWhiteBg(im), tw); } catch(e) {} };
 }
@@ -291,14 +291,14 @@ function spawn(s) {
 // ---------- draw helpers ----------
 function drawGinkgo(x, y) {
   ctx.fillStyle = '#e8c14a'; ctx.strokeStyle = '#222'; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.arc(x-5, y, 7, 0, 7); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.arc(x+5, y+3, 7, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(x-7, y, 10, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(x+7, y+4, 10, 0, 7); ctx.fill(); ctx.stroke();
 }
-function drawAcorn(x, y) { ctx.font = '18px serif'; ctx.textAlign='center'; ctx.fillText('🌰', x, y+6); }
+function drawAcorn(x, y) { ctx.font = '26px serif'; ctx.textAlign='center'; ctx.fillText('🌰', x, y+9); }
 function drawBranch(x, y) {
   ctx.save(); ctx.translate(x,y); ctx.rotate(0.5);
   ctx.fillStyle='#8a6a4a'; ctx.strokeStyle='#222';
-  ctx.beginPath(); ctx.roundRect(-16,-4,32,8,4); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.roundRect(-22,-5,44,10,5); ctx.fill(); ctx.stroke();
   ctx.restore();
 }
 function drawLeaf(x, y, r, a) {
@@ -362,7 +362,7 @@ function loop(now) {
     o.y += o.vy * 60 * dt; o.x += (o.vx||0) * 60 * dt;
     if (o.x < 14 || o.x > W-14) o.vx = -(o.vx||0);
     const rx = s.c.w * 0.38, ry = s.c.h * 0.42;
-    if (!s.over && Math.abs(o.x - px) < rx + 9 && Math.abs(o.y - py) < ry + 9) {
+    if (!s.over && Math.abs(o.x - px) < rx + 13 && Math.abs(o.y - py) < ry + 13) {
       o.dead = true;
       const harmful = s.c.flip ? (o.type === 'branch') : (o.type === 'ginkgo');
       if (o.type === 'acorn') {
@@ -460,7 +460,7 @@ function draw(s, now, shell) {
   for (const o of s.objs) {
     const p = props[o.type];
     if (p) {
-      const ow = o.type === 'branch' ? 36 : (o.type === 'ginkgo' ? 28 : 26);
+      const ow = o.type === 'branch' ? 50 : (o.type === 'ginkgo' ? 40 : 38);
       const oh = ow * p.height / p.width;
       ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(((o.x*13)%10/10 - 0.5) * 0.7);
       ctx.drawImage(p, -ow/2, -oh/2, ow, oh);
