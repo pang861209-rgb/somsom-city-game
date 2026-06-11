@@ -106,7 +106,7 @@ const CHARS = {
                 intro:'떨어지는 도토리, 전부 내 거야!', hit:'앗 따가! 방금 거 환불해줘!', record:'이 기록 완전 희귀템이야!', lose:'방금 그 도토리 완전 희귀템이었는데!' },
   lachilchin: { name:'라칠친 할머니', img:'assets/06_lachilchin.png', sd:'assets/sd_lachilchin.png', speed:3.8, lives:1, w:50, h:58, jump:0.85, ability:'룰 반전: 은행=점수, 나뭇가지 주의!', flip:true,
                 intro:'아이구, 은행 줍기엔 내가 선수지. 그래~', hit:'아이구야! 참말로~', record:'아이구, 늙은이가 또 해냈네 그래~', lose:'아이구, 그래~ 오늘은 이만 줍자.' },
-  bookgeo:    { name:'북거씨',      img:'assets/07_bookgeo.png',    sd:'assets/sd_bookgeo.png',    speed:2.8, lives:1, w:70, h:52, jump:0.6, ability:'등딱지 쉘터: 잠깐 무적 (쿨타임)', shell:true,
+  bookgeo:    { name:'북거씨',      img:'assets/07_bookgeo.png',    sd:'assets/sd_bookgeo.png',    speed:2.8, lives:1, w:70, h:52, hitScale:0.68, jump:0.6, ability:'등딱지 쉘터: 잠깐 무적 (쿨타임)', shell:true,
                 intro:'서두르지 않아도, 이길 수 있어요.', hit:'음... 다음엔 등딱지로 막죠.', record:'천천히 왔는데, 어느새 신기록이네요.', lose:'천천히, 천천히... 다시 해봅시다.' },
 };
 
@@ -270,7 +270,7 @@ function floatTxt(s, x, y, txt, col) { s.floaters.push({ x, y, txt, col, life: 0
 // ---------- spawn ----------
 function spawn(s) {
   if (s.t < s.spawnAt) return;
-  const interval = Math.max(0.16, 0.62 - s.t * 0.018);          // 난이도 ↑
+  const interval = Math.max(0.20, 0.62 - s.t * 0.012);          // 난이도 ↑ (완만하게)
   s.spawnAt = s.t + interval;
   const make = () => {
     const x = 24 + Math.random() * (W - 48);
@@ -278,14 +278,14 @@ function spawn(s) {
     let type;
     if (s.c.flip) type = r < 0.55 ? 'ginkgo' : (r < 0.82 ? 'branch' : 'acorn');
     else          type = r < 0.68 ? 'ginkgo' : 'acorn';
-    const vy = (185 + s.t * 10 + Math.random() * 80) / 60;
-    const vx = s.t > 12 ? (Math.random() - 0.5) * Math.min(2.2, s.t * 0.06) : 0;  // 후반 커브볼
+    const vy = (185 + s.t * 6.5 + Math.random() * 80) / 60;
+    const vx = s.t > 18 ? (Math.random() - 0.5) * Math.min(1.8, s.t * 0.04) : 0;  // 후반 커브볼
     const obj = { type, x, y: -20, vy, vx };
     if (s.c.telegraph) s.warns.push({ x, t: 0.5, obj });
     else s.objs.push(obj);
   };
   make();
-  if (Math.random() < Math.min(0.55, s.t * 0.016)) make();      // 후반 동시 투하
+  if (Math.random() < Math.min(0.45, s.t * 0.010)) make();      // 후반 동시 투하
 }
 
 // ---------- draw helpers ----------
@@ -361,7 +361,8 @@ function loop(now) {
   for (const o of s.objs) {
     o.y += o.vy * 60 * dt; o.x += (o.vx||0) * 60 * dt;
     if (o.x < 14 || o.x > W-14) o.vx = -(o.vx||0);
-    const rx = s.c.w * 0.38, ry = s.c.h * 0.42;
+    const hs = s.c.hitScale || 1;                          // 덩치 큰 캐릭터 피탄 보정
+    const rx = s.c.w * 0.38 * hs, ry = s.c.h * 0.42 * hs;
     if (!s.over && Math.abs(o.x - px) < rx + 13 && Math.abs(o.y - py) < ry + 13) {
       o.dead = true;
       const harmful = s.c.flip ? (o.type === 'branch') : (o.type === 'ginkgo');

@@ -1,7 +1,0 @@
-{
-  "tool_name": "mcp__6d5841e6-0589-498a-a4ba-c471f0b1e2e3__notion-update-page",
-  "tool_input_preview": "{\"page_id\":\"37b7cf57-5ef6-8141-b325-dc4223f1408d\",\"command\":\"update_content\",\"content_updates\":[{\"old_str\":\"## 다음 후보 (우선순위순)\\n\\n1. 표정 스와프 — 보유 표정 시트 기반 피격/승리 표정 SD 생성 후 교체\\n2. 콤보 시스템 — 도토리 연속 수집 배수\\n3...",
-  "error": "{\"name\":\"APIResponseError\",\"code\":\"validation_error\",\"status\":400,\"headers\":{},\"body\":\"{\\\"object\\\":\\\"error\\\",\\\"status\\\":400,\\\"code\\\":\\\"validation_error\\\",\\\"message\\\":\\\"No matches found for ## 다음 후보 (우선순위순)\\\\n\\\\n1. 표정 스와프 — 보유 표정 시트 기반 피격/승리 표정 SD 생성 후 교체\\\\n2. 콤보 시스템 — 도토리 연속 수집 배수\\\\n3. 결과 공유 이미지 — 점수+캐릭터+멘트 카드 저장/공유 (SNS 확산 포인트)\\\\n4. 첫판 튜토리얼 오버레이 / 데일리 챌린지.\\\",\\\"request_id\\\":\\\"b857fbdd-fcfc-423e-b2ea-b1c139ba3338\\\"}\",\"request_id\":\"b857fbdd-fcfc-423e-b2ea-b1c139ba3338\"}",
-  "timestamp": "2026-06-11T05:36:59.946Z",
-  "retry_count": 1
-}
