@@ -63,17 +63,17 @@
 <script>
 const CHARS = {
   kkito:      { name:'끼토',        img:'assets/02_kkito.png',      sd:'assets/sd_kkito.png',      speed:5.4, lives:1, w:52, h:60, jump:1.3, ability:'토끼 점프(최고) + 귀 레이더 경고', telegraph:true,
-                lose:'으아아! 귀 잡고 멘붕...' },
+                intro:'가, 가스 불은 잠갔고... 좋아, 가보자!', lose:'으아아! 귀 잡고 멘붕...' },
   boneul:     { name:'보늘',        img:'assets/03_boneul.png',     sd:'assets/sd_boneul.png',     speed:3.2, lives:2, w:66, h:64, jump:0.75, ability:'맷집: 피격 1회 무효 (점프는 낮음)',
-                lose:'뭐, 죽기밖에 더 하겠냐. 피자 시킬까?' },
+                intro:'귀찮은데... 이기고 와서 피자 시켜야지.', lose:'뭐, 죽기밖에 더 하겠냐. 피자 시킬까?' },
   migae:      { name:'미개',        img:'assets/04_migae.png',      sd:'assets/sd_migae.png',      speed:6.8, lives:1, w:40, h:42, jump:1.15, ability:'스피드: 빠르고 작음 (고수용)',
-                lose:'(더듬이가 꼬불꼬불해졌다) 뽈뽈...' },
+                intro:'뽈뽈뽈—! (의욕 충만)', lose:'(더듬이가 꼬불꼬불해졌다) 뽈뽈...' },
   ramda:      { name:'람다',        img:'assets/05_ramda.png',      sd:'assets/sd_ramda.png',      speed:5.4, lives:1, w:58, h:60, jump:1.05, ability:'줍줍 자석: 도토리가 끌려옴', magnet:120,
-                lose:'방금 그 도토리 완전 희귀템이었는데!' },
+                intro:'떨어지는 도토리, 전부 내 거야!', lose:'방금 그 도토리 완전 희귀템이었는데!' },
   lachilchin: { name:'라칠친 할머니', img:'assets/06_lachilchin.png', sd:'assets/sd_lachilchin.png', speed:3.8, lives:1, w:50, h:58, jump:0.85, ability:'룰 반전: 은행=점수, 나뭇가지 주의!', flip:true,
-                lose:'아이구, 그래~ 오늘은 이만 줍자.' },
+                intro:'아이구, 은행 줍기엔 내가 선수지. 그래~', lose:'아이구, 그래~ 오늘은 이만 줍자.' },
   bookgeo:    { name:'북거씨',      img:'assets/07_bookgeo.png',    sd:'assets/sd_bookgeo.png',    speed:2.8, lives:1, w:70, h:52, jump:0.6, ability:'등딱지 쉘터: 잠깐 무적 (쿨타임)', shell:true,
-                lose:'천천히, 천천히... 다시 해봅시다.' },
+                intro:'서두르지 않아도, 이길 수 있어요.', lose:'천천히, 천천히... 다시 해봅시다.' },
 };
 
 const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
@@ -150,7 +150,7 @@ function newState(key) {
     objs: [], warns: [], particles: [], floaters: [], stains: [], leaves: [],
     spawnAt: 0, dir: 0, hitFlash: 0, shake: 0, squash: 0, scorePop: 0,
     shellUntil: 0, shellCdUntil: 0, over: false, overAt: 0, hitstop: 0, moveT: 0,
-    jy: 0, jvy: 0, air: false,
+    jy: 0, jvy: 0, air: false, introT: 1.8,
   };
 }
 
@@ -224,15 +224,18 @@ function loop(now) {
   let dt = Math.min(0.05, (now - s.last) / 1000); s.last = now;
   if (s.over) dt *= 0.18;                                        // 게임오버 슬로모
   if (s.hitstop > 0) { s.hitstop -= dt; dt = 0; }
-  s.t += dt;
-  if (!s.over) s.score += dt * 10;
+  if (s.introT > 0) { s.introT -= dt; }
+  else {
+    s.t += dt;
+    if (!s.over) s.score += dt * 10;
+  }
 
   // move
   if (!s.over) {
     s.x += s.dir * s.c.speed * 60 * dt;
     s.x = Math.max(s.c.w/2, Math.min(W - s.c.w/2, s.x));
     if (s.dir !== 0) s.moveT += dt; else s.moveT = 0;
-    spawn(s);
+    if (s.introT <= 0) spawn(s);
   }
 
   // jump physics
@@ -399,6 +402,24 @@ function draw(s, now, shell) {
     ctx.globalAlpha = 1;
   }
   ctx.restore();
+
+  // 인트로 말풍선 (각오 한마디)
+  if (s.introT > 0) {
+    const a = Math.min(1, s.introT / 0.45);
+    ctx.globalAlpha = a;
+    ctx.font = '700 15px sans-serif';
+    const txt = s.c.intro, tw = ctx.measureText(txt).width + 28;
+    const bx = Math.max(10 + tw/2, Math.min(W - 10 - tw/2, s.x));
+    const by = GROUND - s.c.h*1.7 - 78;
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = '#222'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(bx - tw/2, by, tw, 40, 12); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(s.x - 7, by + 39); ctx.lineTo(s.x + 7, by + 39); ctx.lineTo(s.x, by + 52); ctx.closePath();
+    ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.strokeStyle = '#222'; ctx.beginPath(); ctx.moveTo(s.x - 7, by + 40); ctx.lineTo(s.x, by + 52); ctx.lineTo(s.x + 7, by + 40); ctx.stroke();
+    ctx.fillStyle = '#5a4a3a'; ctx.textAlign = 'center';
+    ctx.fillText(txt, bx, by + 26);
+    ctx.globalAlpha = 1;
+  }
 
   // floaters
   for (const f of s.floaters) {
