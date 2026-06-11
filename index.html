@@ -186,7 +186,7 @@ function newState(key) {
     spawnAt: 0, dir: 0, hitFlash: 0, shake: 0, squash: 0, scorePop: 0,
     shellUntil: 0, shellCdUntil: 0, over: false, overAt: 0, hitstop: 0, moveT: 0,
     jy: 0, jvy: 0, air: false, introT: 1.8,
-    bubble: null, recordShown: false, prevBest: +(localStorage.getItem('somsom_best_' + key) || 0),
+    bubble: null, recordShown: false, prevBest: +(localStorage.getItem('somsom2_best_' + key) || 0),
     acorns: 0, ginkgos: 0,
   };
 }
@@ -592,7 +592,7 @@ const ui = {
 
 function endGame() {
   const s = state, c = s.c, score = Math.floor(s.score);
-  const bk = 'somsom_best_' + s.key, best = Math.max(score, +(localStorage.getItem(bk) || 0));
+  const bk = 'somsom2_best_' + s.key, best = Math.max(score, +(localStorage.getItem(bk) || 0));
   localStorage.setItem(bk, best);
   $('resTitle').textContent = best === score && score > 0 ? '🎉 최고 기록!' : '게임 오버';
   const isNewBest = best === score && score > 0;
@@ -603,7 +603,7 @@ function endGame() {
   $('resDetail').textContent = '생존 ' + s.t.toFixed(1) + '초 · 도토리 ' + s.acorns + '개' + (c.flip ? ' · 은행 ' + s.ginkgos + '개' : '');
   $('resBest').textContent = c.name + ' 최고기록: ' + best + '점';
   lastResult = { key: s.key, score, best, isNewBest, detail: $('resDetail').textContent };
-  $('nameRow').style.display = (isNewBest ? 'flex' : 'none');                  // 신기록일 때만 랭킹 등록
+  $('nameRow').style.display = (score >= 1 ? 'flex' : 'none');                 // 매 판 등록 가능 (랭킹은 이름당 최고점만 표시)
   $('nameInput').value = localStorage.getItem('somsom_name') || '';
   $('submitBtn').disabled = false; $('submitBtn').textContent = '🏆 랭킹 등록';
   // 신기록 콘페티
@@ -634,14 +634,17 @@ async function lbGet() {
       body: JSON.stringify({ structuredQuery: {
         from: [{ collectionId: 'scores' }],
         orderBy: [{ field: { fieldPath: 's' }, direction: 'DESCENDING' }],
-        limit: 10 } }),
+        limit: 100 } }),
     });
     const j = await r.json();
     if (!r.ok || !Array.isArray(j)) return null;
-    return j.filter(d => d.document).map(d => {
+    const all = j.filter(d => d.document).map(d => {
       const f = d.document.fields || {};
       return { n: (f.n && f.n.stringValue) || '?', c: (f.c && f.c.stringValue) || 'kkito', s: +((f.s && f.s.integerValue) || 0) };
     });
+    const bestByName = {};                                   // 닉네임당 최고 기록 1개만
+    for (const e of all) if (!bestByName[e.n] || e.s > bestByName[e.n].s) bestByName[e.n] = e;
+    return Object.values(bestByName).sort((a, b) => b.s - a.s).slice(0, 10);
   } catch (e) { return null; }
 }
 async function submitScore() {
@@ -697,7 +700,7 @@ async function shareCard() {
 function buildGrid() {
   const g = $('charGrid'); g.innerHTML = '';
   for (const k in CHARS) {
-    const c = CHARS[k], best = localStorage.getItem('somsom_best_' + k) || 0;
+    const c = CHARS[k], best = localStorage.getItem('somsom2_best_' + k) || 0;
     const d = document.createElement('div');
     d.className = 'card';
     d.innerHTML = `<img src="${c.sd}" onerror="this.src='${c.img}'" alt="${c.name}"><div class="nm">${c.name}</div><div class="ab">${c.ability}</div><div class="bs">BEST ${best}</div>`;
