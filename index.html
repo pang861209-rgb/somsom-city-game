@@ -61,7 +61,7 @@
 
   <div id="select" class="screen hidden">
     <h1>캐릭터 선택</h1>
-    <div class="sub">←→ 이동 · 💨 대시(스페이스)로 은행을 피하고 도토리를 모으세요.<br>대시 거리는 캐릭터마다 다르고(끼토 최고) 대시 중엔 살짝 무적! · 북거씨는 대시 대신 쉘터 · 라칠친 할머니는 은행을 줍습니다</div>
+    <div class="sub">←→ 이동 · 💨 대시(스페이스 / 모바일: 더블 터치)로 은행을 피하세요.<br>대시 거리는 캐릭터마다 다르고(끼토 최고) 대시 중엔 살짝 무적! · 북거씨는 대시 대신 쉘터 · 라칠친 할머니는 은행을 줍습니다</div>
     <div class="grid" id="charGrid"></div>
     <button onclick="ui.showRanking()">🏆 솜솜 랭킹</button>
   </div>
@@ -183,6 +183,7 @@ for (const [pk, src, tw] of [['ginkgo','assets/prop_ginkgo.png',130], ['acorn','
   im.onload = () => { try { props[pk] = downscale(keyOutWhiteBg(im), tw); } catch(e) {} };
 }
 
+const IS_TOUCH = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
 let state = null, raf = null, curKey = null;
 
 function newState(key) {
@@ -593,7 +594,7 @@ const ui = {
   start(key) {
     curKey = key; ui.show('none'); state = newState(key);
     $('actionBtn').textContent = CHARS[key].shell ? '🐢 쉘터' : '💨 대시';
-    $('actionBtn').style.display = 'block';
+    $('actionBtn').style.display = IS_TOUCH ? 'none' : 'block';   // 모바일은 더블 터치로 대체
     $('muteBtn').style.display = 'block';
     showBubble(state, CHARS[key].intro, 1.8);
     startBgm();
@@ -742,7 +743,13 @@ function touchDir(e) {
   state.dir = (t.clientX - r.left) < r.width/2 ? -1 : 1;
   e.preventDefault();
 }
-cv.addEventListener('touchstart', touchDir, {passive:false});
+let lastTapT = 0;
+cv.addEventListener('touchstart', e => {
+  touchDir(e);
+  const nowT = performance.now();                       // 더블 터치 = 대시/쉘터
+  if (nowT - lastTapT < 300) action();
+  lastTapT = nowT;
+}, {passive:false});
 cv.addEventListener('touchmove', touchDir, {passive:false});
 cv.addEventListener('touchend', () => { if (state) state.dir = 0; });
 $('actionBtn').addEventListener('click', action);
