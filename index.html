@@ -37,7 +37,7 @@
   #result { overflow:hidden; }
   #nameRow input { border:2px solid #222; border-radius:10px; padding:9px 12px; font-size:15px; width:130px; background:#fff; }
   .rankrow { display:flex; align-items:center; gap:10px; padding:7px 10px; border-bottom:1px dashed #d8cdb8; font-size:14px; color:#5a4a3a; text-align:left; }
-  .rankrow img { width:34px; height:34px; object-fit:contain; }
+  .rankrow img { width:34px; height:34px; object-fit:contain; mix-blend-mode:multiply; }
   .rankrow .rname { font-weight:800; flex:1; }
   .rankrow .rscore { font-weight:800; color:#b08a3a; }
   .rankrow.me { background:#f6eed8; border-radius:8px; }
@@ -651,9 +651,9 @@ async function lbGet() {
       const f = d.document.fields || {};
       return { n: (f.n && f.n.stringValue) || '?', c: (f.c && f.c.stringValue) || 'kkito', s: +((f.s && f.s.integerValue) || 0) };
     });
-    const bestByName = {};                                   // 닉네임당 최고 기록 1개만
-    for (const e of all) if (!bestByName[e.n] || e.s > bestByName[e.n].s) bestByName[e.n] = e;
-    return Object.values(bestByName).sort((a, b) => b.s - a.s).slice(0, 10);
+    const best = {};                                         // 이름+캐릭터 조합당 최고 기록 1개
+    for (const e of all) { const k = e.n + '|' + e.c; if (!best[k] || e.s > best[k].s) best[k] = e; }
+    return Object.values(best).sort((a, b) => b.s - a.s).slice(0, 10);
   } catch (e) { return null; }
 }
 async function submitScore() {
