@@ -624,13 +624,24 @@ function endGame() {
   buildGrid();
 }
 
-// ---------- 공유 랭킹보드 ----------
-const LB_URL = 'https://kvdb.io/LfnWmv9zB3g5o5iE5XNDhi/scores';
+// ---------- 공유 랭킹보드 (Firebase Firestore) ----------
+const FB_KEY = 'AIzaSyBfld7SRrVTxDG0nE_6Z3Mw5kSRTo5bIGY';   // 공개용 식별자 (비밀키 아님)
+const FB_DOCS = 'https://firestore.googleapis.com/v1/projects/somsom-city/databases/(default)/documents';
 async function lbGet() {
   try {
-    const r = await fetch(LB_URL, { cache: 'no-store' });
+    const r = await fetch(FB_DOCS + ':runQuery?key=' + FB_KEY, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ structuredQuery: {
+        from: [{ collectionId: 'scores' }],
+        orderBy: [{ field: { fieldPath: 's' }, direction: 'DESCENDING' }],
+        limit: 10 } }),
+    });
     const j = await r.json();
-    return Array.isArray(j) ? j : [];
+    if (!r.ok || !Array.isArray(j)) return null;
+    return j.filter(d => d.document).map(d => {
+      const f = d.document.fields || {};
+      return { n: (f.n && f.n.stringValue) || '?', c: (f.c && f.c.stringValue) || 'kkito', s: +((f.s && f.s.integerValue) || 0) };
+    });
   } catch (e) { return null; }
 }
 async function submitScore() {
@@ -638,16 +649,19 @@ async function submitScore() {
   const name = ($('nameInput').value || '').trim().slice(0, 8) || '솜솜이';
   localStorage.setItem('somsom_name', name);
   $('submitBtn').disabled = true; $('submitBtn').textContent = '등록 중...';
-  const list = await lbGet();
-  if (list === null) { $('submitBtn').textContent = '연결 실패 — 다시 시도'; $('submitBtn').disabled = false; return; }
-  list.push({ n: name, c: lastResult.key, s: lastResult.score, t: Date.now() });
-  list.sort((a, b) => (+b.s || 0) - (+a.s || 0));
-  const top = list.slice(0, 50);
   try {
-    await fetch(LB_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(top) });
+    const r = await fetch(FB_DOCS + '/scores?key=' + FB_KEY, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: {
+        n: { stringValue: name },
+        c: { stringValue: lastResult.key },
+        s: { integerValue: String(lastResult.score) },
+        t: { integerValue: String(Date.now()) } } }),
+    });
+    if (!r.ok) throw new Error('write failed');
   } catch (e) { $('submitBtn').textContent = '연결 실패 — 다시 시도'; $('submitBtn').disabled = false; return; }
   sfx('record');
-  ui.showRanking(top, name);
+  ui.showRanking(null, name);
 }
 
 let lastResult = null;
