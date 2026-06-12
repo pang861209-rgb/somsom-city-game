@@ -47,7 +47,7 @@
 <body>
 <div id="app">
   <canvas id="cv" width="420" height="680"></canvas>
-  <button id="actionBtn">💨 대시</button>
+  <button id="actionBtn">🐢 쉘터</button>
   <button id="muteBtn">🔊</button>
 
   <div id="title" class="screen">
@@ -61,7 +61,7 @@
 
   <div id="select" class="screen hidden">
     <h1>캐릭터 선택</h1>
-    <div class="sub">←→ 이동 · 💨 대시(스페이스 / 모바일: 더블 터치)로 은행을 피하세요.<br>대시 거리는 캐릭터마다 다르고(끼토 최고) 대시 중엔 살짝 무적! · 북거씨는 대시 대신 쉘터 · 라칠친 할머니는 은행을 줍습니다</div>
+    <div class="sub">←→ 이동으로 은행을 피하세요.<br>북거씨는 쉘터(스페이스 / 모바일: 더블 터치)로 잠깐 무적! · 라칠친 할머니는 은행을 줍습니다</div>
     <div class="grid" id="charGrid"></div>
     <button onclick="ui.showRanking()">🏆 솜솜 랭킹</button>
   </div>
@@ -94,17 +94,17 @@
 
 <script>
 const CHARS = {
-  kkito:      { name:'끼토',        img:'assets/02_kkito.png',      sd:'assets/sd_kkito.png',      speed:5.4, lives:1, w:52, h:60, dash:1.3, ability:'토끼 대시(최고) + 귀 레이더 경고', telegraph:true,
+  kkito:      { name:'끼토',        img:'assets/02_kkito.png',      sd:'assets/sd_kkito.png',      speed:5.4, lives:1, w:52, h:60, ability:'귀 레이더: 낙하 위치 미리 경고', telegraph:true,
                 intro:'가, 가스 불은 잠갔고... 좋아, 가보자!', hit:'으악! 괘, 괜찮아...!', record:'어?! 나 지금 잘하고 있는 거야?!', lose:'으아아! 귀 잡고 멘붕...' },
-  boneul:     { name:'보늘',        img:'assets/03_boneul.png',     sd:'assets/sd_boneul.png',     speed:3.2, lives:2, w:66, h:64, dash:0.75, ability:'맷집: 피격 1회 무효 (대시는 짧음)',
+  boneul:     { name:'보늘',        img:'assets/03_boneul.png',     sd:'assets/sd_boneul.png',     speed:3.2, lives:2, w:66, h:64, ability:'맷집: 피격 1회 무효',
                 intro:'귀찮은데... 이기고 와서 피자 시켜야지.', hit:'아야. ...뭐, 한 대 정도야.', record:'오~ 신기록. 별거 아니네.', lose:'뭐, 죽기밖에 더 하겠냐. 피자 시킬까?' },
-  migae:      { name:'미개',        img:'assets/04_migae.png',      sd:'assets/sd_migae.png',      speed:6.8, lives:1, w:40, h:42, dash:1.15, ability:'스피드: 빠르고 작음 (고수용)',
+  migae:      { name:'미개',        img:'assets/04_migae.png',      sd:'assets/sd_migae.png',      speed:6.8, lives:1, w:40, h:42, ability:'스피드: 빠르고 작음 (고수용)',
                 intro:'뽈뽈뽈—! (의욕 충만)', hit:'뽈?! (더듬이가 꼬불해졌다)', record:'뽈뽈뽈뽈—!! (더듬이 하트)', lose:'(더듬이가 꼬불꼬불해졌다) 뽈뽈...' },
-  ramda:      { name:'람다',        img:'assets/05_ramda.png',      sd:'assets/sd_ramda.png',      speed:5.4, lives:1, w:58, h:60, dash:1.05, ability:'줍줍 자석: 도토리가 끌려옴', magnet:120,
+  ramda:      { name:'람다',        img:'assets/05_ramda.png',      sd:'assets/sd_ramda.png',      speed:5.4, lives:1, w:58, h:60, ability:'줍줍 자석: 도토리가 끌려옴', magnet:120,
                 intro:'떨어지는 도토리, 전부 내 거야!', hit:'앗 따가! 방금 거 환불해줘!', record:'이 기록 완전 희귀템이야!', lose:'방금 그 도토리 완전 희귀템이었는데!' },
-  lachilchin: { name:'라칠친 할머니', img:'assets/06_lachilchin.png', sd:'assets/sd_lachilchin.png', speed:3.8, lives:1, w:50, h:58, dash:0.85, ability:'룰 반전: 은행=점수, 나뭇가지 주의!', flip:true,
+  lachilchin: { name:'라칠친 할머니', img:'assets/06_lachilchin.png', sd:'assets/sd_lachilchin.png', speed:3.8, lives:1, w:50, h:58, ability:'룰 반전: 은행=점수, 나뭇가지 주의!', flip:true,
                 intro:'아이구, 은행 줍기엔 내가 선수지. 그래~', hit:'아이구야! 참말로~', record:'아이구, 늙은이가 또 해냈네 그래~', lose:'아이구, 그래~ 오늘은 이만 줍자.' },
-  bookgeo:    { name:'북거씨',      img:'assets/07_bookgeo.png',    sd:'assets/sd_bookgeo.png',    speed:2.8, lives:1, w:70, h:52, hitScale:0.68, dash:0.6, ability:'등딱지 쉘터: 잠깐 무적 (쿨타임)', shell:true,
+  bookgeo:    { name:'북거씨',      img:'assets/07_bookgeo.png',    sd:'assets/sd_bookgeo.png',    speed:2.8, lives:1, w:70, h:52, hitScale:0.68, ability:'등딱지 쉘터: 잠깐 무적 (쿨타임)', shell:true,
                 intro:'서두르지 않아도, 이길 수 있어요.', hit:'음... 다음엔 등딱지로 막죠.', record:'천천히 왔는데, 어느새 신기록이네요.', lose:'천천히, 천천히... 다시 해봅시다.' },
 };
 
@@ -199,21 +199,13 @@ function newState(key) {
     objs: [], warns: [], particles: [], floaters: [], stains: [], leaves: [],
     spawnAt: 0, dir: 0, hitFlash: 0, shake: 0, squash: 0, scorePop: 0,
     shellUntil: 0, shellCdUntil: 0, over: false, overAt: 0, hitstop: 0, moveT: 0,
-    dashT: 0, dashCd: 0, dashDir: 1, lastDir: 1, introT: 1.8,
+    introT: 1.8,
     bubble: null, recordShown: false, prevBest: +(localStorage.getItem('somsom2_best_' + key) || 0),
     acorns: 0, ginkgos: 0,
   };
 }
 
-const DASH_CD = 1.1;
-function action() { const s = state; if (!s || s.over) return; s.c.shell ? useShell() : dash(); }
-function dash() {
-  const s = state; if (s.dashT > 0 || s.dashCd > 0) return;
-  s.dashT = 0.16; s.dashCd = DASH_CD;
-  s.dashDir = s.dir || s.lastDir;
-  sfx('jump');
-  burst(s, s.x - s.dashDir * 20, GROUND - 16, ['#d8c8a8', '#fff'], 6, 90, 25);   // 대시 먼지
-}
+function action() { const s = state; if (!s || s.over) return; if (s.c.shell) useShell(); }
 
 // ---------- audio (WebAudio 합성 — 파일 없이 8bit풍 효과음) ----------
 let AC = null, muted = localStorage.getItem('somsom_muted') === '1', bgmTimer = null, bgmStep = 0;
@@ -332,17 +324,9 @@ function loop(now) {
     burst(s, s.x, GROUND - s.c.h, ['#f3c14a','#fff','#e8915a'], 16, 160, 90);
   }
 
-  // move (+대시)
-  s.dashCd = Math.max(0, s.dashCd - dt);
+  // move
   if (!s.over) {
-    if (s.dir !== 0) s.lastDir = s.dir;
-    if (s.dashT > 0) {
-      s.dashT -= dt;
-      s.x += s.dashDir * s.c.speed * 60 * 3.4 * s.c.dash * dt;
-      if (Math.random() < 0.6) s.particles.push({ x: s.x - s.dashDir * 24, y: GROUND - 20 - Math.random() * 30, vx: -s.dashDir * 40, vy: -10, g: 0, life: 0.25, max: 0.25, size: 3.5, col: 'rgba(180,160,120,0.5)' });
-    } else {
-      s.x += s.dir * s.c.speed * 60 * dt;
-    }
+    s.x += s.dir * s.c.speed * 60 * dt;
     s.x = Math.max(s.c.w/2, Math.min(W - s.c.w/2, s.x));
     if (s.dir !== 0) s.moveT += dt; else s.moveT = 0;
     if (s.introT <= 0) spawn(s);
@@ -362,7 +346,7 @@ function loop(now) {
     }
   }
 
-  const px = s.x, py = GROUND - 6 - s.c.h/2, shell = (now < s.shellUntil) || s.dashT > 0;   // 대시 중 무적
+  const px = s.x, py = GROUND - 6 - s.c.h/2, shell = now < s.shellUntil;
   for (const o of s.objs) {
     o.y += o.vy * 60 * dt; o.x += (o.vx||0) * 60 * dt;
     if (o.x < 14 || o.x > W-14) o.vx = -(o.vx||0);
@@ -490,12 +474,12 @@ function draw(s, now, shell) {
   if (s.hitFlash > 0 || s.over) face = 'hit';
   else if (s.bubble && s.bubble.txt === s.c.record) face = 'win';
   const im = (face && spritesFace[face][s.key]) || sprites[s.key] || fallbacks[s.key];
-  const bob = (s.dir !== 0 && s.dashT <= 0) ? Math.sin(s.moveT*16) * 2.5 : 0;
+  const bob = s.dir !== 0 ? Math.sin(s.moveT*16) * 2.5 : 0;
   const sq = 1 - s.squash*0.5;
   const dw = s.c.w * 1.7, dh = s.c.h * 1.7 * sq;
   ctx.save();
   ctx.translate(s.x, GROUND - 4 + bob);
-  ctx.rotate(s.dashT > 0 ? s.dashDir * 0.22 : s.dir * 0.12);
+  ctx.rotate(s.dir * 0.12);
   if (s.hitFlash > 0 && Math.floor(now/60)%2===0) ctx.globalAlpha = 0.35;
   if (im && (im.width || im.naturalWidth)) ctx.drawImage(im, -dw/2, -dh, dw, dh);
   ctx.globalAlpha = 1;
@@ -545,14 +529,9 @@ function draw(s, now, shell) {
   ctx.font = '800 19px sans-serif'; ctx.textAlign = 'right';
   const hearts = '❤'.repeat(Math.max(0,s.lives));
   ctx.strokeText(hearts, W-14, 31); ctx.fillText(hearts, W-14, 31);
-  {
-    let txt;
-    if (s.c.shell) {
-      const cd = Math.max(0, (s.shellCdUntil - now)/1000);
-      txt = cd > 0 ? '쉘터 ' + cd.toFixed(1) + 's' : '쉘터 준비됨';
-    } else {
-      txt = s.dashCd > 0 ? '대시 ' + s.dashCd.toFixed(1) + 's' : '대시 준비됨';
-    }
+  if (s.c.shell) {
+    const cd = Math.max(0, (s.shellCdUntil - now)/1000);
+    const txt = cd > 0 ? '쉘터 ' + cd.toFixed(1) + 's' : '쉘터 준비됨';
     ctx.font = '700 12px sans-serif';
     ctx.strokeText(txt, W-14, 52); ctx.fillText(txt, W-14, 52);
   }
@@ -599,8 +578,7 @@ const ui = {
   toSelect() { ui.show('select'); cancelAnimationFrame(raf); state = null; stopBgm(); $('actionBtn').style.display='none'; $('muteBtn').style.display='none'; },
   start(key) {
     curKey = key; ui.show('none'); state = newState(key);
-    $('actionBtn').textContent = CHARS[key].shell ? '🐢 쉘터' : '💨 대시';
-    $('actionBtn').style.display = IS_TOUCH ? 'none' : 'block';   // 모바일은 더블 터치로 대체
+    $('actionBtn').style.display = (CHARS[key].shell && !IS_TOUCH) ? 'block' : 'none';   // 모바일은 더블 터치로 대체
     $('muteBtn').style.display = 'block';
     showBubble(state, CHARS[key].intro, 1.8);
     startBgm();
@@ -752,7 +730,7 @@ function touchDir(e) {
 let lastTapT = 0;
 cv.addEventListener('touchstart', e => {
   touchDir(e);
-  const nowT = performance.now();                       // 더블 터치 = 대시/쉘터
+  const nowT = performance.now();                       // 더블 터치 = 쉘터 (북거씨)
   if (nowT - lastTapT < 300) action();
   lastTapT = nowT;
 }, {passive:false});
