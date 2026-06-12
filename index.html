@@ -184,6 +184,12 @@ for (const [pk, src, tw] of [['ginkgo','assets/prop_ginkgo.png',130], ['acorn','
 }
 
 const IS_TOUCH = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+
+// ---------- haptics (모바일 진동 — iOS 사파리는 미지원이라 무시됨) ----------
+function buzz(pattern) {
+  if (!IS_TOUCH || !navigator.vibrate) return;
+  try { navigator.vibrate(pattern); } catch (e) {}
+}
 let state = null, raf = null, curKey = null;
 
 function newState(key) {
@@ -322,7 +328,7 @@ function loop(now) {
   }
   if (s.bubble) { s.bubble.t -= dt; if (s.bubble.t <= 0) s.bubble = null; }
   if (!s.recordShown && s.prevBest > 0 && s.score > s.prevBest && !s.over) {   // 신기록 돌파 순간
-    s.recordShown = true; showBubble(s, s.c.record, 1.6); sfx('record');
+    s.recordShown = true; showBubble(s, s.c.record, 1.6); sfx('record'); buzz([25, 50, 25, 50, 40]);
     burst(s, s.x, GROUND - s.c.h, ['#f3c14a','#fff','#e8915a'], 16, 160, 90);
   }
 
@@ -366,20 +372,20 @@ function loop(now) {
       o.dead = true;
       const harmful = s.c.flip ? (o.type === 'branch') : (o.type === 'ginkgo');
       if (o.type === 'acorn') {
-        s.score += 50; s.scorePop = 0.3; s.acorns++; sfx('coin');
+        s.score += 50; s.scorePop = 0.3; s.acorns++; sfx('coin'); buzz(15);
         burst(s, o.x, o.y, ['#b5824a','#e8c14a','#fff'], 10, 130, 60); floatTxt(s, o.x, o.y-12, '+50', '#b08a3a');
       } else if (s.c.flip && o.type === 'ginkgo') {
-        s.score += 20; s.scorePop = 0.3; s.ginkgos++; sfx('ding');
+        s.score += 20; s.scorePop = 0.3; s.ginkgos++; sfx('ding'); buzz(12);
         burst(s, o.x, o.y, ['#e8c14a','#f3e29a'], 8, 110, 50); floatTxt(s, o.x, o.y-12, '+20 그래~', '#b08a3a');
       } else if (harmful) {
-        if (shell) { floatTxt(s, px, py - s.c.h/2 - 14, '딱!', '#3a7a5a'); burst(s, o.x, o.y, ['#9ab87a'], 6, 90, 30); sfx('thud'); }
+        if (shell) { floatTxt(s, px, py - s.c.h/2 - 14, '딱!', '#3a7a5a'); burst(s, o.x, o.y, ['#9ab87a'], 6, 90, 30); sfx('thud'); buzz(20); }
         else {
           s.lives--; s.hitFlash = 0.4; s.shake = 0.45; s.hitstop = 0.1; s.squash = 0.25;
           burst(s, o.x, o.y, o.type==='ginkgo' ? ['#e8c14a','#c9a23f'] : ['#8a6a4a','#6a4a2a'], 14, 170, 80);
           if (o.type === 'ginkgo') { stink(s, px, py - 10); floatTxt(s, px, py - s.c.h/2 - 16, '윽, 냄새!', '#d2452a'); }
           else floatTxt(s, px, py - s.c.h/2 - 16, '아이쿠!', '#d2452a');
-          sfx('hit');
-          if (s.lives <= 0) { s.over = true; s.overAt = now; sfx('gameover'); stopBgm(); }
+          sfx('hit'); buzz(70);
+          if (s.lives <= 0) { s.over = true; s.overAt = now; sfx('gameover'); stopBgm(); buzz([80, 60, 120]); }
           else showBubble(s, s.c.hit, 1.3);
         }
       }
