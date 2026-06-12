@@ -185,10 +185,33 @@ for (const [pk, src, tw] of [['ginkgo','assets/prop_ginkgo.png',130], ['acorn','
 
 const IS_TOUCH = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
 
-// ---------- haptics (모바일 진동 — iOS 사파리는 미지원이라 무시됨) ----------
+// ---------- haptics (안드로이드: Vibration API / iOS: 스위치 토글 햅틱 우회) ----------
+// iOS 17.4+ 사파리는 네이티브 스위치 토글 시 햅틱 틱이 울리는 점을 이용 (비공식 동작)
+let hapticEl = null;
+function iosHapticTick() {
+  if (!hapticEl) {
+    hapticEl = document.createElement('label');
+    hapticEl.setAttribute('aria-hidden', 'true');
+    hapticEl.style.display = 'none';
+    const sw = document.createElement('input');
+    sw.type = 'checkbox'; sw.setAttribute('switch', '');
+    hapticEl.appendChild(sw);
+    document.body.appendChild(hapticEl);
+  }
+  hapticEl.click();
+}
 function buzz(pattern) {
-  if (!IS_TOUCH || !navigator.vibrate) return;
-  try { navigator.vibrate(pattern); } catch (e) {}
+  if (!IS_TOUCH) return;
+  try {
+    if (navigator.vibrate) { navigator.vibrate(pattern); return; }
+    // iOS 폴백: 진동 구간마다 햅틱 틱 1회 (세기 조절은 불가)
+    const segs = Array.isArray(pattern) ? pattern : [pattern];
+    let t = 0;
+    for (let i = 0; i < segs.length; i += 2) {
+      t === 0 ? iosHapticTick() : setTimeout(iosHapticTick, t);
+      t += segs[i] + (segs[i + 1] || 0);
+    }
+  } catch (e) {}
 }
 let state = null, raf = null, curKey = null;
 
