@@ -61,7 +61,7 @@
 
   <div id="select" class="screen hidden">
     <h1>캐릭터 선택</h1>
-    <div class="sub">←→ 이동으로 은행을 피하세요.<br>북거씨는 쉘터(스페이스 / 모바일: 더블 터치)로 잠깐 무적! · 라칠친 할머니는 은행을 줍습니다</div>
+    <div class="sub">←→ 이동으로 은행을 피하세요.<br>🌰 도토리를 연속으로 주우면 콤보 배수! ✨ 황금잎은 큰 점수!<br>북거씨는 쉘터(스페이스 / 모바일: 더블 터치)로 잠깐 무적! · 라칠친 할머니는 은행을 줍습니다</div>
     <div class="grid" id="charGrid"></div>
     <button onclick="ui.showRanking()">🏆 솜솜 랭킹</button>
   </div>
@@ -224,7 +224,7 @@ function newState(key) {
     shellUntil: 0, shellCdUntil: 0, over: false, overAt: 0, hitstop: 0, moveT: 0,
     introT: 1.8,
     bubble: null, recordShown: false, prevBest: +(localStorage.getItem('somsom2_best_' + key) || 0),
-    acorns: 0, ginkgos: 0,
+    acorns: 0, ginkgos: 0, goldens: 0, combo: 0, comboT: 0, bestCombo: 0,
   };
 }
 
@@ -300,7 +300,8 @@ function spawn(s) {
     let type;
     if (s.c.flip) type = r < 0.45 ? 'ginkgo' : (r < 0.80 ? 'branch' : 'acorn');
     else          type = r < 0.68 ? 'ginkgo' : 'acorn';
-    const vy = (185 + s.t * 6.5 + Math.random() * 80) / 60;
+    if (Math.random() < 0.05) type = 'golden';                  // 가끔 떨어지는 귀한 황금잎(+200)
+    const vy = (185 + s.t * 6.5 + Math.random() * 80) / 60 * (type === 'golden' ? 0.65 : 1);  // 황금잎은 천천히
     const vx = s.t > 18 ? (Math.random() - 0.5) * Math.min(1.8, s.t * 0.04) : 0;  // 후반 커브볼
     const obj = { type, x, y: -20, vy, vx };
     if (s.c.telegraph) s.warns.push({ x, t: 0.5, obj });
@@ -317,6 +318,26 @@ function drawGinkgo(x, y) {
   ctx.beginPath(); ctx.arc(x+7, y+4, 10, 0, 7); ctx.fill(); ctx.stroke();
 }
 function drawAcorn(x, y) { ctx.font = '26px serif'; ctx.textAlign='center'; ctx.fillText('🌰', x, y+9); }
+function drawGolden(x, y, now) {
+  const pulse = 0.6 + 0.4 * Math.sin(now / 120);
+  ctx.save(); ctx.translate(x, y);
+  ctx.globalAlpha = 0.35 * pulse; ctx.fillStyle = '#ffd95a';      // 빛나는 후광
+  ctx.beginPath(); ctx.arc(0, 0, 18, 0, 7); ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.rotate(Math.sin(now / 300) * 0.3);
+  ctx.fillStyle = '#f5c518'; ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(0, 2, 11, 0.55, Math.PI - 0.55, false); ctx.lineTo(0, -10); ctx.closePath();
+  ctx.fill(); ctx.stroke();
+  ctx.globalAlpha = pulse; ctx.fillStyle = '#fff'; ctx.font = '11px serif'; ctx.textAlign = 'center';
+  ctx.fillText('✨', 7, -6);
+  ctx.globalAlpha = 1; ctx.restore();
+}
+// 콤보 누적 — 연속 줍기 1회당 배수 상승(최대 x5), 줍기 멈추거나 피격 시 리셋
+function bumpCombo(s) {
+  s.combo++; if (s.combo > s.bestCombo) s.bestCombo = s.combo;
+  s.comboT = 3.0;
+  return Math.min(5, s.combo);
+}
 function drawBranch(x, y) {
   ctx.save(); ctx.translate(x,y); ctx.rotate(0.5);
   ctx.fillStyle='#8a6a4a'; ctx.strokeStyle='#222';
@@ -342,6 +363,7 @@ function loop(now) {
     if (!s.over) s.score += dt * 10;
   }
   if (s.bubble) { s.bubble.t -= dt; if (s.bubble.t <= 0) s.bubble = null; }
+  if (s.comboT > 0 && !s.over) { s.comboT -= dt; if (s.comboT <= 0) s.combo = 0; }   // 줍기 끊기면 콤보 리셋
   if (!s.recordShown && s.prevBest > 0 && s.score > s.prevBest && !s.over) {   // 신기록 돌파 순간
     s.recordShown = true; showBubble(s, s.c.record, 1.6); sfx('record'); buzz([25, 50, 25, 50, 40]);
     burst(s, s.x, GROUND - s.c.h, ['#f3c14a','#fff','#e8915a'], 16, 160, 90);
@@ -360,7 +382,7 @@ function loop(now) {
 
   // 람다 자석
   if (s.c.magnet) for (const o of s.objs) {
-    if (o.type === 'acorn') {
+    if (o.type === 'acorn' || o.type === 'golden') {
       const dx = s.x - o.x, dy = (GROUND - 40) - o.y, d = Math.hypot(dx,dy) || 1;
       if (d < s.c.magnet) {
         o.x += dx/d * 170 * dt; o.y += dy/d * 170 * dt;
@@ -378,16 +400,25 @@ function loop(now) {
     if (!s.over && Math.abs(o.x - px) < rx + 13 && Math.abs(o.y - py) < ry + 13) {
       o.dead = true;
       const harmful = s.c.flip ? (o.type === 'branch') : (o.type === 'ginkgo');
-      if (o.type === 'acorn') {
-        s.score += 50; s.scorePop = 0.3; s.acorns++; sfx('coin'); buzz(15);
-        burst(s, o.x, o.y, ['#b5824a','#e8c14a','#fff'], 10, 130, 60); floatTxt(s, o.x, o.y-12, '+50', '#b08a3a');
+      if (o.type === 'golden') {
+        const m = bumpCombo(s), pts = 200 * m;
+        s.score += pts; s.scorePop = 0.5; s.goldens++; sfx('record'); buzz([20, 40, 20]);
+        burst(s, o.x, o.y, ['#f5c518','#ffd95a','#fff'], 18, 170, 80);
+        floatTxt(s, o.x, o.y-12, '+' + pts + (m > 1 ? ' x' + m : '') + ' ✨', '#d9a400');
+      } else if (o.type === 'acorn') {
+        const m = bumpCombo(s), pts = 50 * m;
+        s.score += pts; s.scorePop = 0.3; s.acorns++; sfx('coin'); buzz(15);
+        burst(s, o.x, o.y, ['#b5824a','#e8c14a','#fff'], 10, 130, 60);
+        floatTxt(s, o.x, o.y-12, '+' + pts + (m > 1 ? ' x' + m : ''), '#b08a3a');
       } else if (s.c.flip && o.type === 'ginkgo') {
-        s.score += 20; s.scorePop = 0.3; s.ginkgos++; sfx('ding'); buzz(12);
-        burst(s, o.x, o.y, ['#e8c14a','#f3e29a'], 8, 110, 50); floatTxt(s, o.x, o.y-12, '+20 그래~', '#b08a3a');
+        const m = bumpCombo(s), pts = 20 * m;
+        s.score += pts; s.scorePop = 0.3; s.ginkgos++; sfx('ding'); buzz(12);
+        burst(s, o.x, o.y, ['#e8c14a','#f3e29a'], 8, 110, 50);
+        floatTxt(s, o.x, o.y-12, '+' + pts + (m > 1 ? ' x' + m : '') + ' 그래~', '#b08a3a');
       } else if (harmful) {
         if (shell) { floatTxt(s, px, py - s.c.h/2 - 14, '딱!', '#3a7a5a'); burst(s, o.x, o.y, ['#9ab87a'], 6, 90, 30); sfx('thud'); buzz(20); }
         else {
-          s.lives--; s.hitFlash = 0.4; s.shake = 0.45; s.hitstop = 0.1; s.squash = 0.25;
+          s.lives--; s.combo = 0; s.comboT = 0; s.hitFlash = 0.4; s.shake = 0.45; s.hitstop = 0.1; s.squash = 0.25;
           burst(s, o.x, o.y, o.type==='ginkgo' ? ['#e8c14a','#c9a23f'] : ['#8a6a4a','#6a4a2a'], 14, 170, 80);
           if (o.type === 'ginkgo') { stink(s, px, py - 10); floatTxt(s, px, py - s.c.h/2 - 16, '윽, 냄새!', '#d2452a'); }
           else floatTxt(s, px, py - s.c.h/2 - 16, '아이쿠!', '#d2452a');
@@ -402,6 +433,7 @@ function loop(now) {
       o.dead = true;
       if (o.type === 'ginkgo') { s.stains.push({ x: o.x, life: 3.5 }); if (Math.random()<0.4) stink(s, o.x, GROUND-8); }
       if (o.type === 'branch') burst(s, o.x, GROUND-6, ['#8a6a4a'], 4, 70, 40);
+      if (o.type === 'golden') burst(s, o.x, GROUND-6, ['#f5c518','#fff'], 5, 80, 40);   // 놓친 황금잎
     }
   }
   s.objs = s.objs.filter(o => !o.dead && o.y < H + 30);
@@ -450,6 +482,9 @@ function draw(s, now, shell) {
     ctx.fillStyle = '#efe6d2'; ctx.fillRect(-10, GROUND, W+20, H-GROUND+10);
     ctx.beginPath(); ctx.moveTo(-10,GROUND); ctx.lineTo(W+10,GROUND); ctx.stroke();
   }
+  // 배경 디밍 — 낙하물·캐릭터가 또렷하게 보이도록 한 겹 덮기
+  ctx.fillStyle = 'rgba(253,251,245,0.45)';
+  ctx.fillRect(-10, -10, W+20, H+20);
   // 바닥 얼룩
   for (const st of s.stains) {
     ctx.globalAlpha = Math.min(0.5, st.life/3.5*0.5);
@@ -479,6 +514,7 @@ function draw(s, now, shell) {
       ctx.drawImage(p, -ow/2, -oh/2, ow, oh);
       ctx.restore();
     }
+    else if (o.type === 'golden') drawGolden(o.x, o.y, now);
     else if (o.type === 'ginkgo') drawGinkgo(o.x, o.y);
     else if (o.type === 'acorn') drawAcorn(o.x, o.y);
     else drawBranch(o.x, o.y);
@@ -558,6 +594,16 @@ function draw(s, now, shell) {
     ctx.font = '700 12px sans-serif';
     ctx.strokeText(txt, W-14, 52); ctx.fillText(txt, W-14, 52);
   }
+  // 콤보 표시 (2단계부터, 남은 시간 줄어들면 흐려짐)
+  if (s.combo >= 2) {
+    const m = Math.min(5, s.combo);
+    ctx.globalAlpha = Math.min(1, 0.4 + s.comboT / 3.0 * 0.6);
+    ctx.textAlign = 'left'; ctx.fillStyle = '#e8740a';
+    ctx.font = `800 ${Math.round(16 + m)}px sans-serif`;
+    const txt = '🔥 ' + s.combo + '콤보 x' + m;
+    ctx.strokeText(txt, 14, 54); ctx.fillText(txt, 14, 54);
+    ctx.globalAlpha = 1;
+  }
 
   // 피격 비네트
   if (s.hitFlash > 0) {
@@ -620,7 +666,10 @@ function endGame() {
   $('resultImg').src = spr && spr.toDataURL ? spr.toDataURL() : c.img;
   $('resQuote').textContent = '"' + c.lose + '"';
   $('resScore').textContent = score + '점';
-  $('resDetail').textContent = '생존 ' + s.t.toFixed(1) + '초 · 도토리 ' + s.acorns + '개' + (c.flip ? ' · 은행 ' + s.ginkgos + '개' : '');
+  $('resDetail').textContent = '생존 ' + s.t.toFixed(1) + '초 · 도토리 ' + s.acorns + '개'
+    + (c.flip ? ' · 은행 ' + s.ginkgos + '개' : '')
+    + (s.goldens ? ' · 황금잎 ' + s.goldens + '개 ✨' : '')
+    + (s.bestCombo >= 2 ? ' · 최고 ' + s.bestCombo + '콤보' : '');
   $('resBest').textContent = c.name + ' 최고기록: ' + best + '점';
   lastResult = { key: s.key, score, best, isNewBest, detail: $('resDetail').textContent };
   $('nameRow').style.display = (score >= 1 ? 'flex' : 'none');                 // 매 판 등록 가능 (랭킹은 이름당 최고점만 표시)
