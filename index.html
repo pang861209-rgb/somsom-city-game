@@ -42,6 +42,15 @@
   .rankrow.me { background:#f6eed8; border-radius:8px; }
   .confetti { position:absolute; top:-14px; width:10px; height:14px; border-radius:3px; animation:confFall 2.8s ease-in forwards; pointer-events:none; }
   @keyframes confFall { to { transform:translateY(760px) rotate(560deg); opacity:.15; } }
+  /* 캐릭터 인트로 삽화 */
+  #intro { padding:0; overflow:hidden; justify-content:flex-end; cursor:pointer; }
+  #introImg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0; }
+  #introBox { position:relative; z-index:1; margin:0 14px 22px; background:rgba(253,251,245,.94); border:2.5px solid #222; border-radius:14px; box-shadow:3px 3px 0 #222; padding:14px 16px; text-align:left; animation:introUp .5s ease-out; }
+  #introBox .iname { font-weight:800; font-size:15px; color:#b08a3a; margin-bottom:5px; }
+  #introBox .itext { font-size:13.5px; color:#5a4a3a; line-height:1.6; }
+  #introBox .ihint { margin-top:8px; font-size:11px; color:#9a8b7a; text-align:right; animation:iblink 1.4s infinite; }
+  @keyframes introUp { from{transform:translateY(24px);opacity:0} to{transform:translateY(0);opacity:1} }
+  @keyframes iblink { 50%{opacity:.35} }
 </style>
 </head>
 <body>
@@ -51,7 +60,8 @@
   <button id="muteBtn">🔊</button>
 
   <div id="title" class="screen">
-    <img id="titleBg" src="assets/title_main.png" onerror="this.onerror=null;this.src='assets/01_group_lineup.png';this.style.objectFit='contain';" alt="솜솜시티 친구들">
+    <img id="titleBg" src="assets/title_bg_leaf.png" onerror="this.onerror=null;this.src='assets/title_main.png';" alt="가을 은행나무 골목">
+    <img class="titleChar" src="assets/sd_kkito_t.png" alt="끼토" style="position:absolute;left:50%;bottom:98px;transform:translateX(-50%);width:130px;height:auto;z-index:1;pointer-events:none;filter:drop-shadow(0 4px 5px rgba(90,74,58,.22));">
     <div id="titleTop">
       <h1 id="titleLogo">🍂 솜솜시티: 은행 주의보</h1>
       <div id="titleSub">가을이 왔다. 은행나무 골목을 무사히 버텨라!</div>
@@ -64,6 +74,15 @@
     <div class="sub">←→ 이동 · 💨 대시(스페이스 / 모바일: 더블 터치)로 은행을 피하세요.<br>대시 거리는 캐릭터마다 다르고(끼토 최고) 대시 중엔 살짝 무적! · 북거씨는 대시 대신 쉘터 · 라칠친 할머니는 은행을 줍습니다</div>
     <div class="grid" id="charGrid"></div>
     <button onclick="ui.showRanking()">🏆 솜솜 랭킹</button>
+  </div>
+
+  <div id="intro" class="screen hidden" onclick="ui.beginFromIntro()">
+    <img id="introImg" src="" alt="">
+    <div id="introBox">
+      <div class="iname" id="introName"></div>
+      <div class="itext" id="introText"></div>
+      <div class="ihint">탭하면 바로 시작 ▶</div>
+    </div>
   </div>
 
   <div id="ranking" class="screen hidden">
@@ -571,8 +590,36 @@ function useShell() {
 
 // ---------- UI ----------
 const $ = id => document.getElementById(id);
+// 인트로 삽화 + 내레이션 — 은행나무 골목 출전 준비
+const INTRO = {
+  kkito:      { title:'끼토, 골목 입구에서',    text:'은행나무 골목의 결전. 끼토는 하늘을 올려다봤다.<br>"저걸... 다 피해야 한다고?!"' },
+  boneul:     { title:'보늘, 나무 아래에서',    text:'"피하는 것도 귀찮은데..."<br>그래도 몸은 풀어야지. 보늘, 느릿느릿 출전.' },
+  migae:      { title:'미개, 낙엽 위에서',      text:'가장 작은 도전자. 하지만 제일 씩씩하다!<br>"뽈뽈! (덤벼라, 은행잎!)"' },
+  ramda:      { title:'람다, 기회를 보다',      text:'"은행잎 사이로 도토리가 떨어진다고?"<br>람다의 눈이 반짝였다.' },
+  lachilchin: { title:'라칠친 할머니의 수확',   text:'"아이구, 오늘은 줍기 좋은 날이네 그래~"<br>할머니에겐 게임이 아니라 수확이다.' },
+  bookgeo:    { title:'북거씨, 천천히 입장',    text:'"떨어지는 건 무섭지 않아요. 등딱지가 있으니까."<br>북거씨는 서두르지 않는다.' },
+};
+let introTimer = null, introPending = null;
 const ui = {
-  show(id) { for (const sc of ['title','select','result','ranking']) $(sc).classList.toggle('hidden', sc !== id); },
+  show(id) { for (const sc of ['title','select','intro','result','ranking']) $(sc).classList.toggle('hidden', sc !== id); },
+  showIntro(key) {
+    clearTimeout(introTimer);
+    introPending = key;
+    const im = $('introImg');
+    im.onerror = () => ui.beginFromIntro();                  // 삽화 없으면 바로 시작
+    im.src = `assets/intro_leaf_${key}.png`;
+    $('introName').textContent = INTRO[key].title;
+    $('introText').innerHTML = INTRO[key].text;
+    ui.show('intro');
+    introTimer = setTimeout(() => ui.beginFromIntro(), 4200);
+  },
+  beginFromIntro() {
+    if (!introPending) return;
+    clearTimeout(introTimer);
+    const key = introPending;
+    introPending = null;
+    ui.start(key);
+  },
   async showRanking(list, me) {
     ui.show('ranking');
     const box = $('rankList');
@@ -590,7 +637,7 @@ const ui = {
       box.appendChild(row);
     });
   },
-  toSelect() { ui.show('select'); cancelAnimationFrame(raf); state = null; stopBgm(); $('actionBtn').style.display='none'; $('muteBtn').style.display='none'; },
+  toSelect() { clearTimeout(introTimer); introPending = null; ui.show('select'); cancelAnimationFrame(raf); state = null; stopBgm(); $('actionBtn').style.display='none'; $('muteBtn').style.display='none'; },
   start(key) {
     curKey = key; ui.show('none'); state = newState(key);
     $('actionBtn').textContent = CHARS[key].shell ? '🐢 쉘터' : '💨 대시';
@@ -717,7 +764,7 @@ function buildGrid() {
     const d = document.createElement('div');
     d.className = 'card';
     d.innerHTML = `<img src="${c.sd}" onerror="this.src='${c.img}'" alt="${c.name}"><div class="nm">${c.name}</div><div class="ab">${c.ability}</div><div class="bs">BEST ${best}</div>`;
-    d.onclick = () => ui.start(k);
+    d.onclick = () => ui.showIntro(k);
     g.appendChild(d);
   }
 }
