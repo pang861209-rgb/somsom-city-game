@@ -481,8 +481,8 @@ const MANIFEST={
  acorn:'prop_acorn', ginkgo:'prop_ginkgo', bg:'bg_alley',
 };
 const RAW=new Set(['bg']); // 키잉 없이 원본 사용
-function keyImage(img){
-  const s=Math.min(1,384/img.width);
+function keyImage(img,maxW){
+  const s=Math.min(1,(maxW||384)/img.width);
   const c=document.createElement('canvas'); c.width=Math.round(img.width*s); c.height=Math.round(img.height*s);
   const x=c.getContext('2d'); x.drawImage(img,0,0,c.width,c.height);
   const d=x.getImageData(0,0,c.width,c.height), p=d.data, W=c.width, H=c.height;
@@ -508,6 +508,44 @@ const IMGS={};
 const ready=Promise.all(Object.entries(MANIFEST).map(([k,f])=>new Promise(res=>{
   const i=new Image(); i.onload=()=>{ IMGS[k]=RAW.has(k)?i:trimCanvas(keyImage(i)); res(); }; i.onerror=res; i.src=`../assets/${f}.png`;
 })));
+// ── 전용 시트 로더 (나노바나나 산출물) — assets/defense/ 에 있으면 자동 적용, 없으면 SD 플레이스홀더 유지 ──
+function sliceSheet(c){ // 투명 열 기준 자동 분할 (작업지시서 §0)
+  const x=c.getContext('2d'), d=x.getImageData(0,0,c.width,c.height).data;
+  const colHas=new Uint8Array(c.width);
+  for(let cx=0;cx<c.width;cx++)for(let cy=0;cy<c.height;cy++)
+    if(d[(cy*c.width+cx)*4+3]>10){ colHas[cx]=1; break; }
+  const parts=[]; let s=-1;
+  for(let cx=0;cx<=c.width;cx++){ const on=cx<c.width&&colHas[cx];
+    if(on&&s<0)s=cx;
+    else if(!on&&s>=0){ if(cx-s>8){ const o=document.createElement('canvas');
+      o.width=cx-s; o.height=c.height;
+      o.getContext('2d').drawImage(c,s,0,cx-s,c.height,0,0,cx-s,c.height);
+      parts.push(trimCanvas(o)); } s=-1; } }
+  return parts;
+}
+const SHEET_POSE=['','_act','_win','_hit']; // 시트 포즈 순서: 대기·액션·승리·피격
+function loadSheets(){
+  const jobs=['kkito','migae','boneul','ramda','bookgeo','lachilchin'].map(t=>new Promise(res=>{
+    const i=new Image();
+    i.onload=()=>{ try{ const parts=sliceSheet(keyImage(i,1200)); // 시트는 고해상 유지
+      if(parts.length>=4)SHEET_POSE.forEach((sfx,k)=>{ IMGS[t+sfx]=parts[k]; });
+      else if(parts.length)IMGS[t]=parts[0];
+    }catch(e){} res(); };
+    i.onerror=res; i.src=`../assets/defense/sheet_${t}.png`;
+  }));
+  for(const f of ['bg_field_alley','bg_field_ginkgo','bg_field_dusk','bg_field_rain','bg_field_snow'])
+    jobs.push(new Promise(res=>{ const i=new Image();
+      i.onload=()=>{ IMGS[f]=i; res(); }; i.onerror=res; i.src=`../assets/defense/${f}.png`; }));
+  return Promise.all(jobs);
+}
+function bgFor(){ // 스테이지별 전용 배경 (없으면 공용 폴백)
+  if(!SG)return IMGS.bg;
+  if(SG.ch===2)return IMGS.bg_field_rain||IMGS.bg_field_alley||IMGS.bg;
+  if(SG.ch===3)return IMGS.bg_field_snow||IMGS.bg_field_alley||IMGS.bg;
+  if(SG.id===3)return IMGS.bg_field_ginkgo||IMGS.bg_field_alley||IMGS.bg;
+  if(SG.id===4||SG.endless)return IMGS.bg_field_dusk||IMGS.bg_field_alley||IMGS.bg;
+  return IMGS.bg_field_alley||IMGS.bg;
+}
 
 // ============ 캔버스 ============
 const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
@@ -1281,9 +1319,10 @@ function draw(){
   ctx.clearRect(-10,-10,W+20,H+20);
   ctx.fillStyle='#f3ede2'; ctx.fillRect(0,0,W,H);
   if(!SG)return;
-  if(IMGS.bg){ const sc=W/IMGS.bg.width, sh=H/sc, sy=Math.max(0,(IMGS.bg.height-sh)/2);
-    ctx.drawImage(IMGS.bg,0,sy,IMGS.bg.width,sh,0,0,W,H);
-    ctx.fillStyle='rgba(253,251,245,.60)'; ctx.fillRect(0,0,W,H); }
+  { const bgi=bgFor();
+    if(bgi){ const sc=W/bgi.width, sh=H/sc, sy=Math.max(0,(bgi.height-sh)/2);
+      ctx.drawImage(bgi,0,sy,bgi.width,sh,0,0,W,H);
+      ctx.fillStyle='rgba(253,251,245,.60)'; ctx.fillRect(0,0,W,H); } }
   ctx.strokeStyle='rgba(90,74,58,.07)'; ctx.lineWidth=1;
   for(let c=0;c<=COLS;c++){ ctx.beginPath(); ctx.moveTo(OX+c*TILE,0); ctx.lineTo(OX+c*TILE,H); ctx.stroke(); }
   for(let r=0;r<=ROWS;r++){ ctx.beginPath(); ctx.moveTo(0,r*TILE); ctx.lineTo(W,r*TILE); ctx.stroke(); }
@@ -1366,7 +1405,8 @@ function draw(){
   // 타워
   for(const b of blocks.concat(barrs)){ const t=b.tower; if(!t)continue;
     const T=TOWERS[t.type],p=center(b.c,b.r);
-    const frame=owwT>0?IMGS[t.type+'_hit']:(t.winT>0?IMGS[t.type+'_win']:IMGS[t.type]);
+    const frame=owwT>0?IMGS[t.type+'_hit']:t.winT>0?IMGS[t.type+'_win']
+      :(t.kick>.4&&IMGS[t.type+'_act'])?IMGS[t.type+'_act']:IMGS[t.type];
     const bob=Math.sin(time*3+b.c)*1.5,kick=Math.max(0,t.kick);
     const scale=1+t.lv*.09+(t.evo!==null?.12:0),h=T.h*scale*(1-kick*.08),w=frame?h*frame.width/frame.height:h*.8;
     ctx.fillStyle='rgba(90,74,58,.18)'; ctx.beginPath();
@@ -1586,7 +1626,7 @@ function loop(ts){ const raw=Math.min(.05,(ts-last)/1000); last=ts;
   if(crisisT>0){ crisisT-=raw; dt*=.3; } // 위기 슬로모션
   if(hitstopT>0){ hitstopT-=raw; dt=0; } // 히트스톱
   update(dt); draw(); requestAnimationFrame(loop); }
-ready.then(()=>{
+ready.then(loadSheets).then(()=>{
   if(IMGS.acorn)$('acornIco').src=IMGS.acorn.toDataURL();
   $('startBtn').disabled=false; $('startBtn').textContent='골목 지키러 가기';
   requestAnimationFrame(ts=>{ last=ts; requestAnimationFrame(loop); });
