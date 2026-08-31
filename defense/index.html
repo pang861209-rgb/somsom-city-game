@@ -85,6 +85,11 @@
   #popup .btns { display:flex; gap:8px; }
   #popup button { flex:1; padding:9px 0; font-size:12.5px; }
   #upBtn { background:#f6eed8; }
+  #evoPop { position:absolute; left:20px; right:20px; bottom:108px; background:rgba(253,251,245,.98); border:2.5px solid #222; border-radius:14px; box-shadow:3px 3px 0 #222; padding:12px; z-index:11; }
+  #evoPop h3 { font-size:14px; color:#5a4a3a; text-align:center; margin-bottom:9px; }
+  .evoOpt { width:100%; text-align:left; padding:9px 11px; margin-bottom:7px; font-size:12px; display:block; }
+  .evoOpt b { color:#b06a2a; display:block; font-size:13px; margin-bottom:2px; }
+  .evoOpt span { font-weight:600; color:#8a7a6a; font-size:11px; line-height:1.4; }
 </style>
 </head>
 <body>
@@ -109,11 +114,18 @@
 
   <div id="popup" class="hidden">
     <div class="row"><span class="nm" id="pNm"></span><span class="st" id="pSt"></span></div>
-    <div class="btns"><button id="upBtn"></button><button id="sellBtn"></button><button id="closeBtn">닫기</button></div>
+    <div class="btns"><button id="upBtn"></button><button id="priBtn"></button><button id="sellBtn"></button><button id="closeBtn">닫기</button></div>
+  </div>
+
+  <div id="evoPop" class="hidden">
+    <h3>✨ 진화 방향을 골라요 <b style="color:#b08a3a;">🌰180</b></h3>
+    <button class="evoOpt" id="evoA"></button>
+    <button class="evoOpt" id="evoB"></button>
+    <button id="evoX" style="width:100%; padding:8px; font-size:12px;">닫기</button>
   </div>
 
   <div id="title" class="screen">
-    <span class="tag">M1.5 — 6주민 · 4스테이지 · 사운드 (그래픽은 시트 도착 전 플레이스홀더)</span>
+    <span class="tag">R1 — 분기 진화 · 케미 시너지 · 조준 설정 · 3배속 (그래픽은 시트 도착 전 플레이스홀더)</span>
     <h1>🥕 솜솜시티<br>당근빌라 방범대</h1>
     <img id="titleArt" src="../assets/01_group_lineup.png" alt="솜솜시티 주민들">
     <div class="sub">대나무숲 빌라에서 꼬릿 구름이 흘러온다!<br>방범대를 배치해 당근 빌라의 쾌적도를 지키자</div>
@@ -226,6 +238,28 @@ const ENEMIES={
  n:{name:'젖은 낙엽 더미',hp:80,spd:.5,reward:12,size:56},
  boss:{name:'왕꼬릿 구름',hp:400,spd:.35,reward:60,size:100},
 };
+// ── R1: 분기 진화 (Lv3 → 2갈래) ──
+const EVO_COST=180;
+const EVOS={
+ migae:[{n:'개미 행렬',d:'한 번에 3마리를 콕콕! (다중 공격)'},{n:'저격 더듬이',d:'사거리 3.5타일 · 마킹된 적 2배 피해'}],
+ kkito:[{n:'골목 방송',d:'감속 범위가 4타일로 확대'},{n:'집중 마킹',d:'마킹 +40% · 마킹된 적 처치 시 도토리 2배'}],
+ boneul:[{n:'철벽 낮잠',d:'체력 3배 · 반격 1.5배'},{n:'탄성 배치기',d:'2초마다 접촉한 적을 2타일 뒤로 튕김'}],
+ ramda:[{n:'단추 공방',d:'도토리 대신 12초마다 단추 조각 1 (3조각=단추 1)'},{n:'투자 귀재',d:'웨이브 종료마다 보유 도토리 3% 이자'}],
+ bookgeo:[{n:"'바다' 조향사",d:'미스트가 2초간 향기 도트를 남김'},{n:'향수 폭격',d:'느리지만 4배 피해 · 범위 +0.3'}],
+ lachilchin:[{n:'줍기 명장',d:'먼지 뭉치도 회수 대상'},{n:'은행 폭탄',d:'은행 회수 시 최전방에 광역 25 투척'}],
+};
+// ── R1: 케미 시너지 (인접 배치 시 발동) ──
+const SYNS=[
+ {id:'combi',a:'kkito',b:'migae',n:'당근빌라 콤비',d:'둘 다 공속 +15%'},
+ {id:'basket',a:'lachilchin',b:'bookgeo',n:'향기 나는 바구니',d:'은행 회수액 2배'},
+ {id:'eaters',a:'boneul',b:'ramda',n:'먹보 동맹',d:'람다 생산 시 보늘 회복 +5'},
+ {id:'antenna',a:'kkito',b:'bookgeo',n:'향수 안테나',d:'북거씨 미스트 범위 +0.4'},
+ {id:'busy',a:'migae',b:'ramda',n:'부지런 콤비',d:'람다 생산 주기 -20%'},
+ {id:'back',a:'boneul',b:'kkito',n:'든든한 등',d:'보늘 체력 회복 +2/초'},
+ {id:'market',a:'lachilchin',b:'ramda',n:'알뜰 시장',d:'은행 회수액 +4'},
+ {id:'calmrush',a:'migae',b:'bookgeo',n:'느긋과 성급',d:'미개 공격력 +25%'},
+];
+const PRI_LABEL=['앞','뒤','강함','마킹'];
 const SKILLS={
  migae:{cd:18,dur:5,ico:'⚡',label:'뽈뽈 폭식'},
  kkito:{cd:20,dur:3,ico:'🐰',label:'전장 슬로우'},
@@ -372,6 +406,7 @@ let waypoints=[],blocks=[],barrs=[],tSpots=[],entry=null,villa=null;
 let state='TITLE',acorns=0,life=10,waveIdx=-1,prepT=0,speed=1,time=0;
 let enemies=[],spawnQ=[],fx=[],selCard=null,selTower=null,shakeT=0;
 let gSlowT=0,hasteT=0,owwT=0,stunT=0,shieldT=0,crewT=0,skCool={},tTimer=0,tLeft=0,hitstopT=0;
+let pickups=[],seenE=new Set(),announced=new Set(),fragN=0;
 
 const cellAt=(c,r)=>(r>=1&&r<=ROWS&&c>=1&&c<=COLS)?SG.map[r-1][c-1]:'.';
 const center=(c,r)=>({x:OX+(c-1)*TILE+TILE/2,y:(r-1)*TILE+TILE/2});
@@ -396,7 +431,7 @@ function loadStage(i){
     waypoints.forEach((w,i)=>{ const d=(w.x-p.x)**2+(w.y-p.y)**2; if(d<bd){bd=d;bi=i;} }); t.wp=bi; }
   acorns=SG.start; life=10; waveIdx=-1; enemies=[];spawnQ=[];fx=[];
   selCard=null;selTower=null; gSlowT=hasteT=owwT=stunT=shieldT=crewT=0; tTimer=8; skCool={};
-  stat={kill:0,g:0}; earnedA=0;
+  stat={kill:0,g:0}; earnedA=0; pickups=[]; seenE=new Set(); announced=new Set(); fragN=0;
   buildDock(); buildSkills();
   state='PREP'; $('select').classList.add('hidden'); $('result').classList.add('hidden');
   ui.waveBtn.textContent='웨이브 시작'; ui.waveBtn.classList.remove('hidden');
@@ -455,7 +490,7 @@ function useSkill(t){
   skCool[t]=SKILLS[t].cd; SFX.skill();
   if(t==='kkito'){ gSlowT=3; addFx('text',W/2,120,'귀 쫑긋! 전장 슬로우'); }
   if(t==='migae'){ hasteT=5; addFx('text',W/2,120,'뽈뽈뽈—! 폭식 모드'); }
-  if(t==='boneul'){ shieldT=5; placedOf('boneul').forEach(b=>{ b.tower.hp=TOWERS.boneul.lv[b.tower.lv].hp*gm('boneul'); }); addFx('text',W/2,120,'쿨쿨... 체력 회복!'); }
+  if(t==='boneul'){ shieldT=5; placedOf('boneul').forEach(b=>{ b.tower.hp=bMax(b.tower); }); addFx('text',W/2,120,'쿨쿨... 체력 회복!'); }
   if(t==='ramda'){ acorns+=150; updHud(); addFx('text',W/2,120,'줍줍! 도토리 +150'); }
   if(t==='bookgeo'){ stunT=2; enemies.forEach(en=>{ if(en.type!=='boss')en.hp-=20; }); reapDead('bookgeo'); addFx('mist',W/2,H/2); addFx('text',W/2,120,"'바다' 향 분사!"); }
   if(t==='lachilchin'){ crewT=5; addFx('text',W/2,120,'그래~ 얘들아 줍자!'); }
@@ -478,6 +513,8 @@ function startWave(){
   updHud();
 }
 function endWave(){
+  if(blocks.some(b=>b.tower&&b.tower.type==='ramda'&&b.tower.evo===1)){ // 투자 귀재: 3% 이자
+    const it=Math.floor(acorns*.03); if(it>0){ acorns+=it; earnedA+=it; addFx('text',W/2,90,`이자 +${it}`); } }
   acorns+=WAVE_BONUS; earnedA+=WAVE_BONUS; addFx('text',W/2,60,`웨이브 클리어! +${WAVE_BONUS}`); SFX.clear();
   if(!SG.endless&&waveIdx>=SG.waves.length-1)return finish(true);
   state='PREP'; prepT=PREP_TIME;
@@ -564,36 +601,60 @@ function canPlace(type,c,r){
 function place(type,c,r){
   const T=TOWERS[type]; if(acorns<T.cost)return;
   acorns-=T.cost;
-  const tw={type,lv:0,cool:0,kick:0,winT:0,prodT:0,spent:T.cost};
+  const tw={type,lv:0,cool:0,kick:0,winT:0,prodT:0,spent:T.cost,evo:null,pri:0,kbT:0};
   if(T.slot==='='){ tw.hp=T.lv[0].hp*gm('boneul'); barrs.push({c,r,tower:tw}); }
   else blocks.find(b=>b.c===c&&b.r===r).tower=tw;
   selCard=null; updHud(); updSkills(); addFx('pop',center(c,r).x,center(c,r).y);
   SFX.place(); addFx('bubble',center(c,r).x,center(c,r).y-T.h-18,LINES[type].place);
+  checkSyns();
   if(tutStep){ tutStep=3; tutMsg(); }
 }
 function towerStat(b){
   const t=b.tower,T=TOWERS[t.type],L=T.lv[t.lv];
-  if(t.type==='migae')return `공격 ${L.dmg} · ${L.rate}s · ${L.range}타일`;
-  if(t.type==='kkito')return `감속 -${L.slow*100}% · 마킹 +${L.mark*100}% · ${L.range}타일`;
-  if(t.type==='boneul')return `HP ${Math.ceil(t.hp)}/${L.hp} · 반격 ${L.thorn}/s`;
-  if(t.type==='lachilchin')return `은행 회수 ${L.rate}s · +${L.gain}도토리 · ${L.range}타일`;
-  if(t.type==='ramda')return `${L.every}초당 +${L.prod} · 보상 +${L.bonus*100}%`;
-  if(t.type==='bookgeo')return `광역 ${L.dmg} · ${L.rate}s · ${L.range}타일`+(L.buff?` · 인접 공속 +${L.buff*100}%`:'');
+  const evo=t.evo!==null?` · ✨${EVOS[t.type][t.evo].n}`:'';
+  if(t.type==='migae')return `공격 ${L.dmg} · ${L.rate}s · ${rangeOf(b)}타일${evo}`;
+  if(t.type==='kkito')return `감속 -${L.slow*100}% · 마킹 +${t.evo===1?40:L.mark*100}% · ${rangeOf(b)}타일${evo}`;
+  if(t.type==='boneul')return `HP ${Math.ceil(t.hp)}/${Math.round(bMax(t))} · 반격 ${L.thorn}${t.evo===0?'×1.5':''}/s${evo}`;
+  if(t.type==='lachilchin')return `은행 회수 ${L.rate}s · +${L.gain}도토리${evo}`;
+  if(t.type==='ramda')return t.evo===0?`12초당 단추 조각 +1 (${fragN%3}/3)${evo}`:`${L.every}초당 +${L.prod} · 보상 +${L.bonus*100}%${evo}`;
+  if(t.type==='bookgeo')return `광역 ${Math.round(L.dmg*(t.evo===1?4:1))} · ${(L.rate*(t.evo===1?2:1)).toFixed(1)}s · ${rangeOf(b).toFixed(1)}타일${evo}`;
 }
 function showPopup(b){
   selTower=b; const t=b.tower,T=TOWERS[t.type],nxt=T.lv[t.lv+1];
   $('pNm').textContent=`${T.name} Lv.${t.lv+1}`;
   $('pSt').textContent=towerStat(b);
-  $('upBtn').textContent=nxt?`강화 🌰${nxt.up}`:'최대 레벨';
-  $('upBtn').disabled=!nxt||acorns<(nxt?nxt.up:0);
+  if(!nxt&&t.evo===null&&EVOS[t.type]){ $('upBtn').textContent=`✨ 진화 🌰${EVO_COST}`; $('upBtn').disabled=acorns<EVO_COST; }
+  else if(!nxt){ $('upBtn').textContent=t.evo!==null?`✨ ${EVOS[t.type][t.evo].n}`:'최대 레벨'; $('upBtn').disabled=true; }
+  else { $('upBtn').textContent=`강화 🌰${nxt.up}`; $('upBtn').disabled=acorns<nxt.up; }
+  $('priBtn').classList.toggle('hidden',t.type!=='migae');
+  $('priBtn').textContent=`조준:${PRI_LABEL[t.pri]}`;
   $('sellBtn').textContent=`회수 +${Math.floor(t.spent*REFUND)}`;
   ui.popup.classList.remove('hidden');
 }
-function hidePopup(){ selTower=null; ui.popup.classList.add('hidden'); }
+function hidePopup(){ selTower=null; ui.popup.classList.add('hidden'); $('evoPop').classList.add('hidden'); }
 $('upBtn').onclick=()=>{ const t=selTower.tower,nxt=TOWERS[t.type].lv[t.lv+1];
+  if(!nxt&&t.evo===null&&EVOS[t.type]&&acorns>=EVO_COST){ openEvo(); return; }
   if(nxt&&acorns>=nxt.up){ acorns-=nxt.up; t.spent+=nxt.up; t.lv++;
-    if(t.type==='boneul')t.hp=TOWERS.boneul.lv[t.lv].hp*gm('boneul');
+    if(t.type==='boneul')t.hp=bMax(t);
     SFX.up(); updHud(); showPopup(selTower); addFx('pop',center(selTower.c,selTower.r).x,center(selTower.c,selTower.r).y); } };
+$('priBtn').onclick=()=>{ const t=selTower.tower; t.pri=(t.pri+1)%PRI_LABEL.length; SFX.coin(); showPopup(selTower); };
+function openEvo(){ const t=selTower.tower,E=EVOS[t.type];
+  ui.popup.classList.add('hidden');
+  $('evoA').innerHTML=`<b>${E[0].n}</b><span>${E[0].d}</span>`;
+  $('evoB').innerHTML=`<b>${E[1].n}</b><span>${E[1].d}</span>`;
+  $('evoPop').classList.remove('hidden'); }
+function applyEvo(i){ const b=selTower; if(!b)return; const t=b.tower;
+  if(acorns<EVO_COST||t.evo!==null)return;
+  acorns-=EVO_COST; t.spent+=EVO_COST; t.evo=i;
+  if(t.type==='boneul'&&i===0)t.hp=Math.min(bMax(t),t.hp*3);
+  $('evoPop').classList.add('hidden');
+  SFX.up(); buzz(20); banner(`✨ ${EVOS[t.type][i].n}!`); confetti(8);
+  addFx('pop',center(b.c,b.r).x,center(b.c,b.r).y);
+  addFx('bubble',center(b.c,b.r).x,center(b.c,b.r).y-TOWERS[t.type].h-20,LINES[t.type].place);
+  updHud(); showPopup(b); }
+$('evoA').onclick=()=>applyEvo(0);
+$('evoB').onclick=()=>applyEvo(1);
+$('evoX').onclick=()=>{ $('evoPop').classList.add('hidden'); if(selTower)showPopup(selTower); };
 $('sellBtn').onclick=()=>{ acorns+=Math.floor(selTower.tower.spent*REFUND); SFX.sell();
   const i=barrs.indexOf(selTower); if(i>=0)barrs.splice(i,1); else selTower.tower=null;
   hidePopup(); updHud(); updSkills(); };
@@ -603,6 +664,9 @@ cv.addEventListener('pointerdown',e=>{
   if(state==='TITLE'||state==='RESULT'||!SG)return;
   const rect=cv.getBoundingClientRect();
   const x=(e.clientX-rect.left)*(W/rect.width), y=(e.clientY-rect.top)*(H/rect.height);
+  for(let i=0;i<pickups.length;i++){ const p=pickups[i]; // 도토리 탭 줍기 (+1 보너스)
+    if((x-p.x)**2+(y-p.y)**2<=24*24){ acorns+=p.v+1; earnedA+=p.v+1; SFX.coin(); buzz(8);
+      addFx('text',p.x,p.y-16,'+'+(p.v+1)); pickups.splice(i,1); updHud(); return; } }
   const {c,r}=tileFromXY(x,y), s=slotAt(c,r);
   hidePopup();
   if(s&&s.tower){ showPopup(s); return; }
@@ -614,7 +678,7 @@ cv.addEventListener('pointerdown',e=>{
     return; }
 });
 ui.waveBtn.onclick=()=>{ if(state==='PREP'&&waveIdx>=0)acorns+=SKIP_BONUS; startWave(); };
-ui.speed.onclick=()=>{ speed=speed===1?2:1; ui.speed.textContent=speed+'×'; ui.speed.classList.toggle('on',speed===2); };
+ui.speed.onclick=()=>{ speed=speed===1?2:speed===2?3:1; ui.speed.textContent=speed+'×'; ui.speed.classList.toggle('on',speed>1); };
 $('startBtn').onclick=()=>{ ac(); $('title').classList.add('hidden'); showSelect(); };
 // 일시정지 메뉴 (설정 포함)
 let pausePrev=null;
@@ -705,11 +769,14 @@ $('shareBtn').onclick=()=>{
 $('shareClose').onclick=()=>$('shareModal').classList.add('hidden');
 
 // ============ 게임 로직 ============
+const CTIP={d:'빨라요! 끼토의 감속이 특효예요',g:'라칠친 할머니가 주우면 도토리가 돼요',n:'단단해요! 마킹하고 화력을 모으세요'};
 function spawn(type,wp=0){
   const E=ENEMIES[type];
   const hp=Math.round(E.hp*(SG.endless?1+.12*Math.max(0,waveIdx):1)); // 무한 모드 스케일링
   enemies.push({type,hp,max:hp,wp,x:waypoints[wp].x,y:waypoints[wp].y-(wp?0:40),prog:wp,wob:Math.random()*7,
     sumT:6,rev:0,revd:false});
+  if(CTIP[type]&&!seenE.has(type)){ seenE.add(type); // 첫 등장 상성 안내
+    banner(`${ENEMIES[type].name} 등장!`); ui.info.textContent=`${ENEMIES[type].name} — ${CTIP[type]}`; }
   if(type==='boss'){ banner('왕꼬릿 구름 등장!!',true); SFX.boss(); shakeT=.5;
     placedOf('kkito').forEach(b=>addFx('bubble',center(b.c,b.r).x,center(b.c,b.r).y-90,'귀, 귀가 쭈뼛해!!')); }
 }
@@ -717,7 +784,7 @@ function auraAt(x,y){
   let slow=1,mark=0;
   for(const b of blocks){ const t=b.tower; if(!t||t.type!=='kkito')continue;
     const L=TOWERS.kkito.lv[t.lv],p=center(b.c,b.r);
-    if((x-p.x)**2+(y-p.y)**2<=(L.range*TILE)**2){ slow=Math.min(slow,1-Math.min(.65,L.slow*gm('kkito'))); mark=Math.max(mark,L.mark); } }
+    if((x-p.x)**2+(y-p.y)**2<=(rangeOf(b)*TILE)**2){ slow=Math.min(slow,1-Math.min(.65,L.slow*gm('kkito'))); mark=Math.max(mark,t.evo===1?.4:L.mark); } }
   if(gSlowT>0)slow=Math.min(slow,.4);
   if(stunT>0)slow=0;
   return {slow,mark};
@@ -727,12 +794,14 @@ function rewardOf(en){
   for(const b of blocks){ const t=b.tower; if(!t||t.type!=='ramda')continue;
     const L=TOWERS.ramda.lv[t.lv],p=center(b.c,b.r);
     if((en.x-p.x)**2+(en.y-p.y)**2<=(L.range*TILE)**2){ r=Math.round(r*(1+L.bonus)); break; } }
+  if(en.marked&&blocks.some(b=>b.tower&&b.tower.type==='kkito'&&b.tower.evo===1))r*=2; // 집중 마킹
   return r;
 }
 function defeat(en,collector){
   en.dead=true; const r=collector==='lachilchin'?0:rewardOf(en);
   if(r){ acorns+=r; earnedA+=r; addFx('text',en.x,en.y-26,'+'+r); SFX.coin(); }
   stat.kill++;
+  if(ENEMIES[en.type].reward>=5&&pickups.length<6)pickups.push({x:en.x,y:en.y,v:2,t:5,wob:Math.random()*7}); // 수동 줍기 보너스
   addFx('puff',en.x,en.y); SFX.pop(); hitstopT=Math.max(hitstopT,en.type==='boss'?.22:.045); updHud();
 }
 function reapDead(byType){
@@ -745,6 +814,32 @@ function rateMul(b){ // 북거씨 인접 버프
     if(Math.abs(o.c-b.c)<=1&&Math.abs(o.r-b.r)<=1&&o!==b)m*=1-TOWERS.bookgeo.lv[t.lv].buff; }
   return m;
 }
+// ── R1: 진화·시너지 헬퍼 ──
+function adjTowers(b){ return blocks.concat(barrs).filter(o=>o!==b&&o.tower&&Math.abs(o.c-b.c)<=1&&Math.abs(o.r-b.r)<=1); }
+function synHas(b,id){ const s=SYNS.find(x=>x.id===id), t=b.tower.type;
+  const other=t===s.a?s.b:t===s.b?s.a:null; if(!other)return false;
+  return adjTowers(b).some(o=>o.tower.type===other); }
+function rangeOf(b){ const t=b.tower,L=TOWERS[t.type].lv[t.lv]; let r=L.range||0;
+  if(t.type==='kkito'&&t.evo===0)r=4;
+  if(t.type==='migae'&&t.evo===1)r=3.5;
+  if(t.type==='bookgeo'){ if(t.evo===1)r+=.3; if(synHas(b,'antenna'))r+=.4; }
+  return r; }
+const bMax=t=>TOWERS.boneul.lv[t.lv].hp*gm('boneul')*(t.evo===0?3:1);
+function pickTarget(list,pri){ let best=null;
+  for(const en of list){ if(!best){best=en;continue;}
+    if(pri===1){ if(en.prog<best.prog)best=en; }
+    else if(pri===2){ if(en.hp>best.hp)best=en; }
+    else if(pri===3){ const a=en.marked?1:0,bm=best.marked?1:0; if(a>bm||(a===bm&&en.prog>best.prog))best=en; }
+    else if(en.prog>best.prog)best=en; }
+  return best; }
+function checkSyns(){ const all=blocks.concat(barrs).filter(x=>x.tower);
+  for(const s of SYNS){ if(announced.has(s.id))continue;
+    const pa=all.find(x=>x.tower.type===s.a&&adjTowers(x).some(o=>o.tower.type===s.b));
+    if(!pa)continue; announced.add(s.id);
+    const pb=adjTowers(pa).find(o=>o.tower.type===s.b);
+    banner(`🤝 ${s.n}!`); SFX.bell(); ui.info.textContent=`${s.n} — ${s.d}`;
+    addFx('bubble',center(pa.c,pa.r).x,center(pa.c,pa.r).y-TOWERS[s.a].h-18,'좋았어!');
+    if(pb)addFx('bubble',center(pb.c,pb.r).x,center(pb.c,pb.r).y-TOWERS[s.b].h-32,'맡겨만 줘~'); } }
 function barrAt(x,y){
   for(const b of barrs){ const p=center(b.c,b.r);
     if((x-p.x)**2+(y-p.y)**2<=22*22)return b; }
@@ -771,6 +866,9 @@ function update(dt){
   // 이동
   for(const en of enemies){
     const E=ENEMIES[en.type];
+    if(en.dot){ en.dot.t-=dt; en.hp-=en.dot.dps*dt; // '바다' 향기 도트
+      if(en.dot.t<=0)en.dot=null;
+      if(en.hp<=0&&!en.dead){ defeat(en); placedOf('bookgeo').forEach(o=>o.tower.winT=.7); continue; } }
     // 보스: 소환 + 역주행
     if(en.type==='boss'){ en.sumT-=dt; if(en.sumT<=0){ en.sumT=6; spawn('k',Math.max(0,en.wp-1)); addFx('text',en.x,en.y-60,'꼬릿 소환!'); }
       if(!en.revd&&en.hp<=en.max/2){ en.revd=true; en.rev=3; addFx('text',en.x,en.y-60,'왕꼬릿이 당황했다!'); } }
@@ -782,7 +880,10 @@ function update(dt){
     const bar=barrAt(en.x,en.y+((tgt.y>en.y)?14:(tgt.y<en.y)?-14:0)+0*0)||barrAt(en.x+((tgt.x>en.x)?14:(tgt.x<en.x)?-14:0),en.y);
     if(bar&&dir>0){
       if(shieldT<=0)bar.tower.hp-=4*dt;
-      en.hp-=TOWERS.boneul.lv[bar.tower.lv].thorn*dt;
+      en.hp-=TOWERS.boneul.lv[bar.tower.lv].thorn*(bar.tower.evo===0?1.5:1)*dt;
+      if(bar.tower.evo===1&&(bar.tower.kbT||0)<=0&&en.type!=='boss'){ bar.tower.kbT=2; // 탄성 배치기
+        const nw=Math.max(0,en.wp-2); en.wp=nw; en.x=waypoints[nw].x; en.y=waypoints[nw].y;
+        addFx('pop',en.x,en.y); SFX.pop(); continue; }
       if(bar.tower.hp<=0){ addFx('puff',center(bar.c,bar.r).x,center(bar.c,bar.r).y); barrs.splice(barrs.indexOf(bar),1); updSkills(); }
       if(en.hp<=0&&!en.dead){ defeat(en); placedOf('boneul').forEach(b=>b.tower.winT=.7); }
       continue;
@@ -797,38 +898,56 @@ function update(dt){
   for(const b of blocks.concat(barrs)){ const t=b.tower; if(!t)continue;
     if(t.kick>0)t.kick-=dt*6; if(t.winT>0)t.winT-=dt;
     const T=TOWERS[t.type],L=T.lv[t.lv],p=center(b.c,b.r);
+    if(t.type==='boneul'){ if(t.kbT>0)t.kbT-=dt;
+      if(synHas(b,'back'))t.hp=Math.min(bMax(t),t.hp+2*dt); }
     if(t.type==='migae'){
       t.cool-=dt; if(t.cool>0)continue;
-      const R2=(L.range*TILE)**2; let best=null;
-      for(const en of enemies)if(!en.dead&&(en.x-p.x)**2+(en.y-p.y)**2<=R2&&(!best||en.prog>best.prog))best=en;
-      if(best){ t.cool=L.rate*rateMul(b); t.kick=1; SFX.shoot();
-        best.hp-=L.dmg*gm('migae')*(1+auraAt(best.x,best.y).mark);
-        addFx('proj',p.x,p.y-26,null,best);
-        if(best.hp<=0&&!best.dead){ defeat(best); t.winT=.7; addFx('heart',p.x,p.y-T.h); } }
+      const R2=(rangeOf(b)*TILE)**2;
+      const pool=enemies.filter(en=>!en.dead&&(en.x-p.x)**2+(en.y-p.y)**2<=R2);
+      if(pool.length){ t.cool=L.rate*rateMul(b)*(synHas(b,'combi')?.85:1); t.kick=1; SFX.shoot();
+        const shots=t.evo===0?Math.min(3,pool.length):1; // 개미 행렬: 3연장
+        for(let s=0;s<shots;s++){ const best=pickTarget(pool,t.pri); pool.splice(pool.indexOf(best),1);
+          let dmg=L.dmg*gm('migae')*(1+auraAt(best.x,best.y).mark);
+          if(t.evo===1&&best.marked)dmg*=2; // 저격 더듬이
+          if(synHas(b,'calmrush'))dmg*=1.25;
+          best.hp-=dmg; addFx('proj',p.x,p.y-26,null,best);
+          if(best.hp<=0&&!best.dead){ defeat(best); t.winT=.7; addFx('heart',p.x,p.y-T.h); } } }
     }
     if(t.type==='bookgeo'){
       t.cool-=dt; if(t.cool>0)continue;
-      const R2=(L.range*TILE)**2; let hit=false;
+      const R=rangeOf(b),R2=(R*TILE)**2; let hit=false;
       for(const en of enemies)if(!en.dead&&(en.x-p.x)**2+(en.y-p.y)**2<=R2){
-        en.hp-=L.dmg*gm('bookgeo')*(1+auraAt(en.x,en.y).mark); hit=true;
+        en.hp-=L.dmg*(t.evo===1?4:1)*gm('bookgeo')*(1+auraAt(en.x,en.y).mark); hit=true;
+        if(t.evo===0)en.dot={dps:3,t:2}; // '바다' 조향사
         if(en.hp<=0&&!en.dead){ defeat(en); t.winT=.7; } }
-      if(hit){ t.cool=L.rate*rateMul(b); t.kick=1; SFX.mist(); addFx('ring',p.x,p.y,null,{r:L.range*TILE}); }
+      if(hit){ t.cool=L.rate*(t.evo===1?2:1)*rateMul(b); t.kick=1; SFX.mist(); addFx('ring',p.x,p.y,null,{r:R*TILE}); }
     }
     if(t.type==='lachilchin'){
       t.cool-=dt; if(t.cool>0)continue;
       const R2=(L.range*TILE)**2;
-      const grab=enemies.find(en=>!en.dead&&(en.type==='g'||(crewT>0&&en.type==='d'))&&(en.x-p.x)**2+(en.y-p.y)**2<=R2);
+      const grab=enemies.find(en=>!en.dead&&(en.type==='g'||((crewT>0||t.evo===0)&&en.type==='d'))&&(en.x-p.x)**2+(en.y-p.y)**2<=R2);
       if(grab){ t.cool=crewT>0?.3:L.rate; t.kick=1; grab.dead=true; SFX.bell();
         if(grab.type==='g')stat.g++; else stat.kill++;
-        const gn=Math.round(L.gain*gm('lachilchin')); acorns+=gn; earnedA+=gn; t.winT=.7;
+        const gn=Math.round(L.gain*gm('lachilchin')*(synHas(b,'basket')?2:1))+(synHas(b,'market')?4:0); acorns+=gn; earnedA+=gn; t.winT=.7;
+        if(grab.type==='g'&&t.evo===1){ let fr=null; // 은행 폭탄: 최전방 광역 25
+          for(const en of enemies)if(!en.dead&&(!fr||en.prog>fr.prog))fr=en;
+          if(fr){ for(const en of enemies)if(!en.dead&&(en.x-fr.x)**2+(en.y-fr.y)**2<=(1.2*TILE)**2)en.hp-=25;
+            addFx('ring',fr.x,fr.y,null,{r:1.2*TILE}); reapDead('lachilchin'); } }
         addFx('grab',grab.x,grab.y,null,{tx:p.x,ty:p.y}); addFx('text',p.x,p.y-T.h-6,'+'+gn); updHud(); }
     }
     if(t.type==='ramda'){
       t.prodT+=dt;
-      if(t.prodT>=L.every){ t.prodT=0; const pr=Math.round(L.prod*gm('ramda')); acorns+=pr; earnedA+=pr; t.kick=1;
-        addFx('text',p.x,p.y-T.h-6,'+'+pr); updHud(); }
+      if(t.evo===0){ // 단추 공방: 도토리 대신 단추 조각
+        if(t.prodT>=12){ t.prodT=0; fragN++; t.kick=1; addFx('text',p.x,p.y-T.h-6,`조각 ${fragN%3||3}/3`);
+          if(fragN%3===0){ SAVE.buttons++; save(); banner('🔘 단추 +1!'); SFX.bell(); } }
+      } else if(t.prodT>=L.every*(synHas(b,'busy')?.8:1)){
+        t.prodT=0; const pr=Math.round(L.prod*gm('ramda')); acorns+=pr; earnedA+=pr; t.kick=1;
+        addFx('text',p.x,p.y-T.h-6,'+'+pr); updHud();
+        if(synHas(b,'eaters'))adjTowers(b).forEach(o=>{ if(o.tower.type==='boneul')o.tower.hp=Math.min(bMax(o.tower),o.tower.hp+5); });
+      }
     }
   }
+  pickups=pickups.filter(p=>{ p.t-=dt; if(p.t<=0){ acorns+=p.v; earnedA+=p.v; updHud(); return false; } return true; });
   enemies=enemies.filter(e=>!e.dead);
   if(state==='WAVE'&&!spawnQ.length&&!enemies.length)endWave();
   fx=fx.filter(f=>(f.t-=dt)>0);
@@ -901,12 +1020,12 @@ function draw(){
       const x=OX+(c-1)*TILE,y=(r-1)*TILE;
       ctx.strokeStyle='#4a7a3a'; ctx.setLineDash([5,4]); ctx.lineWidth=2;
       ctx.strokeRect(x+4,y+4,TILE-8,TILE-8); ctx.setLineDash([]); ctx.lineWidth=1; }
-  if(selTower&&selTower.tower){ const t=selTower.tower,L=TOWERS[t.type].lv[t.lv],p=center(selTower.c,selTower.r);
-    if(L.range){ ctx.beginPath(); ctx.arc(p.x,p.y,L.range*TILE,0,7);
+  if(selTower&&selTower.tower){ const p=center(selTower.c,selTower.r),R=rangeOf(selTower);
+    if(R){ ctx.beginPath(); ctx.arc(p.x,p.y,R*TILE,0,7);
       ctx.fillStyle='rgba(210,114,42,.12)'; ctx.fill();
       ctx.strokeStyle='rgba(210,114,42,.6)'; ctx.setLineDash([5,5]); ctx.stroke(); ctx.setLineDash([]); } }
   for(const b of blocks){ const t=b.tower; if(!t||t.type!=='kkito')continue;
-    const L=TOWERS.kkito.lv[t.lv],p=center(b.c,b.r),R=L.range*TILE;
+    const p=center(b.c,b.r),R=rangeOf(b)*TILE;
     ctx.beginPath(); ctx.arc(p.x,p.y,R,0,7); ctx.fillStyle='rgba(106,120,200,.07)'; ctx.fill();
     const ph=(time%2.2)/2.2;
     ctx.beginPath(); ctx.arc(p.x,p.y,R*ph,0,7);
@@ -916,11 +1035,13 @@ function draw(){
     const T=TOWERS[t.type],p=center(b.c,b.r);
     const frame=owwT>0?IMGS[t.type+'_hit']:(t.winT>0?IMGS[t.type+'_win']:IMGS[t.type]);
     const bob=Math.sin(time*3+b.c)*1.5,kick=Math.max(0,t.kick);
-    const scale=1+t.lv*.09,h=T.h*scale*(1-kick*.08),w=frame?h*frame.width/frame.height:h*.8;
+    const scale=1+t.lv*.09+(t.evo!==null?.12:0),h=T.h*scale*(1-kick*.08),w=frame?h*frame.width/frame.height:h*.8;
     ctx.fillStyle='rgba(90,74,58,.18)'; ctx.beginPath();
     ctx.ellipse(p.x,(b.r)*TILE-5,w*.38,5,0,0,7); ctx.fill();
     if(t.lv===2){ ctx.beginPath(); ctx.arc(p.x,(b.r)*TILE-h/2,h*.62,0,7);
-      ctx.strokeStyle=`rgba(224,169,46,${.30+.15*Math.sin(time*4)})`; ctx.lineWidth=2.5; ctx.stroke(); ctx.lineWidth=1; }
+      ctx.strokeStyle=t.evo===null?`rgba(224,169,46,${.30+.15*Math.sin(time*4)})`
+        :t.evo===0?`rgba(224,140,40,${.42+.18*Math.sin(time*4)})`:`rgba(150,110,220,${.42+.18*Math.sin(time*4)})`;
+      ctx.lineWidth=2.5; ctx.stroke(); ctx.lineWidth=1; }
     if(frame){ if(t.type==='migae'&&hasteT>0){ ctx.shadowColor='rgba(224,140,40,.8)'; ctx.shadowBlur=10; }
       ctx.drawImage(frame,p.x-w/2,(b.r)*TILE-4-h+bob,w,h); ctx.shadowBlur=0; }
     // 바리케이드 HP
@@ -928,12 +1049,12 @@ function draw(){
       ctx.fillStyle='#fdfbf5'; ctx.strokeStyle='#222';
       ctx.beginPath(); ctx.roundRect(p.x-20,(b.r)*TILE-4-h-24,40,6,3); ctx.fill(); ctx.stroke();
       ctx.fillStyle=shieldT>0?'#6a9ad8':'#3a8a7a';
-      ctx.beginPath(); ctx.roundRect(p.x-19,(b.r)*TILE-3-h-24,38*Math.max(0,Math.min(1,t.hp/(L.hp*gm('boneul')))),4,2); ctx.fill(); }
-    const by=(b.r)*TILE-4-h+bob-15,max=t.lv===2;
-    ctx.fillStyle=max?'#f2c14b':'#fdfbf5'; ctx.strokeStyle='#222'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.roundRect(p.x-19,(b.r)*TILE-3-h-24,38*Math.max(0,Math.min(1,t.hp/bMax(t))),4,2); ctx.fill(); }
+    const by=(b.r)*TILE-4-h+bob-15,max=t.lv===2,evd=t.evo!==null;
+    ctx.fillStyle=evd?(t.evo===0?'#f2a14b':'#c9a8ee'):max?'#f2c14b':'#fdfbf5'; ctx.strokeStyle='#222'; ctx.lineWidth=1.5;
     ctx.beginPath(); ctx.roundRect(p.x-16,by,32,14,7); ctx.fill(); ctx.stroke();
     ctx.fillStyle='#5a4a3a'; ctx.font='800 9.5px sans-serif'; ctx.textAlign='center';
-    ctx.fillText(max?'MAX':'Lv.'+(t.lv+1),p.x,by+10.5); ctx.lineWidth=1;
+    ctx.fillText(evd?'★진화':max?'MAX':'Lv.'+(t.lv+1),p.x,by+10.5); ctx.lineWidth=1;
   }
   // 골칫거리
   for(const en of enemies){
@@ -980,6 +1101,8 @@ function draw(){
       ctx.fillStyle='#222'; ctx.beginPath(); ctx.arc(-3.4,-3.6,1.4,0,7); ctx.arc(5.6,-3.6,1.4,0,7); ctx.fill();
     }
     ctx.restore();
+    if(en.dot){ ctx.fillStyle='rgba(85,168,148,.7)'; // 향기 도트 표식
+      ctx.beginPath(); ctx.arc(en.x+E.size/2-2,en.y-E.size/2+2,3.5,0,7); ctx.fill(); }
     if(en.slowed){ ctx.beginPath(); ctx.arc(en.x,en.y,E.size/2+6,0,7);
       ctx.strokeStyle='rgba(106,120,200,.65)'; ctx.setLineDash([4,4]); ctx.lineWidth=1.8; ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth=1; }
     const bw=en.type==='boss'?44:26,bx=en.x-bw/2,by=en.y-E.size/2-13;
@@ -994,6 +1117,14 @@ function draw(){
       ctx.beginPath(); ctx.arc(sx,sy,7,0,7); ctx.fill(); ctx.stroke();
       ctx.fillStyle='#222'; ctx.font='800 9px sans-serif'; ctx.textAlign='center'; ctx.fillText(sym,sx,sy+3); ctx.lineWidth=1; }
   }
+  // 떨어진 도토리 — 탭하면 +1 보너스
+  for(const p of pickups){ const pb=Math.sin(time*5+p.wob)*3, bl=p.t<1.5?(Math.sin(time*12)>0?1:.35):1;
+    ctx.globalAlpha=bl;
+    ctx.beginPath(); ctx.arc(p.x,p.y+pb,14+Math.sin(time*4+p.wob)*2,0,7);
+    ctx.strokeStyle='rgba(224,169,46,.55)'; ctx.setLineDash([3,3]); ctx.lineWidth=1.5; ctx.stroke(); ctx.setLineDash([]);
+    if(IMGS.acorn)ctx.drawImage(IMGS.acorn,p.x-11,p.y-11+pb,22,22);
+    else { ctx.fillStyle='#b06a2a'; ctx.beginPath(); ctx.arc(p.x,p.y+pb,8,0,7); ctx.fill(); }
+    ctx.globalAlpha=1; ctx.lineWidth=1; }
   if(gSlowT>0){ ctx.fillStyle=`rgba(106,120,200,${.10+.05*Math.sin(time*8)})`; ctx.fillRect(0,0,W,H); }
   if(stunT>0){ ctx.fillStyle=`rgba(85,168,148,${.08+.04*Math.sin(time*8)})`; ctx.fillRect(0,0,W,H); }
   for(const f of fx){ const a=f.t/f.max;
