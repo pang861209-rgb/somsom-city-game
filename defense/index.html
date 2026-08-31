@@ -287,7 +287,7 @@ const TOWERS={
    lv:[{dmg:4,rate:.25,range:1.5},{dmg:6,rate:.22,range:1.5,up:64},{dmg:8,rate:.18,range:2,up:120}]},
  kkito:{name:'끼토',cost:100,h:76,slot:'#',
    lv:[{slow:.30,range:1.5,mark:.10},{slow:.40,range:2,mark:.15,up:80},{slow:.50,range:2.5,mark:.20,up:150}]},
- boneul:{name:'보늘',cost:120,h:60,slot:'=',
+ boneul:{name:'보늘',cost:120,h:70,slot:'=',
    lv:[{hp:60,thorn:5},{hp:100,thorn:8,up:96},{hp:150,thorn:12,up:180}]},
  lachilchin:{name:'라칠친',cost:160,h:66,slot:'#',
    lv:[{rate:1.1,range:2,gain:8},{rate:.9,range:2.5,gain:10,up:128},{rate:.7,range:3,gain:12,up:256}]},
@@ -521,6 +521,13 @@ function sliceSheet(c){ // 투명 열 기준 자동 분할 (작업지시서 §0)
       o.width=cx-s; o.height=c.height;
       o.getContext('2d').drawImage(c,s,0,cx-s,c.height,0,0,cx-s,c.height);
       parts.push(trimCanvas(o)); } s=-1; } }
+  while(parts.length>0&&parts.length<4){ // 포즈가 닿아 덜 잘린 경우: 가장 넓은 조각을 반으로
+    let wi=0; parts.forEach((p,i)=>{ if(p.width>parts[wi].width)wi=i; });
+    const p=parts[wi], half=Math.floor(p.width/2);
+    const mk=(sx,w)=>{ const o=document.createElement('canvas'); o.width=w; o.height=p.height;
+      o.getContext('2d').drawImage(p,sx,0,w,p.height,0,0,w,p.height); return trimCanvas(o); };
+    parts.splice(wi,1,mk(0,half),mk(half,p.width-half));
+  }
   return parts;
 }
 const SHEET_POSE=['','_act','_win','_hit']; // 시트 포즈 순서: 대기·액션·승리·피격
