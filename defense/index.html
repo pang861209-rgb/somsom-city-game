@@ -46,6 +46,8 @@
   .card { width:50px; height:76px; border:2px solid #222; border-radius:10px; background:#fff; box-shadow:2px 2px 0 #222; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; cursor:pointer; }
   .card.sel { border-color:#b06a2a; border-width:2.5px; background:#f6eed8; transform:translateY(-4px); }
   .card.poor { opacity:.5; }
+  .card.pulse { animation:cpulse 1s infinite; }
+  @keyframes cpulse { 50%{ transform:translateY(-6px); } }
   .card img { width:30px; height:30px; object-fit:contain; pointer-events:none; }
   .card .nm { font-size:8.5px; font-weight:800; color:#5a4a3a; }
   .card .c { display:flex; align-items:center; gap:2px; font-size:9px; font-weight:800; color:#b08a3a; }
@@ -116,6 +118,10 @@
     <img id="titleArt" src="../assets/01_group_lineup.png" alt="솜솜시티 주민들">
     <div class="sub">대나무숲 빌라에서 꼬릿 구름이 흘러온다!<br>방범대를 배치해 당근 빌라의 쾌적도를 지키자</div>
     <button id="startBtn" disabled>불러오는 중...</button>
+    <div style="display:flex; gap:8px;">
+      <button id="haptBtn" style="padding:7px 12px; font-size:11px;"></button>
+      <button id="cbBtn" style="padding:7px 12px; font-size:11px;"></button>
+    </div>
   </div>
 
   <div id="select" class="screen hidden">
@@ -140,11 +146,18 @@
     <h1 id="resTitle"></h1>
     <div id="resultChar"></div>
     <div class="sub" id="resSub"></div>
-    <div style="display:flex; gap:8px;">
+    <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
       <button id="retryBtn" style="padding:11px 20px;">다시</button>
       <button id="nextBtn" style="padding:11px 20px; background:#f6eed8;">다음 스테이지</button>
       <button id="listBtn" style="padding:11px 20px;">목록</button>
+      <button id="shareBtn" style="padding:11px 16px;">📸 자랑하기</button>
     </div>
+  </div>
+
+  <div id="shareModal" class="screen hidden" style="gap:10px;">
+    <img id="shareImg" alt="자랑 카드" style="width:78%; border-radius:10px; border:2px solid #222; box-shadow:3px 3px 0 #222;">
+    <div class="sub">길게 눌러 저장하거나 공유하세요</div>
+    <button id="shareClose" style="padding:10px 26px;">닫기</button>
   </div>
 </div>
 
@@ -213,8 +226,8 @@ const SKILLS={
 // ============ 저장 ============
 const LS='somsom_defense_v1';
 const save=()=>localStorage.setItem(LS,JSON.stringify(SAVE));
-let SAVE={stars:{},buttons:0,grades:{},plays:{},cleared:{},endless:0};
-try{ SAVE=Object.assign({stars:{},buttons:0,grades:{},plays:{},cleared:{},endless:0},JSON.parse(localStorage.getItem(LS))||{}); }catch(e){}
+let SAVE={stars:{},buttons:0,grades:{},plays:{},cleared:{},endless:0,tut:0,hapt:true,cb:false};
+try{ SAVE=Object.assign({stars:{},buttons:0,grades:{},plays:{},cleared:{},endless:0,tut:0,hapt:true,cb:false},JSON.parse(localStorage.getItem(LS))||{}); }catch(e){}
 
 // ============ 단추 메타 (기획서 §7) ============
 const GRADE_COST=[6,10,16,24]; // 등급 1→2 … 4→5
@@ -233,7 +246,7 @@ function tone(f0,f1,dur,type,vol,when){ const c=ac(); if(!c||AU.mute)return;
   if(f1)o.frequency.exponentialRampToValueAtTime(Math.max(30,f1),t+dur);
   g.gain.setValueAtTime(vol||.15,t); g.gain.exponentialRampToValueAtTime(.001,t+dur);
   o.connect(g).connect(c.destination); o.start(t); o.stop(t+dur+.03); }
-function buzz(ms){ try{ if(navigator.vibrate)navigator.vibrate(ms); }catch(e){} }
+function buzz(ms){ try{ if(SAVE.hapt&&navigator.vibrate)navigator.vibrate(ms); }catch(e){} }
 const SFX={
  place(){ tone(300,190,.12,'triangle',.2); buzz(10); },
  up(){ tone(500,900,.15,'triangle',.18); buzz(10); },
@@ -323,7 +336,12 @@ cv.width=W*DPR; cv.height=H*DPR; ctx.scale(DPR,DPR);
 const $=id=>document.getElementById(id);
 
 // ============ 스테이지 상태 ============
-let SG=null, stageIdx=0;
+let SG=null, stageIdx=0, tutStep=0, stat={kill:0,g:0}, lastRes=null, lastWho='kkito';
+const ENAME={k:'꼬릿',d:'먼지',g:'은행',n:'낙엽',boss:'왕꼬릿'};
+function previewTxt(idx){ const def=SG.endless?endlessWaveDef(idx):(SG.waves&&SG.waves[idx]);
+  return def?def.map(([t,n])=>`${ENAME[t]}×${n}`).join('·'):''; }
+function tutMsg(){ if(!tutStep)return;
+  ui.info.textContent = tutStep===1?'👆 ① 미개 카드를 탭하세요!':tutStep===2?'👆 ② 초록으로 빛나는 나무 블록을 탭!':'👆 ③ 한 명 더 배치하고 [웨이브 시작]!'; }
 let waypoints=[],blocks=[],barrs=[],tSpots=[],entry=null,villa=null;
 let state='TITLE',acorns=0,life=10,waveIdx=-1,prepT=0,speed=1,time=0;
 let enemies=[],spawnQ=[],fx=[],selCard=null,selTower=null,shakeT=0;
@@ -352,10 +370,12 @@ function loadStage(i){
     waypoints.forEach((w,i)=>{ const d=(w.x-p.x)**2+(w.y-p.y)**2; if(d<bd){bd=d;bi=i;} }); t.wp=bi; }
   acorns=SG.start; life=10; waveIdx=-1; enemies=[];spawnQ=[];fx=[];
   selCard=null;selTower=null; gSlowT=hasteT=owwT=stunT=shieldT=crewT=0; tTimer=8; skCool={};
+  stat={kill:0,g:0};
   buildDock(); buildSkills();
   state='PREP'; $('select').classList.add('hidden'); $('result').classList.add('hidden');
   ui.waveBtn.textContent='웨이브 시작'; ui.waveBtn.classList.remove('hidden');
-  ui.info.textContent=`${SG.name} — 방범대를 배치하세요`;
+  tutStep=(!SAVE.tut&&SG.id===1)?1:0;
+  if(tutStep)tutMsg(); else ui.info.textContent=`${SG.name} — 첫 웨이브: ${previewTxt(0)}`;
   hidePopup(); updHud();
 }
 
@@ -368,6 +388,7 @@ function updHud(){
   document.querySelectorAll('.card').forEach(el=>{
     el.classList.toggle('poor',acorns<TOWERS[el.dataset.t].cost);
     el.classList.toggle('sel',selCard===el.dataset.t);
+    el.classList.toggle('pulse',tutStep===1&&el.dataset.t==='migae');
   });
 }
 function buildDock(){
@@ -377,7 +398,8 @@ function buildDock(){
     el.innerHTML=`<img alt="${T.name}"><span class="nm">${T.name}</span><span class="c"><img class="ac" alt="">${T.cost}</span>`;
     if(IMGS[t])el.querySelector('img').src=IMGS[t].toDataURL();
     if(IMGS.acorn)el.querySelector('.ac').src=IMGS.acorn.toDataURL();
-    el.addEventListener('pointerdown',e=>{ e.preventDefault(); hidePopup(); selCard=selCard===t?null:t; updHud(); });
+    el.addEventListener('pointerdown',e=>{ e.preventDefault(); hidePopup(); selCard=selCard===t?null:t;
+      if(tutStep===1&&selCard){ tutStep=2; tutMsg(); } updHud(); });
     box.appendChild(el);
   }
 }
@@ -412,6 +434,7 @@ function useSkill(t){
 function startWave(){
   waveIdx++; state='WAVE'; ui.waveBtn.classList.add('hidden');
   ui.info.textContent=`웨이브 ${waveIdx+1} — 골목을 지켜라!`;
+  if(tutStep){ tutStep=0; SAVE.tut=1; save(); updHud(); }
   SFX.wave(); banner(`웨이브 ${waveIdx+1}`);
   spawnQ=[]; let t=0.4;
   const def = SG.endless ? endlessWaveDef(waveIdx) : SG.waves[waveIdx];
@@ -440,7 +463,8 @@ function finish(win){
     SAVE.endless=Math.max(best,rec); SAVE.buttons+=earned; save();
     $('stars').innerHTML=`<span style="font-size:24px;">∞</span>`; $('stars').firstChild.classList.add('on');
     $('resTitle').textContent = rec>best&&best>0?'신기록이다!':rec>=10?'대단한 방범이었어!':'골목이 꼬릿꼬릿해졌다…';
-    $('resSub').innerHTML=`<b>${rec}웨이브</b> 버텼어요 · 최고 기록 ${SAVE.endless}웨이브`+(earned?`<br>🔘 단추 +${earned}`:'');
+    $('resSub').innerHTML=`<b>${rec}웨이브</b> 버텼어요 · 최고 기록 ${SAVE.endless}웨이브<br>치운 골칫거리 ${stat.kill}${stat.g?` · 주운 은행 ${stat.g}`:''}`+(earned?`<br>🔘 단추 +${earned}`:'');
+    lastRes={title:'무한 골목',big:rec+'웨이브',small:`치운 골칫거리 ${stat.kill} · 최고 ${SAVE.endless}웨이브`};
     if(rec>=SAVE.endless&&rec>0){ confetti(24); SFX.win(); } else SFX.lose();
   } else {
     const k='s'+SG.id, prev=SAVE.stars[k]||0, first=!SAVE.cleared[k];
@@ -451,10 +475,12 @@ function finish(win){
     $('stars').innerHTML=[0,1,2].map(i=>`<span>${win&&i<stars?'★':'☆'}</span>`).join('');
     [...$('stars').children].forEach((el,i)=>setTimeout(()=>{ el.classList.add('on'); if(win&&i<stars)SFX.star(); },400+i*380));
     $('resTitle').textContent=win?(stars===3?'완벽한 방범이었어요!':'당근 빌라를 지켰다!'):'골목이 꼬릿꼬릿해졌다…';
-    $('resSub').innerHTML=win?`남은 쾌적도 ${life}/10 → ${stars}★`+(earned?`<br>🔘 단추 +${earned} — 주민 강화에 써요!`:''):'조합과 자리를 바꿔 다시!';
+    $('resSub').innerHTML=(win?`남은 쾌적도 ${life}/10 → ${stars}★`+(earned?`<br>🔘 단추 +${earned} — 주민 강화에 써요!`:''):'조합과 자리를 바꿔 다시!')+`<br>치운 골칫거리 ${stat.kill}${stat.g?` · 주운 은행 ${stat.g}`:''}`;
+    lastRes={title:`${SG.name} ${win?'클리어!':'도전 중'}`,big:win?'★'.repeat(stars):'다음엔 꼭!',small:`치운 골칫거리 ${stat.kill}`};
     if(win){ SFX.win(); confetti(16+stars*10); buzz(60); } else SFX.lose();
   }
   const roster=SG.roster.filter(t=>placedOf(t).length), who=roster.length?roster[Math.floor(Math.random()*roster.length)]:SG.roster[0];
+  lastWho=who;
   $('resultChar').textContent=`${TOWERS[who].name}: "${LINES[who][win?'win':'lose']}"`;
   $('nextBtn').classList.toggle('hidden',SG.endless||!win||stageIdx>=STAGES.length-1);
   $('result').classList.remove('hidden');
@@ -478,6 +504,7 @@ function place(type,c,r){
   else blocks.find(b=>b.c===c&&b.r===r).tower=tw;
   selCard=null; updHud(); updSkills(); addFx('pop',center(c,r).x,center(c,r).y);
   SFX.place(); addFx('bubble',center(c,r).x,center(c,r).y-T.h-18,LINES[type].place);
+  if(tutStep){ tutStep=3; tutMsg(); }
 }
 function towerStat(b){
   const t=b.tower,T=TOWERS[t.type],L=T.lv[t.lv];
@@ -569,6 +596,38 @@ function showLobby(){
 $('lobbyBtn').onclick=()=>{ ac(); showLobby(); };
 $('lobbyBack').onclick=showSelect;
 
+// ============ 설정 토글 · 자랑하기 ============
+function updSet(){ $('haptBtn').textContent=`📳 진동 ${SAVE.hapt?'켬':'끔'}`; $('cbBtn').textContent=`👁 색약 보조 ${SAVE.cb?'켬':'끔'}`; }
+$('haptBtn').onclick=()=>{ SAVE.hapt=!SAVE.hapt; save(); updSet(); if(SAVE.hapt)buzz(25); };
+$('cbBtn').onclick=()=>{ SAVE.cb=!SAVE.cb; save(); updSet(); };
+updSet();
+$('shareBtn').onclick=()=>{
+  if(!lastRes)return;
+  const c=document.createElement('canvas'); c.width=840; c.height=1080;
+  const x=c.getContext('2d'); x.scale(2,2);
+  x.fillStyle='#fdfbf5'; x.fillRect(0,0,420,540);
+  x.strokeStyle='#222'; x.lineWidth=5; x.strokeRect(8,8,404,524);
+  x.fillStyle='#f3ede2'; x.fillRect(13,13,394,86);
+  x.textAlign='center'; x.fillStyle='#5a4a3a'; x.font='800 26px sans-serif';
+  x.fillText('🥕 당근빌라 방범대',210,52);
+  x.fillStyle='#9a8b7a'; x.font='700 13px sans-serif'; x.fillText('솜솜시티 세 번째 게임',210,80);
+  const img=IMGS[lastWho+'_win']||IMGS[lastWho];
+  if(img){ const h=170,w=h*img.width/img.height; x.drawImage(img,210-w/2,120,w,h); }
+  x.fillStyle='#5a4a3a'; x.font='800 21px sans-serif'; x.fillText(lastRes.title,210,336);
+  x.fillStyle='#e0a92e'; x.font='800 36px sans-serif'; x.fillText(lastRes.big,210,388);
+  x.fillStyle='#8a7a6a'; x.font='700 13px sans-serif'; x.fillText(lastRes.small,210,418);
+  x.fillStyle='#f6eed8'; x.fillRect(48,448,324,52); x.strokeStyle='#222'; x.lineWidth=2; x.strokeRect(48,448,324,52);
+  x.fillStyle='#5a4a3a'; x.font='800 11.5px sans-serif';
+  x.fillText('pang861209-rgb.github.io/somsom-city-game/defense',210,478);
+  const url=c.toDataURL('image/png');
+  c.toBlob(async b=>{
+    try{ const f=new File([b],'somsom_defense.png',{type:'image/png'});
+      if(navigator.canShare&&navigator.canShare({files:[f]})){ await navigator.share({files:[f],title:'당근빌라 방범대'}); return; } }catch(e){}
+    $('shareImg').src=url; $('shareModal').classList.remove('hidden');
+  });
+};
+$('shareClose').onclick=()=>$('shareModal').classList.add('hidden');
+
 // ============ 게임 로직 ============
 function spawn(type,wp=0){
   const E=ENEMIES[type];
@@ -597,6 +656,7 @@ function rewardOf(en){
 function defeat(en,collector){
   en.dead=true; const r=collector==='lachilchin'?0:rewardOf(en);
   if(r){ acorns+=r; addFx('text',en.x,en.y-26,'+'+r); SFX.coin(); }
+  stat.kill++;
   addFx('puff',en.x,en.y); SFX.pop(); hitstopT=Math.max(hitstopT,en.type==='boss'?.22:.045); updHud();
 }
 function reapDead(byType){
@@ -621,7 +681,9 @@ function update(dt){
   if(stunT>0)stunT-=dt; if(shieldT>0)shieldT-=dt; if(crewT>0)crewT-=dt;
   for(const k in skCool)if(skCool[k]>0)skCool[k]-=dt;
   updSkills();
-  if(state==='PREP'&&waveIdx>=0){ prepT-=dt; ui.info.textContent=`다음 웨이브까지 ${Math.ceil(prepT)}초 — 재정비!`; if(prepT<=0)startWave(); }
+  if(state==='PREP'&&waveIdx>=0){ prepT-=dt;
+    ui.info.textContent=`다음 웨이브(${previewTxt(waveIdx+1)})까지 ${Math.ceil(prepT)}초`;
+    if(prepT<=0)startWave(); }
   if(state!=='WAVE'&&state!=='PREP')return;
   // T타일 은행 스폰 — '바람 부는 웨이브'에 유한 버스트
   if(tSpots.length&&state==='WAVE'&&tLeft>0){ tTimer-=dt;
@@ -680,7 +742,7 @@ function update(dt){
       t.cool-=dt; if(t.cool>0)continue;
       const R2=(L.range*TILE)**2;
       const grab=enemies.find(en=>!en.dead&&(en.type==='g'||(crewT>0&&en.type==='d'))&&(en.x-p.x)**2+(en.y-p.y)**2<=R2);
-      if(grab){ t.cool=crewT>0?.3:L.rate; t.kick=1; grab.dead=true; SFX.bell();
+      if(grab){ t.cool=crewT>0?.3:L.rate; t.kick=1; grab.dead=true; SFX.bell(); stat.g++;
         const gn=Math.round(L.gain*gm('lachilchin')); acorns+=gn; t.winT=.7;
         addFx('grab',grab.x,grab.y,null,{tx:p.x,ty:p.y}); addFx('text',p.x,p.y-T.h-6,'+'+gn); updHud(); }
     }
@@ -846,6 +908,12 @@ function draw(){
     ctx.beginPath(); ctx.roundRect(bx,by,bw,5,2.5); ctx.fill(); ctx.stroke();
     ctx.fillStyle=en.marked?'#6a78c8':'#d05a4a';
     ctx.beginPath(); ctx.roundRect(bx+1,by+1,(bw-2)*Math.max(0,en.hp/en.max),3,1.5); ctx.fill();
+    if(SAVE.cb){ // 색약 보조: 형태 기호 뱃지
+      const sym={k:'≋',d:'●',g:'▲',n:'■',boss:'♛'}[en.type];
+      const sx=en.x-E.size/2-4, sy=en.y-E.size/2-4;
+      ctx.fillStyle='#fdfbf5'; ctx.strokeStyle='#222'; ctx.lineWidth=1.2;
+      ctx.beginPath(); ctx.arc(sx,sy,7,0,7); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#222'; ctx.font='800 9px sans-serif'; ctx.textAlign='center'; ctx.fillText(sym,sx,sy+3); ctx.lineWidth=1; }
   }
   if(gSlowT>0){ ctx.fillStyle=`rgba(106,120,200,${.10+.05*Math.sin(time*8)})`; ctx.fillRect(0,0,W,H); }
   if(stunT>0){ ctx.fillStyle=`rgba(85,168,148,${.08+.04*Math.sin(time*8)})`; ctx.fillRect(0,0,W,H); }
