@@ -283,7 +283,7 @@ const STAGES=[
 ];
 
 const TOWERS={
- migae:{name:'미개',cost:80,h:26,slot:'b#',
+ migae:{name:'미개',cost:80,h:34,slot:'b#',
    lv:[{dmg:4,rate:.25,range:1.5},{dmg:6,rate:.22,range:1.5,up:64},{dmg:8,rate:.18,range:2,up:120}]},
  kkito:{name:'끼토',cost:100,h:84,slot:'#',
    lv:[{slow:.30,range:1.5,mark:.10},{slow:.40,range:2,mark:.15,up:80},{slow:.50,range:2.5,mark:.20,up:150}]},
@@ -543,6 +543,16 @@ function loadSheets(){
   for(const f of ['bg_field_alley','bg_field_ginkgo','bg_field_dusk','bg_field_rain','bg_field_snow'])
     jobs.push(new Promise(res=>{ const i=new Image();
       i.onload=()=>{ IMGS[f]=i; res(); }; i.onerror=res; i.src=`../assets/defense/${f}.png`; }));
+  // 골칫거리 시트 (시즌별 4종 멀티샷) + 보스
+  const GREM={sheet_gremlins:['k','d','g','n'],sheet_gremlins_rain:['u','w','wd','rboss'],sheet_gremlins_snow:['s','i','sb','wboss']};
+  for(const [f,types] of Object.entries(GREM))
+    jobs.push(new Promise(res=>{ const i=new Image();
+      i.onload=()=>{ try{ const parts=sliceSheet(keyImage(i,1200));
+        if(parts.length>=4)types.forEach((ty,k)=>{ IMGS['en_'+ty]=parts[k]; }); }catch(e){} res(); };
+      i.onerror=res; i.src=`../assets/defense/${f}.png`; }));
+  jobs.push(new Promise(res=>{ const i=new Image(), f='boss_kkorit';
+    i.onload=()=>{ try{ IMGS.en_boss=trimCanvas(keyImage(i,1024)); }catch(e){} res(); };
+    i.onerror=res; i.src=`../assets/defense/${f}.png`; }));
   return Promise.all(jobs);
 }
 function bgFor(){ // 스테이지별 전용 배경 (없으면 공용 폴백)
@@ -1410,7 +1420,7 @@ function draw(){
     ctx.beginPath(); ctx.arc(p.x,p.y,R*ph,0,7);
     ctx.strokeStyle=`rgba(106,120,200,${.45*(1-ph)})`; ctx.lineWidth=2; ctx.stroke(); ctx.lineWidth=1; }
   // 타워
-  for(const b of blocks.concat(barrs)){ const t=b.tower; if(!t)continue;
+  function drawTower(b){ const t=b.tower; if(!t)return;
     const T=TOWERS[t.type],p=center(b.c,b.r);
     const frame=owwT>0?IMGS[t.type+'_hit']:t.winT>0?IMGS[t.type+'_win']
       :(t.kick>.4&&IMGS[t.type+'_act'])?IMGS[t.type+'_act']:IMGS[t.type];
@@ -1440,11 +1450,23 @@ function draw(){
     ctx.fillText(evd?'★진화':max?'MAX':'Lv.'+(t.lv+1),p.x,by+10.5); ctx.lineWidth=1;
   }
   // 골칫거리
-  for(const en of enemies){
+  function drawEnemy(en){
     const E=ENEMIES[en.type],wob=Math.sin(time*4+en.wob)*2,sq=1+Math.sin(time*6+en.wob)*.04;
     ctx.fillStyle='rgba(90,74,58,.15)'; ctx.beginPath(); ctx.ellipse(en.x,en.y+E.size/2+3,E.size*.35,4,0,0,7); ctx.fill();
     ctx.save(); ctx.translate(en.x,en.y+wob);
-    if(en.type==='k'||en.type==='boss'||en.type==='rboss'||en.type==='wboss'){
+    const spr=IMGS['en_'+en.type];
+    if(spr){ // 전용 스프라이트 (없으면 아래 코드 드로잉 폴백)
+      const gs=en.type==='sb'?1+.09*Math.min(6,en.gz||0):1;
+      const hh=E.size*gs, ww=hh*spr.width/spr.height;
+      const rot=en.type==='g'?time*6%6.28:en.type==='sb'?time*4%6.28:0;
+      if(rot)ctx.rotate(rot);
+      ctx.scale(sq,2-sq);
+      ctx.drawImage(spr,-ww/2,-hh/2,ww,hh);
+      ctx.scale(1/sq,1/(2-sq));
+      if(rot)ctx.rotate(-rot);
+      if(en.inv>0){ ctx.strokeStyle=`rgba(255,255,255,${.5+.3*Math.sin(time*10)})`; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.arc(0,-4,E.size*.62,0,7); ctx.stroke(); ctx.lineWidth=1; }
+    } else if(en.type==='k'||en.type==='boss'||en.type==='rboss'||en.type==='wboss'){
       const es=E.size/44; ctx.scale(sq*es,(2-sq)*es);
       ctx.fillStyle=en.type==='wboss'?'#c9d4e4':en.type==='rboss'?'#7d84a4':en.type==='boss'?'#9a8cb5':'#aa9ec0'; ctx.strokeStyle='#222'; ctx.lineWidth=2;
       ctx.beginPath(); ctx.arc(-12,4,11,0,7); ctx.arc(-2,-7,14,0,7); ctx.arc(11,2,12,0,7); ctx.arc(0,7,12,0,7); ctx.closePath(); ctx.fill(); ctx.stroke();
@@ -1564,6 +1586,12 @@ function draw(){
       ctx.beginPath(); ctx.arc(sx,sy,7,0,7); ctx.fill(); ctx.stroke();
       ctx.fillStyle='#222'; ctx.font='800 9px sans-serif'; ctx.textAlign='center'; ctx.fillText(sym,sx,sy+3); ctx.lineWidth=1; }
   }
+  // 발 위치(y) 기준 정렬 렌더 — 지나가는 골칫거리가 주민을 가리지 않게
+  { const rlist=[];
+    for(const b of blocks.concat(barrs))if(b.tower)rlist.push({ry:(b.r)*TILE-4,f:()=>drawTower(b)});
+    for(const en of enemies)rlist.push({ry:en.y+ENEMIES[en.type].size/2,f:()=>drawEnemy(en)});
+    rlist.sort((a,b2)=>a.ry-b2.ry);
+    for(const r of rlist)r.f(); }
   // 떨어진 도토리 — 탭하면 +1 보너스
   for(const p of pickups){ const pb=Math.sin(time*5+p.wob)*3, bl=p.t<1.5?(Math.sin(time*12)>0?1:.35):1;
     ctx.globalAlpha=bl;
