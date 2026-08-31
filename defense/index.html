@@ -37,7 +37,6 @@
   .confetti { position:absolute; top:-14px; width:10px; height:14px; border-radius:3px; animation:confFall 2.8s ease-in forwards; pointer-events:none; z-index:30; }
   @keyframes confFall { to { transform:translateY(760px) rotate(560deg); opacity:.15; } }
   #resultChar { font-size:13px; color:#5a4a3a; background:#f3ede2; border-radius:8px; padding:8px 14px; max-width:300px; line-height:1.6; }
-  #titleArt { width:80%; max-height:180px; object-fit:contain; }
   #waveInfo { position:absolute; left:10px; top:52px; font-size:11px; font-weight:700; color:#5a4a3a; background:rgba(253,251,245,.92); border:1.5px solid #e2d8c4; border-radius:20px; padding:3px 12px; z-index:5; }
 
   #skills { position:absolute; right:10px; bottom:104px; display:flex; gap:6px; z-index:6; flex-wrap:wrap; justify-content:flex-end; max-width:280px; }
@@ -57,6 +56,24 @@
   #waveBtn { position:absolute; left:10px; bottom:104px; z-index:6; padding:10px 14px; font-size:13px; background:#f6eed8; white-space:nowrap; }
 
   .screen { position:absolute; inset:0; background:rgba(253,251,245,.97); z-index:20; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:13px; text-align:center; padding:24px; }
+  /* ── 풀스크린 타이틀 ── */
+  #title { padding:0; gap:0; justify-content:space-between; overflow:hidden; background:linear-gradient(#b898cb 0%, #efae7e 60%, #caa26a 100%); }
+  #heroBg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center bottom; }
+  #heroLeaves span { position:absolute; top:-32px; z-index:1; opacity:.85; animation:leafFall linear infinite; }
+  @keyframes leafFall { 0%{ transform:translateY(-32px) rotate(0deg); } 100%{ transform:translateY(740px) rotate(330deg); } }
+  #logoWrap { position:relative; z-index:2; margin-top:44px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  #logoTop { font-size:14px; font-weight:800; color:#fff7e8; letter-spacing:5px; text-shadow:0 2px 0 rgba(96,58,38,.5); }
+  #logoMain { font-size:47px; line-height:1.1; font-weight:900; color:#fff7e8; letter-spacing:2px; transform:rotate(-2deg);
+    text-shadow:0 3px 0 #7c4a2d, 0 7px 16px rgba(60,30,20,.4); }
+  #logoSub { margin-top:2px; font-size:12px; font-weight:700; color:#5a4130; background:rgba(255,247,232,.85); border:1.5px solid rgba(124,74,45,.5); border-radius:20px; padding:5px 14px; }
+  #titleBottom { position:relative; z-index:2; width:100%; padding:74px 24px 20px; display:flex; flex-direction:column; align-items:center; gap:10px;
+    background:linear-gradient(rgba(64,36,25,0), rgba(64,36,25,.55) 45%, rgba(50,27,19,.82)); }
+  #titleBottom #startBtn { font-size:18px; padding:15px 52px; border-radius:16px; background:#ffb35c; border-color:#5a2f1c; color:#4a2416; box-shadow:0 4px 0 #5a2f1c; }
+  #titleBottom #startBtn:active { transform:translateY(4px); box-shadow:none; }
+  .ghostBtn { padding:7px 13px; font-size:11px; background:rgba(255,247,232,.14); color:#ffefd8; border-color:rgba(255,239,216,.55); box-shadow:none; border-radius:20px; }
+  .ghostBtn:active { transform:none; background:rgba(255,247,232,.3); }
+  #hubLink { font-size:12px; font-weight:700; color:#ffe6bf; text-decoration:none; opacity:.9; }
+  #verTag { font-size:10px; font-weight:700; color:rgba(255,239,216,.55); letter-spacing:1px; }
   .hidden { display:none !important; }
   .screen h1 { font-family:inherit; font-size:24px; color:#5a4a3a; line-height:1.35; font-weight:800; }
   .screen .sub { font-size:13px; color:#9a8b7a; line-height:1.7; }
@@ -131,16 +148,29 @@
   </div>
 
   <div id="title" class="screen">
-    <span class="tag">R3 — 3챕터 16스테이지 · 주간 챌린지 · 작가 그림체 전용 그래픽</span>
-    <h1>🥕 솜솜시티<br>당근빌라 방범대</h1>
-    <img id="titleArt" src="../assets/defense/title_key.png" onerror="this.src='../assets/01_group_lineup.png'" alt="당근빌라 방범대">
-    <div class="sub">대나무숲 빌라에서 꼬릿 구름이 흘러온다!<br>방범대를 배치해 당근 빌라의 쾌적도를 지키자</div>
-    <button id="startBtn" disabled>불러오는 중...</button>
-    <div style="display:flex; gap:8px;">
-      <button id="haptBtn" style="padding:7px 12px; font-size:11px;"></button>
-      <button id="cbBtn" style="padding:7px 12px; font-size:11px;"></button>
+    <img id="heroBg" src="../assets/defense/title_hero.png" onerror="this.style.display='none'" alt="">
+    <div id="heroLeaves" aria-hidden="true">
+      <span style="left:8%;  animation-duration:9s;  animation-delay:0s;   font-size:17px;">🍂</span>
+      <span style="left:26%; animation-duration:12s; animation-delay:3s;  font-size:13px;">🍂</span>
+      <span style="left:47%; animation-duration:10s; animation-delay:6s;  font-size:19px;">🍂</span>
+      <span style="left:66%; animation-duration:13s; animation-delay:1.5s; font-size:12px;">🍂</span>
+      <span style="left:82%; animation-duration:11s; animation-delay:4.5s; font-size:16px;">🍂</span>
+      <span style="left:15%; animation-duration:14s; animation-delay:8s;  font-size:14px;">🍂</span>
     </div>
-    <a href="https://pang861209-rgb.github.io/somsom-city/" style="font-size:12px; font-weight:700; color:#8a6a2a; text-decoration:none;">🏘 솜솜시티 마을로 돌아가기</a>
+    <div id="logoWrap">
+      <div id="logoTop">🥕 솜솜시티</div>
+      <div id="logoMain">당근빌라<br>방범대</div>
+      <div id="logoSub">대나무숲에서 꼬릿 구름이 흘러온다!</div>
+    </div>
+    <div id="titleBottom">
+      <button id="startBtn" disabled>불러오는 중...</button>
+      <div style="display:flex; gap:8px;">
+        <button id="haptBtn" class="ghostBtn"></button>
+        <button id="cbBtn" class="ghostBtn"></button>
+      </div>
+      <a id="hubLink" href="https://pang861209-rgb.github.io/somsom-city/">🏘 솜솜시티 마을로 돌아가기</a>
+      <span id="verTag">R3 · 3챕터 16스테이지 · 주간 챌린지</span>
+    </div>
   </div>
 
   <div id="select" class="screen hidden">
