@@ -131,9 +131,9 @@
   </div>
 
   <div id="title" class="screen">
-    <span class="tag">R3 — 3장 '눈 오는 골목' · 주간 챌린지 · 위기 연출 (그래픽은 시트 도착 전 플레이스홀더)</span>
+    <span class="tag">R3 — 3챕터 16스테이지 · 주간 챌린지 · 작가 그림체 전용 그래픽</span>
     <h1>🥕 솜솜시티<br>당근빌라 방범대</h1>
-    <img id="titleArt" src="../assets/01_group_lineup.png" alt="솜솜시티 주민들">
+    <img id="titleArt" src="../assets/defense/title_key.png" onerror="this.src='../assets/01_group_lineup.png'" alt="당근빌라 방범대">
     <div class="sub">대나무숲 빌라에서 꼬릿 구름이 흘러온다!<br>방범대를 배치해 당근 빌라의 쾌적도를 지키자</div>
     <button id="startBtn" disabled>불러오는 중...</button>
     <div style="display:flex; gap:8px;">
@@ -509,7 +509,7 @@ const ready=Promise.all(Object.entries(MANIFEST).map(([k,f])=>new Promise(res=>{
   const i=new Image(); i.onload=()=>{ IMGS[k]=RAW.has(k)?i:trimCanvas(keyImage(i)); res(); }; i.onerror=res; i.src=`../assets/${f}.png`;
 })));
 // ── 전용 시트 로더 (나노바나나 산출물) — assets/defense/ 에 있으면 자동 적용, 없으면 SD 플레이스홀더 유지 ──
-function sliceSheet(c){ // 투명 열 기준 자동 분할 (작업지시서 §0)
+function sliceSheet(c,want){ // 투명 열 기준 자동 분할 (작업지시서 §0)
   const x=c.getContext('2d'), d=x.getImageData(0,0,c.width,c.height).data;
   const colHas=new Uint8Array(c.width);
   for(let cx=0;cx<c.width;cx++)for(let cy=0;cy<c.height;cy++)
@@ -521,7 +521,7 @@ function sliceSheet(c){ // 투명 열 기준 자동 분할 (작업지시서 §0)
       o.width=cx-s; o.height=c.height;
       o.getContext('2d').drawImage(c,s,0,cx-s,c.height,0,0,cx-s,c.height);
       parts.push(trimCanvas(o)); } s=-1; } }
-  while(parts.length>0&&parts.length<4){ // 포즈가 닿아 덜 잘린 경우: 가장 넓은 조각을 반으로
+  while(parts.length>0&&parts.length<(want||4)){ // 포즈가 닿아 덜 잘린 경우: 가장 넓은 조각을 반으로
     let wi=0; parts.forEach((p,i)=>{ if(p.width>parts[wi].width)wi=i; });
     const p=parts[wi], half=Math.floor(p.width/2);
     const mk=(sx,w)=>{ const o=document.createElement('canvas'); o.width=w; o.height=p.height;
@@ -552,6 +552,14 @@ function loadSheets(){
       i.onerror=res; i.src=`../assets/defense/${f}.png`; }));
   jobs.push(new Promise(res=>{ const i=new Image(), f='boss_kkorit';
     i.onload=()=>{ try{ IMGS.en_boss=trimCanvas(keyImage(i,1024)); }catch(e){} res(); };
+    i.onerror=res; i.src=`../assets/defense/${f}.png`; }));
+  jobs.push(new Promise(res=>{ const i=new Image(), f='sheet_structures'; // 당근빌라·대나무숲·은행나무
+    i.onload=()=>{ try{ const p=sliceSheet(keyImage(i,1200),3);
+      if(p.length>=3){ IMGS.st_villa=p[0]; IMGS.st_bamboo=p[1]; IMGS.st_tree=p[2]; } }catch(e){} res(); };
+    i.onerror=res; i.src=`../assets/defense/${f}.png`; }));
+  jobs.push(new Promise(res=>{ const i=new Image(), f='sheet_ui'; // 소품 아이콘
+    i.onload=()=>{ try{ const p=sliceSheet(keyImage(i,1400),8);
+      if(p.length>=8){ IMGS.acorn=p[0]; IMGS.ui_btn=p[1]; IMGS.ui_heart=p[4]; IMGS.ui_star=p[5]; IMGS.ui_perfume=p[6]; IMGS.ginkgo=p[7]; } }catch(e){} res(); };
     i.onerror=res; i.src=`../assets/defense/${f}.png`; }));
   return Promise.all(jobs);
 }
@@ -1370,14 +1378,18 @@ function draw(){
     ctx.fillStyle='rgba(110,150,200,.40)'; ctx.strokeStyle='rgba(70,110,170,.75)'; ctx.lineWidth=1.5;
     ctx.beginPath(); ctx.ellipse(p.x,p.y+6,19,11+Math.sin(time*2+c)*1.5,0,0,7); ctx.fill(); ctx.stroke();
     ctx.font='11px sans-serif'; ctx.textAlign='center'; ctx.fillText('💧',p.x,p.y-4); ctx.lineWidth=1; }
-  { const x=OX+(entry.c-1)*TILE,y=(entry.r-1)*TILE;
+  if(IMGS.st_bamboo){ const p=center(entry.c,entry.r), h=64, w=h*IMGS.st_bamboo.width/IMGS.st_bamboo.height;
+    ctx.drawImage(IMGS.st_bamboo,p.x-w/2,(entry.r)*TILE-h,w,h); }
+  else { const x=OX+(entry.c-1)*TILE,y=(entry.r-1)*TILE;
     ctx.fillStyle='#3f5232'; ctx.fillRect(x,y,TILE,TILE);
     ctx.strokeStyle='#222'; ctx.lineWidth=2; ctx.strokeRect(x+1,y+1,TILE-2,TILE-2);
     ctx.strokeStyle='#6f8f56'; ctx.lineWidth=3;
     for(let i=0;i<3;i++){ const bx=x+12+i*14; ctx.beginPath(); ctx.moveTo(bx,y+4); ctx.lineTo(bx,y+TILE-14); ctx.stroke(); }
     ctx.fillStyle='#fdfbf5'; ctx.font='800 9px sans-serif'; ctx.textAlign='center';
     ctx.fillText('대나무숲',x+TILE/2,y+TILE-4); ctx.lineWidth=1; }
-  { const x=OX+(villa.c-1)*TILE,y=(villa.r-1)*TILE,cx=x+TILE/2;
+  if(IMGS.st_villa){ const p=center(villa.c,villa.r), h=66, w=h*IMGS.st_villa.width/IMGS.st_villa.height;
+    ctx.drawImage(IMGS.st_villa,p.x-w/2,(villa.r)*TILE-h,w,h); }
+  else { const x=OX+(villa.c-1)*TILE,y=(villa.r-1)*TILE,cx=x+TILE/2;
     ctx.fillStyle='#f6eed8'; ctx.strokeStyle='#222'; ctx.lineWidth=2;
     ctx.beginPath(); ctx.roundRect(x+5,y+8,TILE-10,TILE-14,4); ctx.fill(); ctx.stroke();
     ctx.fillStyle='#e8834a'; ctx.beginPath(); ctx.moveTo(x+1,y+10); ctx.lineTo(cx,y-12); ctx.lineTo(x+TILE-1,y+10); ctx.closePath(); ctx.fill(); ctx.stroke();
@@ -1385,8 +1397,10 @@ function draw(){
     ctx.font='13px sans-serif'; ctx.textAlign='center'; ctx.fillText('🥕',cx-13,y+20);
     ctx.fillStyle='#5a4a3a'; ctx.font='800 8px sans-serif'; ctx.fillText('당근빌라',cx,y+TILE-3); ctx.lineWidth=1; }
   for(const t of tSpots){ const p=center(t.c,t.r);
-    ctx.font='38px sans-serif'; ctx.textAlign='center'; ctx.fillText('🌳',p.x,p.y+12);
-    if(IMGS.ginkgo)ctx.drawImage(IMGS.ginkgo,p.x+6,p.y+10,14,14); }
+    if(IMGS.st_tree){ const h=74, w=h*IMGS.st_tree.width/IMGS.st_tree.height;
+      ctx.drawImage(IMGS.st_tree,p.x-w/2,(t.r)*TILE-h,w,h); }
+    else { ctx.font='38px sans-serif'; ctx.textAlign='center'; ctx.fillText('🌳',p.x,p.y+12); }
+    if(IMGS.ginkgo)ctx.drawImage(IMGS.ginkgo,p.x+10,(t.r)*TILE-16,14,14); }
   // 자유 배치: 카드 선택 시 빈 칸 전체 하이라이트, 배치된 주민 아래엔 나무 받침대
   if(selCard&&TOWERS[selCard].slot!=='='){
     ctx.setLineDash([5,4]); ctx.lineWidth=1.6; ctx.strokeStyle='rgba(74,122,58,.7)';
