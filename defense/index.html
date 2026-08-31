@@ -42,8 +42,8 @@
   .skillBtn { padding:7px 11px; font-size:11px; font-weight:800; border-radius:20px; background:#fff; }
 
   #dock { position:absolute; left:0; bottom:0; width:100%; height:96px; background:rgba(253,251,245,.96); border-top:2px solid #222; padding:8px 8px; display:flex; gap:6px; align-items:center; z-index:5; }
-  #cards { display:flex; gap:5px; flex:1; }
-  .card { width:50px; height:76px; border:2px solid #222; border-radius:10px; background:#fff; box-shadow:2px 2px 0 #222; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; cursor:pointer; }
+  #cards { display:flex; gap:5px; flex:1; justify-content:center; min-width:0; }
+  .card { flex:1 1 0; min-width:0; max-width:60px; height:76px; border:2px solid #222; border-radius:10px; background:#fff; box-shadow:2px 2px 0 #222; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; cursor:pointer; }
   .card.sel { border-color:#b06a2a; border-width:2.5px; background:#f6eed8; transform:translateY(-4px); }
   .card.poor { opacity:.5; }
   .card.pulse { animation:cpulse 1s infinite; }
@@ -52,7 +52,7 @@
   .card .nm { font-size:8.5px; font-weight:800; color:#5a4a3a; }
   .card .c { display:flex; align-items:center; gap:2px; font-size:9px; font-weight:800; color:#b08a3a; }
   .card .c img { width:9px; height:9px; }
-  #waveBtn { padding:10px 8px; font-size:12px; background:#f6eed8; white-space:nowrap; }
+  #waveBtn { position:absolute; left:10px; bottom:104px; z-index:6; padding:10px 14px; font-size:13px; background:#f6eed8; white-space:nowrap; }
 
   .screen { position:absolute; inset:0; background:rgba(253,251,245,.97); z-index:20; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:13px; text-align:center; padding:24px; }
   .hidden { display:none !important; }
@@ -104,8 +104,8 @@
 
   <div id="dock">
     <div id="cards"></div>
-    <button id="waveBtn">웨이브 시작</button>
   </div>
+  <button id="waveBtn">웨이브 시작</button>
 
   <div id="popup" class="hidden">
     <div class="row"><span class="nm" id="pNm"></span><span class="st" id="pSt"></span></div>
@@ -182,16 +182,16 @@ const PREP_TIME=12, SKIP_BONUS=10, WAVE_BONUS=20, REFUND=.7;
 const STAGES=[
  {id:1,name:'첫 골목',desc:'미개·끼토와 기본기',start:200,roster:['migae','kkito'],
   map:['...E....','..#=#...','...=#.#.','...===..','....#=#.','..##.=..','..====#.','.#=#....','.#=.....','..V.....'],
-  waves:[[['k',4]],[['k',6]],[['k',8]],[['k',10]]]},
+  waves:[[['k',4]],[['k',6]],[['k',8]],[['k',10]],[['k',12]],[['k',15]]]},
  {id:2,name:'지그재그 골목',desc:'보늘 합류 — 먼지가 빨라요',start:200,roster:['migae','kkito','boneul'],
   map:['......E.','.##..#=.','.======.','.=#.#.#.','.=..#...','.======.','.#.#..=.','...#..=.','....##=.','....V==.'],
-  waves:[[['k',5]],[['d',4]],[['k',6],['d',3]],[['d',8]],[['k',8],['d',4]]]},
- {id:3,name:'은행나무 골목',desc:'라칠친 합류 — 은행이 굴러온다!',start:180,roster:['migae','kkito','boneul','lachilchin'],tWaves:[2,4],
+  waves:[[['k',5]],[['d',4]],[['k',6],['d',3]],[['d',8]],[['k',8],['d',4]],[['d',10],['k',4]],[['k',12],['d',6]]]},
+ {id:3,name:'은행나무 골목',desc:'라칠친 합류 — 은행이 굴러온다!',start:180,roster:['migae','kkito','boneul','lachilchin'],tWaves:[2,5],
   map:['.E......','.=.#..#.','.=#.#.T.','.=====#.','.b...=#.','..##.=..','..====..','.#=#.#..','.#====..','.....V..'],
-  waves:[[['k',6]],[['k',4],['d',4]],[['g',5]],[['k',8],['d',5]],[['k',10],['d',6]]]},
- {id:4,name:'왕꼬릿의 방문',desc:'전원 합류 — 보스전!',start:180,roster:['migae','kkito','boneul','lachilchin','ramda','bookgeo'],tWaves:[3,4],
+  waves:[[['k',6]],[['k',4],['d',4]],[['g',5]],[['k',8],['d',5]],[['k',10],['d',6]],[['k',6],['g',4]],[['k',13],['d',8]]]},
+ {id:4,name:'왕꼬릿의 방문',desc:'전원 합류 — 보스전!',start:180,roster:['migae','kkito','boneul','lachilchin','ramda','bookgeo'],tWaves:[3,5,6],
   map:['...E....','.#.====.','.#....=.','..#.#.=.','.======.','.=.##.#.','.=..T##.','.=====..','.##..=..','....#V..'],
-  waves:[[['k',6]],[['n',2],['k',4]],[['d',8]],[['n',3],['k',6]],[['boss',1],['k',6]]]},
+  waves:[[['k',6]],[['n',2],['k',4]],[['d',8]],[['n',3],['k',6]],[['k',8],['d',6]],[['n',4],['k',8]],[['boss',1],['k',6]]]},
 ];
 
 const TOWERS={
@@ -352,6 +352,14 @@ const $=id=>document.getElementById(id);
 // ============ 스테이지 상태 ============
 let SG=null, stageIdx=0, tutStep=0, stat={kill:0,g:0}, lastRes=null, lastWho='kkito', earnedA=0;
 const ENAME={k:'꼬릿',d:'먼지',g:'은행',n:'낙엽',boss:'왕꼬릿'};
+const TDESC={
+ migae:'⚡ 속사 — 빠르게 콕콕! 기본 공격수 (아무 빈 칸에 배치)',
+ kkito:'🐰 감속+귀 마킹 — 범위 안 적이 느려지고 더 아프게 맞아요',
+ boneul:'🛡️ 바리케이드 — 길 위에 눕혀서 길막! (경로에만 배치)',
+ ramda:'🧲 자원 — 도토리를 계속 벌어다 줘요 (공격 없음)',
+ bookgeo:'🐢 광역 미스트 — 범위 전체 공격 + 이웃 타워 공속 버프',
+ lachilchin:'🔄 은행 줍기 — 굴러오는 은행을 도토리로 바꿔요',
+};
 let pvCache={i:-9,sg:null,s:''};
 function previewTxt(idx){
   if(pvCache.i===idx&&pvCache.sg===SG)return pvCache.s; // 매 프레임 재계산 방지
@@ -359,7 +367,7 @@ function previewTxt(idx){
   pvCache={i:idx,sg:SG,s:def?def.map(([t,n])=>`${ENAME[t]}×${n}`).join('·'):''};
   return pvCache.s; }
 function tutMsg(){ if(!tutStep)return;
-  ui.info.textContent = tutStep===1?'👆 ① 미개 카드를 탭하세요!':tutStep===2?'👆 ② 초록으로 빛나는 나무 블록을 탭!':'👆 ③ 한 명 더 배치하고 [웨이브 시작]!'; }
+  ui.info.textContent = tutStep===1?'👆 ① 미개 카드를 탭하세요!':tutStep===2?'👆 ② 길만 빼고 아무 빈 칸이나 탭!':'👆 ③ 한 명 더 배치하고 [웨이브 시작]!'; }
 let waypoints=[],blocks=[],barrs=[],tSpots=[],entry=null,villa=null;
 let state='TITLE',acorns=0,life=10,waveIdx=-1,prepT=0,speed=1,time=0;
 let enemies=[],spawnQ=[],fx=[],selCard=null,selTower=null,shakeT=0;
@@ -374,8 +382,8 @@ function loadStage(i){
   for(let r=1;r<=ROWS;r++)for(let c=1;c<=COLS;c++){
     const ch=cellAt(c,r);
     if(ch==='E')entry={c,r}; else if(ch==='V')villa={c,r};
-    else if(ch==='#'||ch==='b')blocks.push({c,r,tower:null,small:ch==='b'});
     else if(ch==='T')tSpots.push({c,r});
+    else if(ch!=='=')blocks.push({c,r,tower:null}); // 자유 배치: 경로·입구·빌라·나무 빼고 전부 설치 가능
   }
   let cur=entry,prev=null; waypoints.push(center(cur.c,cur.r));
   while(!(cur.c===villa.c&&cur.r===villa.r)){
@@ -394,6 +402,10 @@ function loadStage(i){
   ui.waveBtn.textContent='웨이브 시작'; ui.waveBtn.classList.remove('hidden');
   tutStep=(!SAVE.tut&&SG.id===1&&!(SAVE.stars.s1>0))?1:0; // 기존 세이브(클리어 이력)엔 미노출
   if(tutStep)tutMsg(); else ui.info.textContent=`${SG.name} — 첫 웨이브: ${previewTxt(0)}`;
+  // 새 주민 합류 소개
+  if(typeof i==='number'&&i>0){ const nw=SG.roster.filter(t=>!STAGES[i-1].roster.includes(t));
+    if(nw.length){ const t=nw[0]; banner(`${TOWERS[t].name} 합류!`);
+      ui.info.textContent=`${TOWERS[t].name} ${TDESC[t]}`; } }
   hidePopup(); updHud();
 }
 
@@ -417,7 +429,9 @@ function buildDock(){
     if(IMGS[t])el.querySelector('img').src=IMGS[t].toDataURL();
     if(IMGS.acorn)el.querySelector('.ac').src=IMGS.acorn.toDataURL();
     el.addEventListener('pointerdown',e=>{ e.preventDefault(); hidePopup(); selCard=selCard===t?null:t;
-      if(tutStep===1&&selCard==='migae'){ tutStep=2; tutMsg(); } updHud(); });
+      if(tutStep===1&&selCard==='migae'){ tutStep=2; tutMsg(); }
+      else if(!tutStep) ui.info.textContent = selCard ? `${TOWERS[t].name} ${TDESC[t]}` : `${SG.name} — 카드를 골라 특성을 확인하세요`;
+      updHud(); });
     box.appendChild(el);
   }
 }
@@ -545,8 +559,7 @@ function canPlace(type,c,r){
   const T=TOWERS[type];
   if(T.slot==='='){ return cellAt(c,r)==='='&&!barrs.find(b=>b.c===c&&b.r===r); }
   const b=blocks.find(b=>b.c===c&&b.r===r);
-  if(!b||b.tower)return false;
-  return b.small?T.slot.includes('b'):true;
+  return !!b&&!b.tower;
 }
 function place(type,c,r){
   const T=TOWERS[type]; if(acorns<T.cost)return;
@@ -745,7 +758,7 @@ function update(dt){
   for(const k in skCool)if(skCool[k]>0)skCool[k]-=dt;
   updSkills();
   if(state==='PREP'&&waveIdx>=0){ prepT-=dt;
-    ui.info.textContent=`다음 웨이브(${previewTxt(waveIdx+1)})까지 ${Math.ceil(prepT)}초`;
+    if(!selCard) ui.info.textContent=`다음 웨이브(${previewTxt(waveIdx+1)})까지 ${Math.ceil(prepT)}초`;
     if(prepT<=0)startWave(); }
   if(state!=='WAVE'&&state!=='PREP')return;
   // T타일 은행 스폰 — '바람 부는 웨이브'에 유한 버스트
@@ -866,18 +879,20 @@ function draw(){
   for(const t of tSpots){ const p=center(t.c,t.r);
     ctx.font='38px sans-serif'; ctx.textAlign='center'; ctx.fillText('🌳',p.x,p.y+12);
     if(IMGS.ginkgo)ctx.drawImage(IMGS.ginkgo,p.x+6,p.y+10,14,14); }
-  for(const b of blocks){
-    const full=TILE-8, s=b.small?{w:full-4,h:22}:{w:full,h:full};
-    const x=OX+(b.c-1)*TILE+(TILE-s.w)/2, y=(b.r-1)*TILE+(b.small?TILE-s.h-6:4);
-    const hl=!b.tower&&selCard&&canPlace(selCard,b.c,b.r);
-    const no=!b.tower&&selCard&&!canPlace(selCard,b.c,b.r);
-    ctx.fillStyle=hl?'#cfe3c0':no?'#e4ddd0':'#d9b98a'; ctx.strokeStyle=hl?'#4a7a3a':no?'#b0a48e':'#222';
-    ctx.lineWidth=2; ctx.setLineDash(hl?[5,4]:[]);
-    ctx.beginPath(); ctx.roundRect(x,y,s.w,s.h,b.small?5:7); ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
-    if(!hl&&!no&&!b.small){ ctx.strokeStyle='rgba(90,74,58,.25)'; ctx.lineWidth=1;
-      ctx.beginPath(); ctx.moveTo(x+4,y+s.h/2); ctx.lineTo(x+s.w-4,y+s.h/2); ctx.stroke();
-      ctx.fillStyle='rgba(34,34,32,.55)';
-      for(const [dx,dy] of [[6,6],[s.w-6,6],[6,s.h-6],[s.w-6,s.h-6]]){ ctx.beginPath(); ctx.arc(x+dx,y+dy,1.6,0,7); ctx.fill(); } }
+  // 자유 배치: 카드 선택 시 빈 칸 전체 하이라이트, 배치된 주민 아래엔 나무 받침대
+  if(selCard&&TOWERS[selCard].slot!=='='){
+    ctx.setLineDash([5,4]); ctx.lineWidth=1.6; ctx.strokeStyle='rgba(74,122,58,.7)';
+    for(const b of blocks) if(!b.tower){
+      const x=OX+(b.c-1)*TILE+5, y=(b.r-1)*TILE+5;
+      ctx.fillStyle='rgba(207,227,192,.32)'; ctx.fillRect(x,y,TILE-10,TILE-10);
+      ctx.strokeRect(x,y,TILE-10,TILE-10); }
+    ctx.setLineDash([]); ctx.lineWidth=1; }
+  for(const b of blocks){ if(!b.tower)continue;
+    const x=OX+(b.c-1)*TILE+4, y=(b.r-1)*TILE+4, s=TILE-8;
+    ctx.fillStyle='#d9b98a'; ctx.strokeStyle='#222'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.roundRect(x,y,s,s,7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='rgba(34,34,32,.55)';
+    for(const [dx,dy] of [[6,6],[s-6,6],[6,s-6],[s-6,s-6]]){ ctx.beginPath(); ctx.arc(x+dx,y+dy,1.6,0,7); ctx.fill(); }
     ctx.lineWidth=1;
   }
   // 보늘 배치 하이라이트 (경로)
