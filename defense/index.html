@@ -628,6 +628,9 @@ function finish(win){
   // 나이테존: 출전 주민 누적 판수
   for(const t of SG.roster) if(placedOf(t).length) SAVE.plays[t]=(SAVE.plays[t]||0)+1;
   SAVE.bank+=win?earnedA:Math.floor(earnedA/2); // 누적 도토리 → 유물 상점
+  let daily=0; // 오늘 첫 승리 보너스
+  if(win){ const d=new Date(), dk=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+    if(SAVE.daily!==dk){ SAVE.daily=dk; SAVE.buttons+=1; daily=1; } }
   const stars=win?(life>=lifeMax?3:life>=Math.ceil(lifeMax*.6)?2:1):0;
   track('stage_end',{s:SG.id||99,win:win?1:0,stars,wave:waveIdx,hard:hardOn?1:0});
   let earned=0;
@@ -650,7 +653,8 @@ function finish(win){
     $('stars').innerHTML=[0,1,2].map(i=>`<span>${win&&i<stars?'★':'☆'}</span>`).join('');
     [...$('stars').children].forEach((el,i)=>setTimeout(()=>{ el.classList.add('on'); if(win&&i<stars)SFX.star(); },400+i*380));
     $('resTitle').textContent=(win?(stars===3?'완벽한 방범이었어요!':'당근 빌라를 지켰다!'):'골목이 꼬릿꼬릿해졌다…')+(hardOn?' 🔥':'');
-    $('resSub').innerHTML=(win?`남은 쾌적도 ${life}/10 → ${stars}★`+(earned?`<br>🔘 단추 +${earned} — 주민 강화에 써요!`:''):'조합과 자리를 바꿔 다시!')+`<br>치운 골칫거리 ${stat.kill}${stat.g?` · 주운 은행 ${stat.g}`:''}`;
+    $('resSub').innerHTML=(win?`남은 쾌적도 ${life}/${lifeMax} → ${stars}★`+(earned?`<br>🔘 단추 +${earned} — 주민 강화에 써요!`:''):'조합과 자리를 바꿔 다시!')
+      +(daily?`<br>☀️ 오늘의 첫 승리 🔘+1`:'')+`<br>치운 골칫거리 ${stat.kill}${stat.g?` · 주운 은행 ${stat.g}`:''}`;
     lastRes={title:`${SG.name} ${win?'클리어!':'도전 중'}`,big:win?'★'.repeat(stars):'다음엔 꼭!',small:`치운 골칫거리 ${stat.kill}`};
     if(win){ SFX.win(); confetti(16+stars*10); buzz(60); } else SFX.lose();
   }
