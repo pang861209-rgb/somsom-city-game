@@ -831,9 +831,10 @@ function showSelect(){
     if(!lock)el.onclick=()=>loadStage(i);
     box.appendChild(el);
   });
-  if(selCh===1){
+  { // 무한 골목 — 어느 챕터 탭에서든 항상 노출
     const eu=(SAVE.stars.s4||0)>0;
     const el=document.createElement('div'); el.className='stageRow'+(eu?'':' locked');
+    el.style.background='#f6eed8';
     el.innerHTML=`<span class="no">∞</span><span class="info"><div class="snm">무한 골목</div><div class="sdc">${eu?'끝없는 꼬릿 구름 — 기록에 도전!':'스테이지 4 클리어로 해금'}</div></span><span class="st">${SAVE.endless?SAVE.endless+'W':''}</span>`;
     if(eu)el.onclick=()=>loadStage('E');
     box.appendChild(el);
