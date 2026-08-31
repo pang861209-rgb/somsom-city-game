@@ -406,7 +406,7 @@ let waypoints=[],blocks=[],barrs=[],tSpots=[],entry=null,villa=null;
 let state='TITLE',acorns=0,life=10,waveIdx=-1,prepT=0,speed=1,time=0;
 let enemies=[],spawnQ=[],fx=[],selCard=null,selTower=null,shakeT=0;
 let gSlowT=0,hasteT=0,owwT=0,stunT=0,shieldT=0,crewT=0,skCool={},tTimer=0,tLeft=0,hitstopT=0;
-let pickups=[],seenE=new Set(),announced=new Set(),fragN=0;
+let pickups=[],seenE=new Set(),announced=new Set(),fragN=0,aimSkill=null;
 
 const cellAt=(c,r)=>(r>=1&&r<=ROWS&&c>=1&&c<=COLS)?SG.map[r-1][c-1]:'.';
 const center=(c,r)=>({x:OX+(c-1)*TILE+TILE/2,y:(r-1)*TILE+TILE/2});
@@ -431,7 +431,7 @@ function loadStage(i){
     waypoints.forEach((w,i)=>{ const d=(w.x-p.x)**2+(w.y-p.y)**2; if(d<bd){bd=d;bi=i;} }); t.wp=bi; }
   acorns=SG.start; life=10; waveIdx=-1; enemies=[];spawnQ=[];fx=[];
   selCard=null;selTower=null; gSlowT=hasteT=owwT=stunT=shieldT=crewT=0; tTimer=8; skCool={};
-  stat={kill:0,g:0}; earnedA=0; pickups=[]; seenE=new Set(); announced=new Set(); fragN=0;
+  stat={kill:0,g:0}; earnedA=0; pickups=[]; seenE=new Set(); announced=new Set(); fragN=0; aimSkill=null;
   buildDock(); buildSkills();
   state='PREP'; $('select').classList.add('hidden'); $('result').classList.add('hidden');
   ui.waveBtn.textContent='웨이브 시작'; ui.waveBtn.classList.remove('hidden');
@@ -481,18 +481,21 @@ function updSkills(){
   for(const t of SG.roster){ const b=$('sk_'+t); if(!b)continue;
     const has=placedOf(t).length>0; b.classList.toggle('hidden',!has);
     if(has){ const cd=skCool[t]||0; b.disabled=cd>0;
-      b.textContent=cd>0?`${SKILLS[t].ico} ${Math.ceil(cd)}s`:`${SKILLS[t].ico} ${SKILLS[t].label}`; }
+      b.textContent=cd>0?`${SKILLS[t].ico} ${Math.ceil(cd)}s`
+        :aimSkill===t?`${SKILLS[t].ico} 지점 탭!`:`${SKILLS[t].ico} ${SKILLS[t].label}`; }
   }
 }
 function placedOf(type){ return blocks.concat(barrs).filter(b=>b.tower&&b.tower.type===type); }
 function useSkill(t){
   if((skCool[t]||0)>0||!placedOf(t).length)return;
+  if(t==='bookgeo'){ aimSkill=aimSkill?null:'bookgeo'; // 지점 조준 스킬
+    if(aimSkill){ ui.info.textContent="'바다' 향 — 뿌릴 지점을 탭하세요!"; addFx('text',W/2,120,'지점을 탭!'); }
+    updSkills(); return; }
   skCool[t]=SKILLS[t].cd; SFX.skill();
   if(t==='kkito'){ gSlowT=3; addFx('text',W/2,120,'귀 쫑긋! 전장 슬로우'); }
   if(t==='migae'){ hasteT=5; addFx('text',W/2,120,'뽈뽈뽈—! 폭식 모드'); }
   if(t==='boneul'){ shieldT=5; placedOf('boneul').forEach(b=>{ b.tower.hp=bMax(b.tower); }); addFx('text',W/2,120,'쿨쿨... 체력 회복!'); }
   if(t==='ramda'){ acorns+=150; updHud(); addFx('text',W/2,120,'줍줍! 도토리 +150'); }
-  if(t==='bookgeo'){ stunT=2; enemies.forEach(en=>{ if(en.type!=='boss')en.hp-=20; }); reapDead('bookgeo'); addFx('mist',W/2,H/2); addFx('text',W/2,120,"'바다' 향 분사!"); }
   if(t==='lachilchin'){ crewT=5; addFx('text',W/2,120,'그래~ 얘들아 줍자!'); }
   updSkills();
 }
@@ -664,6 +667,11 @@ cv.addEventListener('pointerdown',e=>{
   if(state==='TITLE'||state==='RESULT'||!SG)return;
   const rect=cv.getBoundingClientRect();
   const x=(e.clientX-rect.left)*(W/rect.width), y=(e.clientY-rect.top)*(H/rect.height);
+  if(aimSkill==='bookgeo'){ aimSkill=null; skCool.bookgeo=SKILLS.bookgeo.cd; SFX.skill(); // '바다' 향 지점 분사
+    let n=0; for(const en of enemies)if(!en.dead&&(en.x-x)**2+(en.y-y)**2<=(2.5*TILE)**2){ en.hp-=30; en.dot={dps:3,t:2}; n++; }
+    reapDead('bookgeo'); stunT=Math.max(stunT,1);
+    addFx('ring',x,y,null,{r:2.5*TILE}); addFx('mist',x,y);
+    addFx('text',x,y-20,n?"'바다' 향 직격!":'허공에 향수를...'); updSkills(); return; }
   for(let i=0;i<pickups.length;i++){ const p=pickups[i]; // 도토리 탭 줍기 (+1 보너스)
     if((x-p.x)**2+(y-p.y)**2<=24*24){ acorns+=p.v+1; earnedA+=p.v+1; SFX.coin(); buzz(8);
       addFx('text',p.x,p.y-16,'+'+(p.v+1)); pickups.splice(i,1); updHud(); return; } }
