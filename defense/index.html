@@ -143,8 +143,16 @@
     <div id="stageList" style="display:flex; flex-direction:column; gap:10px; width:100%; align-items:center;"></div>
     <div style="display:flex; gap:8px; align-items:center;">
       <button id="lobbyBtn" style="padding:11px 18px;">주민 강화</button>
+      <button id="dexBtn" style="padding:11px 18px;">케미 도감</button>
       <span class="pill">🔘 <b id="selBtnN">0</b></span>
     </div>
+  </div>
+
+  <div id="dex" class="screen hidden">
+    <h1>케미 도감</h1>
+    <div class="sub">붙여 놓으면 발동하는 인접 시너지 · Lv3에서 갈리는 진화</div>
+    <div id="dexList" style="width:100%; max-width:330px; max-height:430px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; text-align:left;"></div>
+    <button id="dexBack" style="padding:11px 24px;">돌아가기</button>
   </div>
 
   <div id="lobby" class="screen hidden">
@@ -740,6 +748,23 @@ function showLobby(){
 }
 $('lobbyBtn').onclick=()=>{ ac(); showLobby(); };
 $('lobbyBack').onclick=showSelect;
+function showDex(){
+  $('select').classList.add('hidden'); $('dex').classList.remove('hidden');
+  const box=$('dexList'); box.innerHTML='';
+  const row=(h,b2)=>{ const d=document.createElement('div');
+    d.style.cssText='border:2px solid #222;border-radius:10px;background:#fff;box-shadow:2px 2px 0 #222;padding:8px 11px;';
+    d.innerHTML=`<div style="font-size:12.5px;font-weight:800;color:#5a4a3a;">${h}</div><div style="font-size:10.5px;color:#8a7a6a;line-height:1.5;">${b2}</div>`;
+    box.appendChild(d); };
+  const hd=t=>{ const d=document.createElement('div');
+    d.style.cssText='font-size:11px;font-weight:800;color:#b08a3a;margin:6px 2px 0;'; d.textContent=t; box.appendChild(d); };
+  hd('🤝 인접 시너지 — 옆 칸(대각선 포함)에 두면 자동 발동');
+  for(const s of SYNS)row(`${TOWERS[s.a].name} + ${TOWERS[s.b].name} — ${s.n}`,s.d);
+  hd('✨ 분기 진화 — Lv3에서 🌰180으로 선택');
+  for(const t of ['migae','kkito','boneul','ramda','bookgeo','lachilchin'])
+    row(TOWERS[t].name,EVOS[t].map(e=>`<b style="color:#b06a2a">${e.n}</b> ${e.d}`).join('<br>'));
+}
+$('dexBtn').onclick=()=>{ ac(); showDex(); };
+$('dexBack').onclick=()=>{ $('dex').classList.add('hidden'); showSelect(); };
 
 // ============ 설정 토글 · 자랑하기 ============
 function updSet(){ $('haptBtn').textContent=`📳 진동 ${SAVE.hapt?'켬':'끔'}`; $('cbBtn').textContent=`👁 색약 보조 ${SAVE.cb?'켬':'끔'}`; }
