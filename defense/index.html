@@ -67,6 +67,14 @@
   .stageRow .snm { font-size:14px; font-weight:800; color:#5a4a3a; }
   .stageRow .sdc { font-size:10.5px; color:#9a8b7a; }
   .stageRow .st { font-size:13px; color:#e0a92e; letter-spacing:1px; font-weight:800; }
+  .lobRow { width:100%; max-width:330px; display:flex; align-items:center; gap:9px; border:2px solid #222; border-radius:12px; background:#fff; box-shadow:2px 2px 0 #222; padding:8px 11px; }
+  .lobRow img { width:38px; height:38px; object-fit:contain; }
+  .lobRow .li { flex:1; text-align:left; }
+  .lobRow .ln { font-size:13px; font-weight:800; color:#5a4a3a; }
+  .lobRow .ls { font-size:10px; color:#9a8b7a; }
+  .lobRow .dots { letter-spacing:2px; font-size:11px; color:#e0a92e; }
+  .lobRow button { padding:8px 10px; font-size:11px; white-space:nowrap; background:#f6eed8; }
+  .lobRow button.max { background:#f2c14b; }
 
   #popup { position:absolute; left:24px; right:24px; bottom:108px; background:rgba(253,251,245,.97); border:2.5px solid #222; border-radius:14px; box-shadow:3px 3px 0 #222; padding:12px 14px; z-index:10; }
   #popup .row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
@@ -114,6 +122,17 @@
     <h1>골목 어귀</h1>
     <div class="sub">스테이지를 골라요 — ★는 남은 쾌적도로 결정</div>
     <div id="stageList" style="display:flex; flex-direction:column; gap:10px; width:100%; align-items:center;"></div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button id="lobbyBtn" style="padding:11px 18px;">주민 강화</button>
+      <span class="pill">🔘 <b id="selBtnN">0</b></span>
+    </div>
+  </div>
+
+  <div id="lobby" class="screen hidden">
+    <h1>주민 강화</h1>
+    <div class="sub">별점으로 얻은 단추로 방범대를 키워요 · 보유 <b id="lobBtnN">0</b>🔘<br>같은 주민을 10판 쓸 때마다 강화비 -10% (나이테존)</div>
+    <div id="lobbyList" style="display:flex; flex-direction:column; gap:8px; width:100%; align-items:center; max-height:390px; overflow-y:auto;"></div>
+    <button id="lobbyBack" style="padding:11px 24px;">돌아가기</button>
   </div>
 
   <div id="result" class="screen hidden">
@@ -164,6 +183,17 @@ const TOWERS={
  bookgeo:{name:'북거씨',cost:150,h:48,slot:'#',
    lv:[{dmg:8,rate:2.5,range:2},{dmg:12,rate:2.3,range:2.2,buff:.10,up:120},{dmg:18,rate:2.0,range:2.5,buff:.20,up:225}]},
 };
+const ENDLESS={id:99,endless:true,name:'무한 골목',desc:'기록에 도전! (S4 클리어로 해금)',start:200,
+  roster:['migae','kkito','boneul','lachilchin','ramda','bookgeo'],
+  map:['...E....','.#.====.','.#....=.','..#.#.=.','.======.','.=.##.#.','.=..T##.','.=====..','.##..=..','....#V..']};
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function endlessWaveDef(n){ // 고정 시드 — 랭킹 공정성
+  if(n%10===9)return [['boss',1],['k',4+Math.floor(n/3)]];
+  const rng=mulberry32(1000+n), pool=n<3?['k','k','d']:['k','k','d','g','n'];
+  const cnt=6+Math.floor(n*1.4), def={};
+  for(let i=0;i<cnt;i++){ const t=pool[Math.floor(rng()*pool.length)]; def[t]=(def[t]||0)+1; }
+  return Object.entries(def);
+}
 const ENEMIES={
  k:{name:'꼬릿 구름',hp:20,spd:.8,reward:5,size:52},
  d:{name:'먼지 뭉치',hp:10,spd:1.6,reward:4,size:30},
@@ -183,7 +213,16 @@ const SKILLS={
 // ============ 저장 ============
 const LS='somsom_defense_v1';
 const save=()=>localStorage.setItem(LS,JSON.stringify(SAVE));
-let SAVE={stars:{}}; try{ SAVE=JSON.parse(localStorage.getItem(LS))||SAVE; }catch(e){}
+let SAVE={stars:{},buttons:0,grades:{},plays:{},cleared:{},endless:0};
+try{ SAVE=Object.assign({stars:{},buttons:0,grades:{},plays:{},cleared:{},endless:0},JSON.parse(localStorage.getItem(LS))||{}); }catch(e){}
+
+// ============ 단추 메타 (기획서 §7) ============
+const GRADE_COST=[6,10,16,24]; // 등급 1→2 … 4→5
+const CORE_STAT={migae:'공격력',kkito:'감속률',boneul:'체력',ramda:'생산량',bookgeo:'광역 피해',lachilchin:'회수액'};
+const gm=t=>1+.08*(SAVE.grades[t]||0); // 등급당 +8%
+function gradeCostOf(t){ const g=SAVE.grades[t]||0; if(g>=4)return null;
+  const disc=Math.min(.30,Math.floor((SAVE.plays[t]||0)/10)*.10); // 나이테존 할인
+  return Math.max(1,Math.round(GRADE_COST[g]*(1-disc))); }
 
 // ============ 사운드 (WebAudio 합성 — 게임1 방식) · 햅틱 ============
 const AU={ctx:null,mute:!!SAVE.mute,last:0};
@@ -294,7 +333,7 @@ const cellAt=(c,r)=>(r>=1&&r<=ROWS&&c>=1&&c<=COLS)?SG.map[r-1][c-1]:'.';
 const center=(c,r)=>({x:OX+(c-1)*TILE+TILE/2,y:(r-1)*TILE+TILE/2});
 
 function loadStage(i){
-  stageIdx=i; SG=STAGES[i];
+  stageIdx=i; SG= i==='E' ? ENDLESS : STAGES[i];
   waypoints=[];blocks=[];barrs=[];tSpots=[];entry=null;villa=null;
   for(let r=1;r<=ROWS;r++)for(let c=1;c<=COLS;c++){
     const ch=cellAt(c,r);
@@ -323,7 +362,8 @@ function loadStage(i){
 // ============ UI ============
 const ui={wave:$('wavePill'),acorn:$('acornN'),life:$('lifePill'),info:$('waveInfo'),waveBtn:$('waveBtn'),popup:$('popup'),speed:$('speedBtn')};
 function updHud(){
-  ui.wave.textContent = waveIdx<0?`WAVE -/${SG?SG.waves.length:0}`:`WAVE ${Math.min(waveIdx+1,SG.waves.length)}/${SG.waves.length}`;
+  ui.wave.textContent = SG&&SG.endless ? `WAVE ${Math.max(1,waveIdx+1)} ∞`
+    : waveIdx<0?`WAVE -/${SG?SG.waves.length:0}`:`WAVE ${Math.min(waveIdx+1,SG.waves.length)}/${SG.waves.length}`;
   ui.acorn.textContent=acorns; ui.life.textContent=`❤ ${life}/10`;
   document.querySelectorAll('.card').forEach(el=>{
     el.classList.toggle('poor',acorns<TOWERS[el.dataset.t].cost);
@@ -361,7 +401,7 @@ function useSkill(t){
   skCool[t]=SKILLS[t].cd; SFX.skill();
   if(t==='kkito'){ gSlowT=3; addFx('text',W/2,120,'귀 쫑긋! 전장 슬로우'); }
   if(t==='migae'){ hasteT=5; addFx('text',W/2,120,'뽈뽈뽈—! 폭식 모드'); }
-  if(t==='boneul'){ shieldT=5; placedOf('boneul').forEach(b=>{ b.tower.hp=TOWERS.boneul.lv[b.tower.lv].hp; }); addFx('text',W/2,120,'쿨쿨... 체력 회복!'); }
+  if(t==='boneul'){ shieldT=5; placedOf('boneul').forEach(b=>{ b.tower.hp=TOWERS.boneul.lv[b.tower.lv].hp*gm('boneul'); }); addFx('text',W/2,120,'쿨쿨... 체력 회복!'); }
   if(t==='ramda'){ acorns+=150; updHud(); addFx('text',W/2,120,'줍줍! 도토리 +150'); }
   if(t==='bookgeo'){ stunT=2; enemies.forEach(en=>{ if(en.type!=='boss')en.hp-=20; }); reapDead('bookgeo'); addFx('mist',W/2,H/2); addFx('text',W/2,120,"'바다' 향 분사!"); }
   if(t==='lachilchin'){ crewT=5; addFx('text',W/2,120,'그래~ 얘들아 줍자!'); }
@@ -374,31 +414,50 @@ function startWave(){
   ui.info.textContent=`웨이브 ${waveIdx+1} — 골목을 지켜라!`;
   SFX.wave(); banner(`웨이브 ${waveIdx+1}`);
   spawnQ=[]; let t=0.4;
-  for(const [type,n] of SG.waves[waveIdx]) for(let i=0;i<n;i++){ spawnQ.push({type,t}); t+= type==='d'?0.75:type==='g'?0.6:type==='boss'?0:1.05; }
+  const def = SG.endless ? endlessWaveDef(waveIdx) : SG.waves[waveIdx];
+  for(const [type,n] of def) for(let i=0;i<n;i++){ spawnQ.push({type,t}); t+= type==='d'?0.75:type==='g'?0.6:type==='boss'?0:1.05; }
   // 은행나무: 활성 웨이브에 유한 버스트만 (무한 스폰 → 웨이브 교착 방지)
-  tLeft = (SG.tWaves&&SG.tWaves.includes(waveIdx)) ? (SG.id===3&&waveIdx===2?4:3) : 0;
+  tLeft = SG.endless ? (waveIdx%5===2?3:0)
+    : (SG.tWaves&&SG.tWaves.includes(waveIdx)) ? (SG.id===3&&waveIdx===2?4:3) : 0;
   tTimer=3;
   updHud();
 }
 function endWave(){
   acorns+=WAVE_BONUS; addFx('text',W/2,60,`웨이브 클리어! +${WAVE_BONUS}`); SFX.clear();
-  if(waveIdx>=SG.waves.length-1)return finish(true);
+  if(!SG.endless&&waveIdx>=SG.waves.length-1)return finish(true);
   state='PREP'; prepT=PREP_TIME;
   ui.waveBtn.textContent=`바로 시작 (+${SKIP_BONUS})`; ui.waveBtn.classList.remove('hidden'); updHud();
 }
 function finish(win){
   state='RESULT';
+  // 나이테존: 출전 주민 누적 판수
+  for(const t of SG.roster) if(placedOf(t).length) SAVE.plays[t]=(SAVE.plays[t]||0)+1;
   const stars=win?(life>=10?3:life>=6?2:1):0;
-  if(win){ const k='s'+SG.id; SAVE.stars[k]=Math.max(SAVE.stars[k]||0,stars); save(); }
-  $('stars').innerHTML=[0,1,2].map(i=>`<span>${win&&i<stars?'★':'☆'}</span>`).join('');
-  [...$('stars').children].forEach((el,i)=>setTimeout(()=>{ el.classList.add('on'); if(win&&i<stars)SFX.star(); },400+i*380));
-  $('resTitle').textContent=win?(stars===3?'완벽한 방범이었어요!':'당근 빌라를 지켰다!'):'골목이 꼬릿꼬릿해졌다…';
+  let earned=0;
+  if(SG.endless){ // 무한 모드: 5웨이브당 단추 1 (최고 기록 향상분만)
+    const rec=Math.max(0,waveIdx), best=SAVE.endless||0;
+    earned=Math.max(0,Math.floor(Math.max(rec,best)/5)-Math.floor(best/5));
+    SAVE.endless=Math.max(best,rec); SAVE.buttons+=earned; save();
+    $('stars').innerHTML=`<span style="font-size:24px;">∞</span>`; $('stars').firstChild.classList.add('on');
+    $('resTitle').textContent = rec>best&&best>0?'신기록이다!':rec>=10?'대단한 방범이었어!':'골목이 꼬릿꼬릿해졌다…';
+    $('resSub').innerHTML=`<b>${rec}웨이브</b> 버텼어요 · 최고 기록 ${SAVE.endless}웨이브`+(earned?`<br>🔘 단추 +${earned}`:'');
+    if(rec>=SAVE.endless&&rec>0){ confetti(24); SFX.win(); } else SFX.lose();
+  } else {
+    const k='s'+SG.id, prev=SAVE.stars[k]||0, first=!SAVE.cleared[k];
+    if(win){ const tbl=[0,1,2,3];
+      earned=Math.max(0,tbl[stars]-tbl[prev])+(first?2:0);
+      SAVE.cleared[k]=1; SAVE.stars[k]=Math.max(prev,stars); SAVE.buttons+=earned; }
+    save();
+    $('stars').innerHTML=[0,1,2].map(i=>`<span>${win&&i<stars?'★':'☆'}</span>`).join('');
+    [...$('stars').children].forEach((el,i)=>setTimeout(()=>{ el.classList.add('on'); if(win&&i<stars)SFX.star(); },400+i*380));
+    $('resTitle').textContent=win?(stars===3?'완벽한 방범이었어요!':'당근 빌라를 지켰다!'):'골목이 꼬릿꼬릿해졌다…';
+    $('resSub').innerHTML=win?`남은 쾌적도 ${life}/10 → ${stars}★`+(earned?`<br>🔘 단추 +${earned} — 주민 강화에 써요!`:''):'조합과 자리를 바꿔 다시!';
+    if(win){ SFX.win(); confetti(16+stars*10); buzz(60); } else SFX.lose();
+  }
   const roster=SG.roster.filter(t=>placedOf(t).length), who=roster.length?roster[Math.floor(Math.random()*roster.length)]:SG.roster[0];
   $('resultChar').textContent=`${TOWERS[who].name}: "${LINES[who][win?'win':'lose']}"`;
-  $('resSub').innerHTML=win?`남은 쾌적도 ${life}/10 → ${stars}★`:'조합과 자리를 바꿔 다시!';
-  $('nextBtn').classList.toggle('hidden',!win||stageIdx>=STAGES.length-1);
+  $('nextBtn').classList.toggle('hidden',SG.endless||!win||stageIdx>=STAGES.length-1);
   $('result').classList.remove('hidden');
-  if(win){ SFX.win(); confetti(16+stars*10); buzz(60); } else SFX.lose();
 }
 
 // ============ 배치/강화 ============
@@ -415,7 +474,7 @@ function place(type,c,r){
   const T=TOWERS[type]; if(acorns<T.cost)return;
   acorns-=T.cost;
   const tw={type,lv:0,cool:0,kick:0,winT:0,prodT:0,spent:T.cost};
-  if(T.slot==='='){ tw.hp=T.lv[0].hp; barrs.push({c,r,tower:tw}); }
+  if(T.slot==='='){ tw.hp=T.lv[0].hp*gm('boneul'); barrs.push({c,r,tower:tw}); }
   else blocks.find(b=>b.c===c&&b.r===r).tower=tw;
   selCard=null; updHud(); updSkills(); addFx('pop',center(c,r).x,center(c,r).y);
   SFX.place(); addFx('bubble',center(c,r).x,center(c,r).y-T.h-18,LINES[type].place);
@@ -441,7 +500,7 @@ function showPopup(b){
 function hidePopup(){ selTower=null; ui.popup.classList.add('hidden'); }
 $('upBtn').onclick=()=>{ const t=selTower.tower,nxt=TOWERS[t.type].lv[t.lv+1];
   if(nxt&&acorns>=nxt.up){ acorns-=nxt.up; t.spent+=nxt.up; t.lv++;
-    if(t.type==='boneul')t.hp=TOWERS.boneul.lv[t.lv].hp;
+    if(t.type==='boneul')t.hp=TOWERS.boneul.lv[t.lv].hp*gm('boneul');
     SFX.up(); updHud(); showPopup(selTower); addFx('pop',center(selTower.c,selTower.r).x,center(selTower.c,selTower.r).y); } };
 $('sellBtn').onclick=()=>{ acorns+=Math.floor(selTower.tower.spent*REFUND); SFX.sell();
   const i=barrs.indexOf(selTower); if(i>=0)barrs.splice(i,1); else selTower.tower=null;
@@ -472,7 +531,8 @@ $('retryBtn').onclick=()=>loadStage(stageIdx);
 $('nextBtn').onclick=()=>loadStage(stageIdx+1);
 $('listBtn').onclick=()=>{ state='TITLE'; showSelect(); };
 function showSelect(){
-  $('result').classList.add('hidden'); $('select').classList.remove('hidden');
+  $('result').classList.add('hidden'); $('lobby').classList.add('hidden'); $('select').classList.remove('hidden');
+  $('selBtnN').textContent=SAVE.buttons;
   const box=$('stageList'); box.innerHTML='';
   STAGES.forEach((s,i)=>{
     const unlocked=i===0||(SAVE.stars['s'+STAGES[i-1].id]||0)>0;
@@ -482,12 +542,38 @@ function showSelect(){
     if(unlocked)el.onclick=()=>loadStage(i);
     box.appendChild(el);
   });
+  const eu=(SAVE.stars.s4||0)>0;
+  const el=document.createElement('div'); el.className='stageRow'+(eu?'':' locked');
+  el.innerHTML=`<span class="no">∞</span><span class="info"><div class="snm">무한 골목</div><div class="sdc">${eu?'끝없는 꼬릿 구름 — 기록에 도전!':'스테이지 4 클리어로 해금'}</div></span><span class="st">${SAVE.endless?SAVE.endless+'W':''}</span>`;
+  if(eu)el.onclick=()=>loadStage('E');
+  box.appendChild(el);
 }
+function showLobby(){
+  $('select').classList.add('hidden'); $('lobby').classList.remove('hidden');
+  $('lobBtnN').textContent=SAVE.buttons;
+  const box=$('lobbyList'); box.innerHTML='';
+  for(const t of ['migae','kkito','boneul','ramda','bookgeo','lachilchin']){
+    const g=SAVE.grades[t]||0, cost=gradeCostOf(t), plays=SAVE.plays[t]||0;
+    const el=document.createElement('div'); el.className='lobRow';
+    el.innerHTML=`<img alt="${TOWERS[t].name}"><span class="li"><div class="ln">${TOWERS[t].name} <span class="dots">${'●'.repeat(g)}${'○'.repeat(4-g)}</span></div>
+      <div class="ls">${CORE_STAT[t]} +${g*8}% · 출전 ${plays}판${plays>=10?' (할인 중)':''}</div></span>
+      <button ${cost===null?'class="max" disabled':''}>${cost===null?'MAX':`강화 🔘${cost}`}</button>`;
+    if(IMGS[t])el.querySelector('img').src=IMGS[t].toDataURL();
+    const btn=el.querySelector('button');
+    if(cost!==null){ btn.disabled=SAVE.buttons<cost;
+      btn.onclick=()=>{ if(SAVE.buttons<cost)return;
+        SAVE.buttons-=cost; SAVE.grades[t]=g+1; save(); SFX.up(); buzz(15); showLobby(); }; }
+    box.appendChild(el);
+  }
+}
+$('lobbyBtn').onclick=()=>{ ac(); showLobby(); };
+$('lobbyBack').onclick=showSelect;
 
 // ============ 게임 로직 ============
 function spawn(type,wp=0){
   const E=ENEMIES[type];
-  enemies.push({type,hp:E.hp,max:E.hp,wp,x:waypoints[wp].x,y:waypoints[wp].y-(wp?0:40),prog:wp,wob:Math.random()*7,
+  const hp=Math.round(E.hp*(SG.endless?1+.12*Math.max(0,waveIdx):1)); // 무한 모드 스케일링
+  enemies.push({type,hp,max:hp,wp,x:waypoints[wp].x,y:waypoints[wp].y-(wp?0:40),prog:wp,wob:Math.random()*7,
     sumT:6,rev:0,revd:false});
   if(type==='boss'){ banner('왕꼬릿 구름 등장!!',true); SFX.boss(); shakeT=.5;
     placedOf('kkito').forEach(b=>addFx('bubble',center(b.c,b.r).x,center(b.c,b.r).y-90,'귀, 귀가 쭈뼛해!!')); }
@@ -496,7 +582,7 @@ function auraAt(x,y){
   let slow=1,mark=0;
   for(const b of blocks){ const t=b.tower; if(!t||t.type!=='kkito')continue;
     const L=TOWERS.kkito.lv[t.lv],p=center(b.c,b.r);
-    if((x-p.x)**2+(y-p.y)**2<=(L.range*TILE)**2){ slow=Math.min(slow,1-L.slow); mark=Math.max(mark,L.mark); } }
+    if((x-p.x)**2+(y-p.y)**2<=(L.range*TILE)**2){ slow=Math.min(slow,1-Math.min(.65,L.slow*gm('kkito'))); mark=Math.max(mark,L.mark); } }
   if(gSlowT>0)slow=Math.min(slow,.4);
   if(stunT>0)slow=0;
   return {slow,mark};
@@ -578,7 +664,7 @@ function update(dt){
       const R2=(L.range*TILE)**2; let best=null;
       for(const en of enemies)if(!en.dead&&(en.x-p.x)**2+(en.y-p.y)**2<=R2&&(!best||en.prog>best.prog))best=en;
       if(best){ t.cool=L.rate*rateMul(b); t.kick=1; SFX.shoot();
-        best.hp-=L.dmg*(1+auraAt(best.x,best.y).mark);
+        best.hp-=L.dmg*gm('migae')*(1+auraAt(best.x,best.y).mark);
         addFx('proj',p.x,p.y-26,null,best);
         if(best.hp<=0&&!best.dead){ defeat(best); t.winT=.7; addFx('heart',p.x,p.y-T.h); } }
     }
@@ -586,7 +672,7 @@ function update(dt){
       t.cool-=dt; if(t.cool>0)continue;
       const R2=(L.range*TILE)**2; let hit=false;
       for(const en of enemies)if(!en.dead&&(en.x-p.x)**2+(en.y-p.y)**2<=R2){
-        en.hp-=L.dmg*(1+auraAt(en.x,en.y).mark); hit=true;
+        en.hp-=L.dmg*gm('bookgeo')*(1+auraAt(en.x,en.y).mark); hit=true;
         if(en.hp<=0&&!en.dead){ defeat(en); t.winT=.7; } }
       if(hit){ t.cool=L.rate*rateMul(b); t.kick=1; SFX.mist(); addFx('ring',p.x,p.y,null,{r:L.range*TILE}); }
     }
@@ -595,13 +681,13 @@ function update(dt){
       const R2=(L.range*TILE)**2;
       const grab=enemies.find(en=>!en.dead&&(en.type==='g'||(crewT>0&&en.type==='d'))&&(en.x-p.x)**2+(en.y-p.y)**2<=R2);
       if(grab){ t.cool=crewT>0?.3:L.rate; t.kick=1; grab.dead=true; SFX.bell();
-        acorns+=L.gain; t.winT=.7;
-        addFx('grab',grab.x,grab.y,null,{tx:p.x,ty:p.y}); addFx('text',p.x,p.y-T.h-6,'+'+L.gain); updHud(); }
+        const gn=Math.round(L.gain*gm('lachilchin')); acorns+=gn; t.winT=.7;
+        addFx('grab',grab.x,grab.y,null,{tx:p.x,ty:p.y}); addFx('text',p.x,p.y-T.h-6,'+'+gn); updHud(); }
     }
     if(t.type==='ramda'){
       t.prodT+=dt;
-      if(t.prodT>=L.every){ t.prodT=0; acorns+=L.prod; t.kick=1;
-        addFx('text',p.x,p.y-T.h-6,'+'+L.prod); updHud(); }
+      if(t.prodT>=L.every){ t.prodT=0; const pr=Math.round(L.prod*gm('ramda')); acorns+=pr; t.kick=1;
+        addFx('text',p.x,p.y-T.h-6,'+'+pr); updHud(); }
     }
   }
   enemies=enemies.filter(e=>!e.dead);
@@ -701,7 +787,7 @@ function draw(){
       ctx.fillStyle='#fdfbf5'; ctx.strokeStyle='#222';
       ctx.beginPath(); ctx.roundRect(p.x-20,(b.r)*TILE-4-h-24,40,6,3); ctx.fill(); ctx.stroke();
       ctx.fillStyle=shieldT>0?'#6a9ad8':'#3a8a7a';
-      ctx.beginPath(); ctx.roundRect(p.x-19,(b.r)*TILE-3-h-24,38*Math.max(0,t.hp/L.hp),4,2); ctx.fill(); }
+      ctx.beginPath(); ctx.roundRect(p.x-19,(b.r)*TILE-3-h-24,38*Math.max(0,Math.min(1,t.hp/(L.hp*gm('boneul')))),4,2); ctx.fill(); }
     const by=(b.r)*TILE-4-h+bob-15,max=t.lv===2;
     ctx.fillStyle=max?'#f2c14b':'#fdfbf5'; ctx.strokeStyle='#222'; ctx.lineWidth=1.5;
     ctx.beginPath(); ctx.roundRect(p.x-16,by,32,14,7); ctx.fill(); ctx.stroke();
