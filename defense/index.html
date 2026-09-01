@@ -174,7 +174,7 @@
 
   <div id="popup" class="hidden">
     <div class="row"><span class="nm" id="pNm"></span><span class="st" id="pSt"></span></div>
-    <div class="btns"><button id="upBtn"></button><button id="priBtn"></button><button id="sellBtn"></button><button id="closeBtn">닫기</button></div>
+    <div class="btns"><button id="upBtn"></button><button id="sellBtn"></button><button id="closeBtn">닫기</button></div>
   </div>
 
   <div id="evoPop" class="hidden">
@@ -427,7 +427,6 @@ const SYNS=[
  {id:'market',a:'lachilchin',b:'ramda',n:'알뜰 시장',d:'은행 회수액 +4'},
  {id:'calmrush',a:'migae',b:'bookgeo',n:'느긋과 성급',d:'미개 공격력 +25%'},
 ];
-const PRI_LABEL=['앞','뒤','강함','마킹'];
 const SKILLS={
  migae:{cd:18,dur:5,ico:'⚡',label:'뽈뽈 폭식'},
  kkito:{cd:20,dur:3,ico:'🐰',label:'전장 슬로우'},
@@ -949,8 +948,6 @@ function showPopup(b){
   if(!nxt&&t.evo===null&&EVOS[t.type]){ $('upBtn').textContent=`✨ 진화 🌰${EVO_COST}`; $('upBtn').disabled=acorns<EVO_COST; }
   else if(!nxt){ $('upBtn').textContent=t.evo!==null?`✨ ${EVOS[t.type][t.evo].n}`:'최대 레벨'; $('upBtn').disabled=true; }
   else { $('upBtn').textContent=`강화 🌰${nxt.up}`; $('upBtn').disabled=acorns<nxt.up; }
-  $('priBtn').classList.toggle('hidden',t.type!=='migae');
-  $('priBtn').textContent=`조준:${PRI_LABEL[t.pri]}`;
   $('sellBtn').textContent=`회수 +${Math.floor(t.spent*REFUND)}`;
   $('sellBtn').disabled=!!(SG&&SG.weekly&&wRule().id==='nosell');
   ui.popup.classList.remove('hidden');
@@ -962,7 +959,6 @@ $('upBtn').onclick=()=>{ const t=selTower.tower,nxt=TOWERS[t.type].lv[t.lv+1];
     if(t.type==='boneul')t.hp=bMax(t);
     SFX.up(); updHud(); showPopup(selTower); const pc=center(selTower.c,selTower.r);
     addFx('pop',pc.x,pc.y); addFx('sparkle',pc.x,(selTower.r)*TILE-TOWERS[t.type].h*.6); t.kick=1; t.dir=0; } }; // 강화: 반짝 + 제자리 홉
-$('priBtn').onclick=()=>{ const t=selTower.tower; t.pri=(t.pri+1)%PRI_LABEL.length; SFX.coin(); showPopup(selTower); };
 function openEvo(){ const t=selTower.tower,E=EVOS[t.type];
   ui.popup.classList.add('hidden');
   $('evoA').innerHTML=`<b>${E[0].n}</b><span>${E[0].d}</span>`;
