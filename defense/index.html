@@ -368,11 +368,16 @@ const ENDLESS={id:99,endless:true,name:'무한 골목',desc:'기록에 도전! (
   map:['...E....','.#.====.','.#....=.','..#.#.=.','.======.','.=.##.#.','.=..T##.','.=====..','.##..=..','....#V..']};
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
 function endlessWaveDef(n){ // 고정 시드 — 랭킹 공정성 (주간 챌린지는 주차별 시드)
-  if(n%10===9)return [['boss',1],['k',4+Math.floor(n/3)]];
+  if(n%10===9){ const bt=['boss','rboss','wboss'][Math.floor(n/10)%3]; // 보스 로테이션
+    return [[bt,1],['k',4+Math.floor(n/3)]]; }
   const wk=SG&&SG.weekly;
-  const rng=mulberry32(wk?weekKey()*53+n:1000+n),
-    pool=n<3?['k','k','d']:wk?['k','d','g','n','u','w','i','s']:['k','k','d','g','n'];
-  const cnt=6+Math.floor(n*1.4), def={};
+  const rng=mulberry32(wk?weekKey()*53+n:1000+n);
+  let pool=['k','k','d']; // 웨이브가 갈수록 전 챕터 골칫거리 합류
+  if(n>=3)pool=['k','k','d','g','n'];
+  if(n>=6)pool=['k','d','g','n','u','w'];
+  if(n>=10)pool=['k','d','n','u','w','s','i'];
+  if(n>=14)pool=['k','d','u','w','s','i','sb'];
+  const cnt=Math.min(32,6+Math.floor(n*1.4)), def={};
   for(let i=0;i<cnt;i++){ const t=pool[Math.floor(rng()*pool.length)]; def[t]=(def[t]||0)+1; }
   return Object.entries(def);
 }
@@ -1199,12 +1204,14 @@ const CTIP={d:'빨라요! 끼토의 감속이 특효예요',g:'라칠친 할머�
   s:'스스로 회복해요! 화력을 모아 단숨에 잡으세요',i:'얼음이라 감속이 안 통해요 — 순수 화력으로!',sb:'구를수록 커져요 — 입구에서 일찍 잡으세요'};
 const chMul=()=>SG.ch===2?1.35:SG.ch===3?1.75:1; // 챕터 난이도 계수 — 메타 성장(단추·유물·진화)에 맞춰 상승
 const chSpd=()=>SG.ch===2?1.05:SG.ch===3?1.1:1;
-const hpScale=()=>(SG.endless?1+.12*Math.max(0,waveIdx):chMul())*(hardOn&&!SG.endless?1.5:1)*rc('hpMul',1);
+const endlessHp=()=>{ const n=Math.max(0,waveIdx); return (1+.10*n)*Math.pow(1.045,n); }; // 복리 — 완성 조합도 결국 뚫린다
+const endlessSpd=()=>1+Math.min(.6,.025*Math.max(0,waveIdx));
+const hpScale=()=>(SG.endless?endlessHp():chMul())*(hardOn&&!SG.endless?1.5:1)*rc('hpMul',1);
 function spawn(type,wp=0){
   const E=ENEMIES[type];
   const hp=Math.round(E.hp*hpScale());
   enemies.push({type,hp,max:hp,wp,x:waypoints[wp].x,y:waypoints[wp].y-(wp?0:40),prog:wp,wob:Math.random()*7,born:.38,
-    sumT:6,rev:0,revd:false,spdMul:(hardOn&&!SG.endless?1.2:1)*(SG.endless?1:chSpd())*(SG.weekly&&wRule().id==='storm'?1.3:1)});
+    sumT:6,rev:0,revd:false,spdMul:(hardOn&&!SG.endless?1.2:1)*(SG.endless?endlessSpd():chSpd())*(SG.weekly&&wRule().id==='storm'?1.3:1)});
   if(CTIP[type]&&!seenE.has(type)){ seenE.add(type); // 첫 등장 상성 안내
     banner(`${ENEMIES[type].name} 등장!`); ui.info.textContent=`${ENEMIES[type].name} — ${CTIP[type]}`; }
   if(type==='boss'){ banner('왕꼬릿 구름 등장!!',true); SFX.boss(); shakeT=.5;
