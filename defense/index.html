@@ -615,11 +615,11 @@ const ENAME={k:'꼬릿',d:'먼지',g:'은행',n:'낙엽',boss:'왕꼬릿',u:'진
 const CNTR={d:'끼토',g:'라칠친',n:'미개',u:'끼토',w:'북거씨',boss:'전원',rboss:'전원',s:'미개',i:'미개',sb:'북거씨',wboss:'전원'};
 const TDESC={
  migae:'⚡ 속사 — 빠르게 콕콕! 기본 공격수 (아무 빈 칸에 배치)',
- kkito:'🐰 감속+귀 마킹 — 범위 안 적이 느려지고 더 아프게 맞아요',
- boneul:'🛡️ 바리케이드 — 길 위에 눕혀서 길막! (경로에만 배치)',
- ramda:'🧲 자원 — 도토리를 계속 벌어다 줘요 (공격 없음)',
+ kkito:'🐰 감속+귀 마킹 — 느려지고 아프게 + 심심하면 귀로 튕겨요',
+ boneul:'🛡️ 바리케이드 — 길막! 스치는 적은 할퀴어요 (경로에만)',
+ ramda:'🧲 자원 — 도토리 벌이 + 가끔 도토리 투척',
  bookgeo:'🐢 광역 미스트 — 범위 전체 공격 + 이웃 타워 공속 버프',
- lachilchin:'🔄 은행 줍기 — 굴러오는 은행을 도토리로 바꿔요',
+ lachilchin:'🔄 은행 줍기 — 은행을 도토리로! 한가하면 집게로 콕',
 };
 let pvCache={i:-9,sg:null,s:''};
 function previewTxt(idx){
@@ -888,10 +888,10 @@ function towerStat(b){
   const t=b.tower,T=TOWERS[t.type],L=T.lv[t.lv];
   const evo=t.evo!==null?` · ✨${EVOS[t.type][t.evo].n}`:'';
   if(t.type==='migae')return `공격 ${L.dmg} · ${L.rate}s · ${rangeOf(b)}타일${evo}`;
-  if(t.type==='kkito')return `감속 -${L.slow*100}% · 마킹 +${t.evo===1?40:L.mark*100}% · ${rangeOf(b)}타일${evo}`;
-  if(t.type==='boneul')return `HP ${Math.ceil(t.hp)}/${Math.round(bMax(t))} · 반격 ${L.thorn}${t.evo===0?'×1.5':''}/s${evo}`;
-  if(t.type==='lachilchin')return `은행 회수 ${L.rate}s · +${L.gain}도토리${evo}`;
-  if(t.type==='ramda')return t.evo===0?`12초당 단추 조각 +1 (${fragN%3}/3)${evo}`:`${L.every}초당 +${L.prod} · 보상 +${L.bonus*100}%${evo}`;
+  if(t.type==='kkito')return `감속 -${L.slow*100}% · 마킹 +${t.evo===1?40:L.mark*100}% · 귀 튕기기 ${2+t.lv}${evo}`;
+  if(t.type==='boneul')return `HP ${Math.ceil(t.hp)}/${Math.round(bMax(t))} · 반격 ${L.thorn}${t.evo===0?'×1.5':''}/s · 할큄 ${2+t.lv}/s${evo}`;
+  if(t.type==='lachilchin')return `은행 회수 +${L.gain} · 집게 콕 ${[3,4,6][t.lv]}${evo}`;
+  if(t.type==='ramda')return (t.evo===0?`12초당 단추 조각 +1 (${fragN%3}/3)`:`${L.every}초당 +${L.prod} · 보상 +${L.bonus*100}%`)+` · 투척 ${3+t.lv}${evo}`;
   if(t.type==='bookgeo')return `광역 ${Math.round(L.dmg*(t.evo===1?4:1))} · ${(L.rate*(t.evo===1?2:1)).toFixed(1)}s · ${rangeOf(b).toFixed(1)}타일${evo}`;
 }
 function showPopup(b){
@@ -1307,7 +1307,17 @@ function update(dt){
     if(t.flood||t.freeze>0)continue; // 침수·빙결 주민은 활동 불가
     const T=TOWERS[t.type],L=T.lv[t.lv],p=center(b.c,b.r);
     if(t.type==='boneul'){ if(t.kbT>0)t.kbT-=dt;
-      if(synHas(b,'back'))t.hp=Math.min(bMax(t),t.hp+2*dt); }
+      if(synHas(b,'back'))t.hp=Math.min(bMax(t),t.hp+2*dt);
+      const S2=(1.2*TILE)**2; // 할큄: 스치는 적에게 지속 피해
+      for(const en of enemies)if(!en.dead&&(en.x-p.x)**2+(en.y-p.y)**2<=S2){
+        hurt(en,(2+t.lv)*dt);
+        if(en.hp<=0&&!en.dead){ defeat(en); t.winT=.7; } } }
+    if(t.type==='kkito'){ t.cool-=dt; // 귀 튕기기: 약한 단일 공격
+      if(t.cool<=0){ const R2=(rangeOf(b)*TILE)**2;
+        const pool=enemies.filter(en=>!en.dead&&(en.x-p.x)**2+(en.y-p.y)**2<=R2);
+        if(pool.length){ const best=pickTarget(pool,0); t.cool=1.2; t.kick=1; SFX.shoot();
+          hurt(best,(2+t.lv)*gm('kkito')); addFx('proj',p.x,p.y-46,null,best);
+          if(best.hp<=0&&!best.dead){ defeat(best); t.winT=.7; } } } }
     if(t.type==='migae'){
       t.cool-=dt; if(t.cool>0)continue;
       const R2=(rangeOf(b)*TILE)**2;
@@ -1344,8 +1354,18 @@ function update(dt){
           if(fr){ for(const en of enemies)if(!en.dead&&(en.x-fr.x)**2+(en.y-fr.y)**2<=(1.2*TILE)**2)hurt(en,25);
             addFx('ring',fr.x,fr.y,null,{r:1.2*TILE}); reapDead('lachilchin'); } }
         addFx('grab',grab.x,grab.y,null,{tx:p.x,ty:p.y}); addFx('text',p.x,p.y-T.h-6,'+'+gn); updHud(); }
+      else { const tp=enemies.filter(en=>!en.dead&&(en.x-p.x)**2+(en.y-p.y)**2<=R2); // 주울 게 없으면 집게로 콕
+        if(tp.length){ const best=pickTarget(tp,0); t.cool=L.rate; t.kick=1; SFX.shoot();
+          hurt(best,[3,4,6][t.lv]); addFx('proj',p.x,p.y-30,null,best);
+          if(best.hp<=0&&!best.dead){ defeat(best); t.winT=.7; } } }
     }
     if(t.type==='ramda'){
+      t.cool-=dt; // 도토리 투척: 약한 단일 공격
+      if(t.cool<=0){ const R2=(L.range*TILE)**2;
+        const pool=enemies.filter(en=>!en.dead&&(en.x-p.x)**2+(en.y-p.y)**2<=R2);
+        if(pool.length){ const best=pickTarget(pool,0); t.cool=2.5; t.kick=1;
+          hurt(best,(3+t.lv)*gm('ramda')); addFx('proj',p.x,p.y-30,null,best);
+          if(best.hp<=0&&!best.dead){ defeat(best); t.winT=.7; } } }
       t.prodT+=dt;
       if(t.evo===0){ // 단추 공방: 도토리 대신 단추 조각
         if(t.prodT>=12){ t.prodT=0; fragN++; t.kick=1; addFx('text',p.x,p.y-T.h-6,`조각 ${fragN%3||3}/3`);
