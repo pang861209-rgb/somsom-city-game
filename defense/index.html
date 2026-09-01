@@ -575,19 +575,35 @@ const ready=Promise.all(Object.entries(MANIFEST).map(([k,f])=>new Promise(res=>{
   const i=new Image(); i.onload=()=>{ IMGS[k]=RAW.has(k)?i:trimCanvas(keyImage(i)); res(); }; i.onerror=res; i.src=`../assets/${f}.png`;
 })));
 // ── 전용 시트 로더 (나노바나나 산출물) — assets/defense/ 에 있으면 자동 적용, 없으면 SD 플레이스홀더 유지 ──
-function sliceSheet(c,want){ // 투명 열 기준 자동 분할 (작업지시서 §0)
-  const x=c.getContext('2d'), d=x.getImageData(0,0,c.width,c.height).data;
-  const colHas=new Uint8Array(c.width);
-  for(let cx=0;cx<c.width;cx++)for(let cy=0;cy<c.height;cy++)
-    if(d[(cy*c.width+cx)*4+3]>10){ colHas[cx]=1; break; }
-  const parts=[]; let s=-1;
-  for(let cx=0;cx<=c.width;cx++){ const on=cx<c.width&&colHas[cx];
-    if(on&&s<0)s=cx;
-    else if(!on&&s>=0){ if(cx-s>8){ const o=document.createElement('canvas');
-      o.width=cx-s; o.height=c.height;
-      o.getContext('2d').drawImage(c,s,0,cx-s,c.height,0,0,cx-s,c.height);
-      parts.push(trimCanvas(o)); } s=-1; } }
-  while(parts.length>0&&parts.length<(want||4)){ // 포즈가 닿아 덜 잘린 경우: 가장 넓은 조각을 반으로
+function sliceSheet(c,want){ // 연결 성분(픽셀 덩어리) 기준 자동 분할 — 포즈가 가로로 겹쳐도(팔 뻗기 등) 분리됨
+  want=want||4;
+  const W=c.width,H=c.height, d=c.getContext('2d').getImageData(0,0,W,H).data;
+  const lab=new Int32Array(W*H), stack=new Int32Array(W*H), comps=[];
+  for(let i=0;i<W*H;i++){ if(lab[i]||d[i*4+3]<=10)continue;
+    const id=comps.length+1, cm={id,minx:W,maxx:0,miny:H,maxy:0,n:0}; let sp=0; stack[sp++]=i; lab[i]=id;
+    while(sp){ const p=stack[--sp], px=p%W, py=(p-px)/W; cm.n++;
+      if(px<cm.minx)cm.minx=px; if(px>cm.maxx)cm.maxx=px; if(py<cm.miny)cm.miny=py; if(py>cm.maxy)cm.maxy=py;
+      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy)continue;
+        const nx=px+dx,ny=py+dy; if(nx<0||ny<0||nx>=W||ny>=H)continue;
+        const q=ny*W+nx; if(lab[q]||d[q*4+3]<=10)continue; lab[q]=id; stack[sp++]=q; } }
+    comps.push(cm); }
+  if(!comps.length)return [];
+  // 큰 덩어리 want개가 포즈 본체, 나머지(땀방울·잎·미스트)는 x중심이 가장 가까운 본체에 편입
+  const bySize=comps.slice().sort((a,b)=>b.n-a.n), maxN=bySize[0].n;
+  const majors=bySize.filter(k=>k.n>=maxN*.004).slice(0,want);
+  const mk=g=>({ids:[g.id],minx:g.minx,maxx:g.maxx,miny:g.miny,maxy:g.maxy,cx:(g.minx+g.maxx)/2});
+  const groups=majors.map(mk).sort((a,b)=>a.cx-b.cx);
+  const merge=(g,k)=>{ g.ids=g.ids.concat(k.ids||[k.id]); g.minx=Math.min(g.minx,k.minx); g.maxx=Math.max(g.maxx,k.maxx);
+    g.miny=Math.min(g.miny,k.miny); g.maxy=Math.max(g.maxy,k.maxy); g.cx=(g.minx+g.maxx)/2; };
+  for(const k of comps){ if(majors.includes(k))continue; const cx=(k.minx+k.maxx)/2;
+    let g=groups[0],bd=1e9; for(const gg of groups){ const dd=Math.abs(gg.cx-cx); if(dd<bd){bd=dd;g=gg;} } merge(g,k); }
+  groups.sort((a,b)=>a.cx-b.cx);
+  const parts=groups.map(g=>{ const set=new Set(g.ids), w=g.maxx-g.minx+1, h=g.maxy-g.miny+1;
+    const o=document.createElement('canvas'); o.width=w; o.height=h; const ox=o.getContext('2d'), od=ox.createImageData(w,h);
+    for(let py=g.miny;py<=g.maxy;py++)for(let px=g.minx;px<=g.maxx;px++){ const p=py*W+px; if(!set.has(lab[p]))continue;
+      const s=p*4, t=((py-g.miny)*w+(px-g.minx))*4; od.data[t]=d[s]; od.data[t+1]=d[s+1]; od.data[t+2]=d[s+2]; od.data[t+3]=d[s+3]; }
+    ox.putImageData(od,0,0); return o; });
+  while(parts.length>0&&parts.length<want){ // 그래도 모자라면(포즈끼리 픽셀이 붙은 경우): 가장 넓은 조각을 반으로
     let wi=0; parts.forEach((p,i)=>{ if(p.width>parts[wi].width)wi=i; });
     const p=parts[wi], half=Math.floor(p.width/2);
     const mk=(sx,w)=>{ const o=document.createElement('canvas'); o.width=w; o.height=p.height;
@@ -1557,7 +1573,10 @@ function draw(){
     const frame=owwT>0?IMGS[t.type+'_hit']:t.winT>0?IMGS[t.type+'_win']
       :(t.kick>.4&&IMGS[t.type+'_act'])?IMGS[t.type+'_act']:IMGS[t.type];
     const bob=Math.sin(time*(2.7+((b.c*7+b.r*5)%5)*.18)+b.c*2.3+b.r*3.1)*1.5,kick=Math.max(0,Math.min(1,t.kick));
-    const scale=1+t.lv*.09+(t.evo!==null?.12:0),h=T.h*scale,w=frame?h*frame.width/frame.height:h*.8;
+    const scale=1+t.lv*.09+(t.evo!==null?.12:0),h=T.h*scale;
+    // 시트 공통 스케일: 대기 프레임 높이를 기준으로 모든 포즈를 같은 배율로 — 팔 벌린 포즈가 폭만 넓어지고 몸 크기는 유지
+    const base=IMGS[t.type], px=base?h/base.height:1;
+    const w=frame?frame.width*px:h*.8, fh=frame?frame.height*px:h;
     // 공격 반동: 발사 직후 목표 쪽으로 기울며 쭉 늘었다가 스프링처럼 복귀
     const rec=kick>0?Math.exp(-3.5*(1-kick))*Math.cos((1-kick)*7):0;
     const lean=(t.dir||0)*.22*rec; let sy=1+.12*rec, sx=1-.08*rec;
@@ -1566,7 +1585,7 @@ function draw(){
     if(t.land>0){ const lq=Math.sin(t.land/.26*Math.PI); sy*=1-.22*lq; sx*=1+.16*lq; }
     { const shs=t.drop>0?Math.max(.3,1+dropY/160):1; // 공중에 있으면 그림자 축소
       ctx.fillStyle=`rgba(90,74,58,${.18*shs})`; ctx.beginPath();
-      ctx.ellipse(p.x,(b.r)*TILE-5,w*.38*shs,5*shs,0,0,7); ctx.fill(); }
+      ctx.ellipse(p.x,(b.r)*TILE-5,(base?base.width*px:w)*.38*shs,5*shs,0,0,7); ctx.fill(); }
     if(t.lv===2){ ctx.beginPath(); ctx.arc(p.x,(b.r)*TILE-h/2,h*.62,0,7);
       ctx.strokeStyle=t.evo===null?`rgba(224,169,46,${.30+.15*Math.sin(time*4)})`
         :t.evo===0?`rgba(224,140,40,${.42+.18*Math.sin(time*4)})`:`rgba(150,110,220,${.42+.18*Math.sin(time*4)})`;
@@ -1575,7 +1594,7 @@ function draw(){
       const held=t.flood||t.freeze>0;
       if(held)ctx.globalAlpha=.45;
       ctx.save(); ctx.translate(p.x,(b.r)*TILE-4+dropY); ctx.rotate(lean); ctx.scale(sx,sy); // 발끝 피벗
-      ctx.drawImage(frame,-w/2,-h+(t.drop>0?0:bob),w,h); ctx.restore(); ctx.shadowBlur=0; ctx.globalAlpha=1;
+      ctx.drawImage(frame,-w/2,-fh+(t.drop>0?0:bob),w,fh); ctx.restore(); ctx.shadowBlur=0; ctx.globalAlpha=1;
       if(held){ ctx.font='15px sans-serif'; ctx.textAlign='center'; ctx.fillText(t.flood?'💧':'❄',p.x+w/2-2,(b.r)*TILE-h+6); } }
     // 바리케이드 HP
     if(t.type==='boneul'){ const L=TOWERS.boneul.lv[t.lv];
