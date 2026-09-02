@@ -226,6 +226,7 @@
       <button id="dexBtn" style="padding:10px 13px; font-size:12px;">케미 도감</button>
       <span class="tag">🔘 <b id="selBtnN">0</b></span>
     </div>
+    <button id="selBack" style="padding:8px 16px; font-size:12px; background:transparent; box-shadow:none; border-color:rgba(124,74,45,.3); color:#8a6a4d;">← 타이틀로</button>
   </div>
 
   <div id="weeklb" class="screen hidden">
@@ -237,7 +238,7 @@
 
   <div id="shop" class="screen hidden">
     <h1>도토리 상점</h1>
-    <div class="sub">골목에서 번 도토리가 쌓여요 · 판마다 3개까지 장착<br>보유 🌰<b id="shopA">0</b> · 장착 <b id="shopEq">0</b>/3</div>
+    <div class="sub">판에서 번 도토리의 일부가 쌓여요 (승리 35% · 패배 15%) · 판마다 3개까지 장착<br>보유 🌰<b id="shopA">0</b> · 장착 <b id="shopEq">0</b>/3</div>
     <div id="shopList" style="width:100%; max-width:330px; max-height:400px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
     <button id="shopBack" style="padding:11px 24px;">돌아가기</button>
   </div>
@@ -276,7 +277,8 @@
       <button id="pMute" style="padding:10px; font-size:12px;"></button>
       <button id="pHapt" style="padding:10px; font-size:12px;"></button>
       <button id="pCb" style="padding:10px; font-size:12px;"></button>
-      <button id="quitBtn" style="padding:11px; font-size:13px; color:#a05a4a;">포기하고 목록으로</button>
+      <button id="endBtn" style="padding:10px; font-size:12px;">🏁 여기까지 끝내기 (기록 저장)</button>
+      <button id="quitBtn" style="padding:11px; font-size:13px; color:#a05a4a;">포기하고 목록으로 (기록 없음)</button>
     </div>
   </div>
 
@@ -291,7 +293,7 @@
 'use strict';
 // ============ 기획서 v0.3 데이터 (선언형) ============
 const TILE=52, COLS=8, ROWS=10, OX=2;
-const PREP_TIME=12, SKIP_BONUS=10, WAVE_BONUS=20, REFUND=.7;
+const PREP_TIME=12, SKIP_BONUS=10, WAVE_BONUS=12, REFUND=.7;
 
 const STAGES=[
  {id:1,ch:1,name:'첫 골목',desc:'미개·끼토와 기본기',start:200,roster:['migae','kkito'],
@@ -371,17 +373,17 @@ const STAGES=[
 
 const TOWERS={
  migae:{name:'미개',cost:80,h:34,slot:'b#',
-   lv:[{dmg:4,rate:.25,range:1.5},{dmg:6,rate:.22,range:1.5,up:64},{dmg:8,rate:.18,range:2,up:120}]},
+   lv:[{dmg:4,rate:.25,range:1.5},{dmg:6,rate:.22,range:1.5,up:80},{dmg:8,rate:.18,range:2,up:150}]},
  kkito:{name:'끼토',cost:100,h:84,slot:'#',
-   lv:[{slow:.30,range:1.5,mark:.10},{slow:.40,range:2,mark:.15,up:80},{slow:.50,range:2.5,mark:.20,up:150}]},
+   lv:[{slow:.30,range:1.5,mark:.10},{slow:.40,range:2,mark:.15,up:100},{slow:.50,range:2.5,mark:.20,up:190}]},
  boneul:{name:'보늘',cost:120,h:92,slot:'=',
-   lv:[{hp:60,thorn:5},{hp:100,thorn:8,up:96},{hp:150,thorn:12,up:180}]},
+   lv:[{hp:60,thorn:5},{hp:100,thorn:8,up:120},{hp:150,thorn:12,up:225}]},
  lachilchin:{name:'라칠친',cost:160,h:48,slot:'#',
-   lv:[{rate:1.1,range:2,gain:8},{rate:.9,range:2.5,gain:10,up:128},{rate:.7,range:3,gain:12,up:256}]},
+   lv:[{rate:1.1,range:2,gain:8},{rate:.9,range:2.5,gain:10,up:160},{rate:.7,range:3,gain:12,up:320}]},
  ramda:{name:'람다',cost:140,h:56,slot:'#',
-   lv:[{prod:5,every:4,range:2,bonus:.25},{prod:5,every:3,range:2,bonus:.25,up:112},{prod:6,every:2.5,range:2.5,bonus:.35,up:210}]},
+   lv:[{prod:5,every:4,range:2,bonus:.25},{prod:5,every:3,range:2,bonus:.25,up:140},{prod:6,every:2.5,range:2.5,bonus:.35,up:260}]},
  bookgeo:{name:'북거씨',cost:150,h:40,slot:'#',
-   lv:[{dmg:8,rate:2.5,range:2},{dmg:12,rate:2.3,range:2.2,buff:.10,up:120},{dmg:18,rate:2.0,range:2.5,buff:.20,up:225}]},
+   lv:[{dmg:8,rate:2.5,range:2},{dmg:12,rate:2.3,range:2.2,buff:.10,up:150},{dmg:18,rate:2.0,range:2.5,buff:.20,up:280}]},
 };
 const ENDLESS={id:99,endless:true,name:'무한 골목',desc:'기록에 도전! (S4 클리어로 해금)',start:200,
   roster:['migae','kkito','boneul','lachilchin','ramda','bookgeo'],
@@ -441,7 +443,7 @@ const WEEKLY={id:98,endless:true,weekly:true,name:'주간 챌린지',start:200,
   roster:['migae','kkito','boneul','lachilchin','ramda','bookgeo'],
   map:['......E.','.##..#=.','.======.','.=#.#.#.','.=..#...','.======.','.#.#..=.','...#..=.','....##=.','....V==.']};
 // ── R1: 분기 진화 (Lv3 → 2갈래) ──
-const EVO_COST=180;
+const EVO_COST=240;
 const EVOS={
  migae:[{n:'개미 행렬',d:'한 번에 3마리를 콕콕! (다중 공격)'},{n:'저격 더듬이',d:'사거리 3.5타일 · 마킹된 적 2배 피해'}],
  kkito:[{n:'골목 방송',d:'감속 범위가 4타일로 확대'},{n:'집중 마킹',d:'마킹 +40% · 마킹된 적 처치 시 도토리 2배'}],
@@ -479,18 +481,18 @@ try{ SAVE=Object.assign({},SAVE_DEF,JSON.parse(localStorage.getItem(LS))||{}); }
 
 // ============ 유물 12종 (도토리 상점 — 누적 도토리로 구매, 3개 장착) ============
 const RELICS=[
- {id:'goldbtn',ico:'🔘',n:'왕금박 단추',d:'시작 도토리 +40',cost:300},
- {id:'flag',ico:'🥕',n:'당근 깃발',d:'시작 쾌적도 +2',cost:350},
- {id:'clock',ico:'⏰',n:'태엽 시계',d:'준비 시간 +6초 · 바로 시작 보너스 +5',cost:300},
- {id:'bank',ico:'🐷',n:'도토리 저금통',d:'웨이브 클리어 보너스 +8',cost:400},
- {id:'whistle',ico:'📯',n:'개미 호루라기',d:'미개 공격력 +10%',cost:450},
- {id:'pearl',ico:'📿',n:'진주 목걸이',d:'끼토 감속 범위 +0.5타일',cost:450},
- {id:'blanket',ico:'🛌',n:'솜이불',d:'보늘 체력 +30%',cost:400},
- {id:'basket2',ico:'🧺',n:'낡은 바구니',d:'라칠친 회수액 +4',cost:400},
- {id:'euca',ico:'🌿',n:'유칼립투스 잎',d:'향기 도트 지속 +1초',cost:450},
- {id:'glove',ico:'🧤',n:'은행 장갑',d:'은행 회수 시 도토리 +2',cost:350},
- {id:'charm',ico:'🍂',n:'젖은 낙엽 부적',d:'낙엽 더미에게 주는 피해 +25%',cost:500},
- {id:'bookgpt',ico:'📟',n:'북gpt 단말기',d:'웨이브 예고에 추천 주민 표시',cost:550},
+ {id:'goldbtn',ico:'🔘',n:'왕금박 단추',d:'시작 도토리 +40',cost:450},
+ {id:'flag',ico:'🥕',n:'당근 깃발',d:'시작 쾌적도 +2',cost:525},
+ {id:'clock',ico:'⏰',n:'태엽 시계',d:'준비 시간 +6초 · 바로 시작 보너스 +5',cost:450},
+ {id:'bank',ico:'🐷',n:'도토리 저금통',d:'웨이브 클리어 보너스 +8',cost:600},
+ {id:'whistle',ico:'📯',n:'개미 호루라기',d:'미개 공격력 +10%',cost:675},
+ {id:'pearl',ico:'📿',n:'진주 목걸이',d:'끼토 감속 범위 +0.5타일',cost:675},
+ {id:'blanket',ico:'🛌',n:'솜이불',d:'보늘 체력 +30%',cost:600},
+ {id:'basket2',ico:'🧺',n:'낡은 바구니',d:'라칠친 회수액 +4',cost:600},
+ {id:'euca',ico:'🌿',n:'유칼립투스 잎',d:'향기 도트 지속 +1초',cost:675},
+ {id:'glove',ico:'🧤',n:'은행 장갑',d:'은행 회수 시 도토리 +2',cost:525},
+ {id:'charm',ico:'🍂',n:'젖은 낙엽 부적',d:'낙엽 더미에게 주는 피해 +25%',cost:750},
+ {id:'bookgpt',ico:'📟',n:'북gpt 단말기',d:'웨이브 예고에 추천 주민 표시',cost:825},
 ];
 const hasRelic=id=>SAVE.relics[id]&&SAVE.loadout.includes(id);
 
@@ -893,7 +895,7 @@ function finish(win){
   state='RESULT';
   // 나이테존: 출전 주민 누적 판수
   for(const t of SG.roster) if(placedOf(t).length) SAVE.plays[t]=(SAVE.plays[t]||0)+1;
-  SAVE.bank+=win?earnedA:Math.floor(earnedA/2); // 누적 도토리 → 유물 상점
+  SAVE.bank+=Math.floor(earnedA*(win?.35:.15)); // 누적 도토리 → 유물 상점 (승리 35% · 패배 15%)
   let daily=0; // 오늘 첫 승리 보너스
   if(win){ const d=new Date(), dk=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
     if(SAVE.daily!==dk){ SAVE.daily=dk; SAVE.buttons+=1; daily=1; } }
@@ -1085,6 +1087,8 @@ $('pauseBtn').onclick=()=>{ if(state!=='WAVE'&&state!=='PREP')return;
   pausePrev=state; state='PAUSE'; updPause(); hidePopup(); $('pause').classList.remove('hidden'); };
 $('resumeBtn').onclick=()=>{ $('pause').classList.add('hidden'); state=pausePrev||'PREP'; };
 $('quitBtn').onclick=()=>{ $('pause').classList.add('hidden'); state='TITLE'; showSelect(); };
+$('endBtn').onclick=()=>{ $('pause').classList.add('hidden'); state=pausePrev||'WAVE'; finish(false); // 지금까지 기록으로 마무리 (무한·주간 기록·은행 적립 유지)
+  if(!/신기록/.test($('resTitle').textContent))$('resTitle').textContent='여기서 마무리했어요'; };
 $('pMute').onclick=()=>{ AU.mute=!AU.mute; SAVE.mute=AU.mute; save(); updPause(); if(!AU.mute)SFX.coin(); };
 $('pHapt').onclick=()=>{ SAVE.hapt=!SAVE.hapt; save(); updPause(); if(SAVE.hapt)buzz(25); };
 $('pCb').onclick=()=>{ SAVE.cb=!SAVE.cb; save(); updPause(); };
@@ -1138,6 +1142,7 @@ $('chTab1').onclick=()=>{ selCh=1; showSelect(); };
 $('chTab2').onclick=()=>{ selCh=2; showSelect(); };
 $('chTab3').onclick=()=>{ selCh=3; showSelect(); };
 $('chTab4').onclick=()=>{ selCh=4; showSelect(); };
+$('selBack').onclick=()=>{ $('select').classList.add('hidden'); $('title').classList.remove('hidden'); };
 async function showWeekLb(){
   $('select').classList.add('hidden'); $('weeklb').classList.remove('hidden');
   const R=wRule(), wk=weekKey(), box=$('wlbList');
@@ -1294,7 +1299,7 @@ function rewardOf(en){
     if((en.x-p.x)**2+(en.y-p.y)**2<=(L.range*TILE)**2){ r=Math.round(r*(1+L.bonus)); break; } }
   if(en.marked&&blocks.some(b=>b.tower&&b.tower.type==='kkito'&&b.tower.evo===1))r*=2; // 집중 마킹
   if(SG.weekly&&wRule().id==='storm')r=Math.round(r*1.5);
-  return r;
+  return Math.round(r*(SG.endless||SG.weekly?1:SG.ch===2?.9:SG.ch===3?.8:SG.ch===4?.75:1)); // 후반 챕터 보상 하향 — 도토리 과잉 방지
 }
 const hurt=(en,amt)=>{ if(en.inv>0||en.under)return; en.hp-=amt; // 보스 '들이쉬기' 무적 관통 방지
   if(amt>=1){ en.flash=.13; en.punch=.2; // 단발 타격만 리액션 (지속 피해 스팸 방지)
@@ -1506,7 +1511,7 @@ function update(dt){
         if(pool.length){ const best=pickTarget(pool,0); t.cool=2.5; t.kick=1; t.dir=Math.sign(best.x-p.x)||1;
           hurt(best,(3+t.lv)*gm('ramda')); addFx('proj',p.x,p.y-30,null,best);
           if(best.hp<=0&&!best.dead){ defeat(best); t.winT=.7; } } }
-      t.prodT+=dt;
+      if(waveIdx>=0)t.prodT+=dt; // 첫 웨이브 시작 전(타이머 없는 준비 단계)엔 생산 정지
       if(t.evo===0){ // 단추 공방: 도토리 대신 단추 조각
         if(t.prodT>=12){ t.prodT=0; fragN++; t.kick=1; t.dir=0; addFx('text',p.x,p.y-T.h-6,`조각 ${fragN%3||3}/3`);
           if(fragN%3===0){ SAVE.buttons++; save(); banner('🔘 단추 +1!'); SFX.bell(); } }
