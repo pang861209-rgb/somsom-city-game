@@ -206,7 +206,7 @@
         <button id="cbBtn" class="ghostBtn"></button>
       </div>
       <a id="hubLink" href="https://pang861209-rgb.github.io/somsom-city/">🏘 솜솜시티 마을로 돌아가기</a>
-      <span id="verTag">R4 · 3챕터 16스테이지 · 주간 챌린지</span>
+      <span id="verTag">R5 · 4챕터 22스테이지 · 주간 챌린지</span>
     </div>
   </div>
 
@@ -216,6 +216,7 @@
       <button id="chTab1" class="chTab">🍂 1장</button>
       <button id="chTab2" class="chTab">☔ 2장</button>
       <button id="chTab3" class="chTab">❄ 3장</button>
+      <button id="chTab4" class="chTab">🌙 4장</button>
       <button id="hardTgl" class="chTab hidden">하드 OFF</button>
     </div>
     <div id="stageList" style="display:flex; flex-direction:column; gap:8px; width:100%; align-items:center; max-height:400px; overflow-y:auto;"></div>
@@ -347,6 +348,25 @@ const STAGES=[
  {id:16,ch:3,name:'왕눈보라의 밤',desc:'왕눈보라 — 주민이 얼어붙는다!',start:200,roster:['migae','kkito','boneul','lachilchin','ramda','bookgeo'],
   map:['..E.....','..=..#..','..=*....','..====..','..#..=..','.*.===..','...=*#..','...==...','..#.=*..','....V...'],
   waves:[[['k',7]],[['i',5],['s',3]],[['sb',6],['d',5]],[['s',7],['i',7]],[['n',5],['sb',6]],[['i',10],['s',6],['k',8]],[['sb',9],['i',8]],[['wboss',1],['i',6]]]},
+ // ── 챕터 4 '밤 골목' (S17~S22) — S16 클리어로 해금 ──
+ {id:17,ch:4,name:'가로등 골목',desc:'두더지는 땅속으로 숨어요 — 나온 순간을 노려라!',start:210,roster:['migae','kkito','boneul','lachilchin','ramda','bookgeo'],
+  map:['...E....','.#.=....','...====.','..#...=.','..=====.','..=..#..','..====..','.#...=..','.....=..','.....V..'],
+  waves:[[['k',5],['m',2]],[['m',5]],[['k',8],['m',5]],[['d',9],['m',6]],[['m',10],['n',3]],[['k',12],['m',8]],[['m',12],['d',8]],[['m',14],['n',5]]]},
+ {id:18,ch:4,name:'말벌 골목',desc:'말벌 떼는 날아서 보늘을 넘어가요',start:210,roster:['migae','kkito','boneul','lachilchin','ramda','bookgeo'],
+  map:['.E......','.=......','.=..#...','.======.','......=.','.======.','.=......','.======.','......=.','......V.'],
+  waves:[[['h',6]],[['h',8],['m',3]],[['h',10]],[['d',8],['h',8]],[['h',12],['m',5]],[['h',14],['n',4]],[['m',8],['h',12]],[['h',18],['d',10]]]},
+ {id:19,ch:4,name:'쓰레기 골목',desc:'쓰레기 봉투는 터지면 먼지 3개!',start:220,roster:['migae','kkito','boneul','lachilchin','ramda','bookgeo'],
+  map:['....E...','....=...','.====...','.=..#...','.======.','..#...=.','...====.','...=..#.','...=....','...V....'],
+  waves:[[['tb',2],['d',4]],[['tb',3],['h',5]],[['tb',4],['m',4]],[['tb',5],['d',6]],[['h',10],['tb',5]],[['tb',7],['m',6]],[['tb',8],['d',8]],[['tb',9],['h',10]]]},
+ {id:20,ch:4,name:'까치 골목',desc:'까치는 빌라 대신 도토리를 훔쳐요',start:210,roster:['migae','kkito','boneul','lachilchin','ramda','bookgeo'],
+  map:['......E.','......=.','.======.','.=...#..','.=......','.=====..','.....=..','..====..','..=.....','..V.....'],
+  waves:[[['mg',4]],[['mg',6],['h',4]],[['mg',7],['m',4]],[['tb',4],['mg',6]],[['mg',10],['d',8]],[['mg',12],['h',8]],[['tb',5],['mg',10]],[['mg',14],['m',8]]]},
+ {id:21,ch:4,name:'안개 사거리',desc:'안개 뭉치 근처 주민은 사거리가 줄어요',start:240,roster:['migae','kkito','boneul','lachilchin','ramda','bookgeo'],
+  map:['..E.....','..====..','.....=..','.=====..','.=..#...','.=......','.======.','......=.','......=.','......V.'],
+  waves:[[['fg',1],['m',3]],[['fg',2],['h',4]],[['fg',3],['mg',5]],[['tb',5],['fg',4]],[['fg',6],['m',8]],[['fg',6],['h',12]],[['tb',6],['fg',6],['mg',6]],[['fg',8],['m',10],['h',10]]]},
+ {id:22,ch:4,name:'왕두더지의 밤',desc:'왕두더지 — 땅속으로 점프한다!',start:230,roster:['migae','kkito','boneul','lachilchin','ramda','bookgeo'],
+  map:['...E....','.===....','.=...#..','.=......','.======.','..#...=.','.======.','.=...#..','.====...','....V...'],
+  waves:[[['m',5],['k',4]],[['h',9],['mg',4]],[['tb',4],['fg',3]],[['m',8],['h',9]],[['fg',6],['mg',8]],[['tb',6],['m',9]],[['h',12],['fg',5],['mg',6]],[['nboss',1],['m',5]]]},
 ];
 
 const TOWERS={
@@ -368,16 +388,18 @@ const ENDLESS={id:99,endless:true,name:'무한 골목',desc:'기록에 도전! (
   map:['...E....','.#.====.','.#....=.','..#.#.=.','.======.','.=.##.#.','.=..T##.','.=====..','.##..=..','....#V..']};
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
 function endlessWaveDef(n){ // 고정 시드 — 랭킹 공정성 (주간 챌린지는 주차별 시드)
-  if(n%10===9){ const bt=['boss','rboss','wboss'][Math.floor(n/10)%3]; // 보스 로테이션
+  if(n%10===9){ const bt=['boss','rboss','wboss','nboss'][Math.floor(n/10)%4]; // 보스 로테이션
     return [[bt,1],['k',4+Math.floor(n/3)]]; }
   const wk=SG&&SG.weekly;
   const rng=mulberry32(wk?weekKey()*53+n:1000+n);
-  let pool=['k','k','d']; // 웨이브가 갈수록 전 챕터 골칫거리 합류
+  let pool=['k','k','d']; // 웨이브가 갈수록 전 챕터 골칫거리 합류 (주간도 동일 풀 + 밤 골목)
   if(n>=3)pool=['k','k','d','g','n'];
   if(n>=6)pool=['k','d','g','n','u','w'];
   if(n>=10)pool=['k','d','n','u','w','s','i'];
   if(n>=14)pool=['k','d','u','w','s','i','sb'];
-  const cnt=Math.min(32,6+Math.floor(n*1.4)), def={};
+  if(n>=18)pool=['d','u','w','s','i','sb','m','h','tb','mg','fg']; // 밤 골목 합류
+  if(n>=24)pool=['u','w','s','i','sb','m','h','tb','mg','fg','fg'];
+  const cnt=Math.min(40,6+Math.floor(n*1.4)), def={};
   for(let i=0;i<cnt;i++){ const t=pool[Math.floor(rng()*pool.length)]; def[t]=(def[t]||0)+1; }
   return Object.entries(def);
 }
@@ -397,6 +419,13 @@ const ENEMIES={
  i:{name:'고드름',hp:14,spd:1.7,reward:5,size:26},          // 감속 면역
  sb:{name:'눈덩이',hp:30,spd:.9,reward:9,size:40},          // 웨이포인트마다 +6 HP 성장
  wboss:{name:'왕눈보라',hp:850,spd:.3,reward:90,size:106},  // 9초마다 눈보라: 주민 2명 빙결 + 고드름 소환
+ // ── 챕터 4 '밤 골목' 신규 ──
+ m:{name:'두더지',hp:26,spd:.9,reward:8,size:40},           // 3초마다 1.5초 땅속(표적 불가·감속 면역)
+ h:{name:'말벌 떼',hp:15,spd:1.6,reward:6,size:36},         // 비행: 보늘 바리케이드를 넘어감
+ tb:{name:'쓰레기 봉투',hp:95,spd:.45,reward:14,size:50},  // 터지면 먼지 뭉치 3개
+ mg:{name:'까치',hp:20,spd:1.3,reward:7,size:38},           // 빌라 도달 시 쾌적도 대신 도토리 30 강탈
+ fg:{name:'안개 뭉치',hp:65,spd:.5,reward:12,size:54},      // 1.5타일 내 주민 사거리 -30%
+ nboss:{name:'왕두더지',hp:850,spd:.3,reward:110,size:108}, // 8초마다 잠수 → 2칸 앞으로 점프 + 흙덩이(먼지) 2
 };
 // ── 주간 챌린지 (고정 시드 + 특수 룰 — 매주 교체) ──
 const weekKey=()=>{ const d=new Date(), oj=new Date(d.getFullYear(),0,1);
@@ -618,16 +647,19 @@ function sliceSheet(c,want){ // 연결 성분(픽셀 덩어리) 기준 자동 �
   return parts;
 }
 const SHEET_POSE=['','_act','_win','_hit']; // 시트 포즈 순서: 대기·액션·승리·피격
+const SHEET_POSE2=['_wind','_thru','_land','_skill']; // 모션 확장 시트(sheet2_*): 윈드업·팔로스루·착지·스킬
+const medH=parts=>parts.map(q=>q.height).sort((a,b)=>a-b)[Math.floor(parts.length/2)];
+// 시트마다 픽셀 배율이 달라 프레임에 norm(그 시트의 기준 높이)을 붙여 렌더 시 같은 몸 크기로 맞춤
 function loadSheets(){
   const jobs=['kkito','migae','boneul','ramda','bookgeo','lachilchin'].map(t=>new Promise(res=>{
     const i=new Image();
     i.onload=()=>{ try{ const parts=sliceSheet(keyImage(i,1200)); // 시트는 고해상 유지
-      if(parts.length>=4)SHEET_POSE.forEach((sfx,k)=>{ IMGS[t+sfx]=parts[k]; });
+      if(parts.length>=4)SHEET_POSE.forEach((sfx,k)=>{ parts[k].norm=parts[0].height; IMGS[t+sfx]=parts[k]; });
       else if(parts.length)IMGS[t]=parts[0];
     }catch(e){} res(); };
     i.onerror=res; i.src=`../assets/defense/sheet_${t}.png`;
   }));
-  for(const f of ['bg_field_alley','bg_field_ginkgo','bg_field_dusk','bg_field_rain','bg_field_snow'])
+  for(const f of ['bg_field_alley','bg_field_ginkgo','bg_field_dusk','bg_field_rain','bg_field_snow','bg_field_night'])
     jobs.push(new Promise(res=>{ const i=new Image();
       i.onload=()=>{ IMGS[f]=i; res(); }; i.onerror=res; i.src=`../assets/defense/${f}.png`; }));
   // 골칫거리 시트 (시즌별 4종 멀티샷) + 보스
@@ -648,12 +680,27 @@ function loadSheets(){
     i.onload=()=>{ try{ const p=sliceSheet(keyImage(i,1400),8);
       if(p.length>=8){ IMGS.acorn=p[0]; IMGS.ui_btn=p[1]; IMGS.ui_heart=p[4]; IMGS.ui_star=p[5]; IMGS.ui_perfume=p[6]; IMGS.ginkgo=p[7]; } }catch(e){} res(); };
     i.onerror=res; i.src=`../assets/defense/${f}.png`; }));
+  // ── R5 확장 시트 (없으면 조용히 폴백) ──
+  const loadParts=(f,want,cb)=>jobs.push(new Promise(res=>{ const i=new Image();
+    i.onload=()=>{ try{ const p=sliceSheet(keyImage(i,1200),want); if(p.length>=want)cb(p); }catch(e){} res(); };
+    i.onerror=res; i.src=`../assets/defense/${f}.png`; }));
+  for(const t of ['kkito','migae','boneul','ramda','bookgeo','lachilchin']){
+    loadParts('sheet2_'+t,4,p=>{ const m=medH(p); SHEET_POSE2.forEach((sfx,k)=>{ p[k].norm=m; IMGS[t+sfx]=p[k]; }); });
+    loadParts('sheet_evo_'+t,4,p=>{ const m=medH(p); [['_evo0',0],['_evo0_act',1],['_evo1',2],['_evo1_act',3]].forEach(([sfx,k])=>{ p[k].norm=m; IMGS[t+sfx]=p[k]; }); });
+  }
+  const WALK={sheet_gremlins_walk:['k','d','g','n'],sheet_gremlins_rain_walk:['u','w','wd','rboss'],sheet_gremlins_snow_walk:['s','i','sb','wboss'],sheet_boss_walk:['boss','rboss','wboss']};
+  for(const [f,types] of Object.entries(WALK))
+    loadParts(f,types.length*2,p=>types.forEach((ty,k)=>{ const A=p[2*k],B=p[2*k+1], ra=(A.width*A.height)/(B.width*B.height);
+      if(ra<.35||ra>2.8)return; // 쌍 크기가 크게 다르면(조각·병합) 그 타입만 단일 프레임 유지
+      IMGS['en_'+ty+'_a']=A; IMGS['en_'+ty+'_b']=B; }));
+  loadParts('sheet_gremlins_night',6,p=>['m','h','tb','mg','fg','nboss'].forEach((ty,k)=>{ IMGS['en_'+ty]=p[k]; })); // 4장 밤 골목
   return Promise.all(jobs);
 }
 function bgFor(){ // 스테이지별 전용 배경 (없으면 공용 폴백)
   if(!SG)return IMGS.bg;
   if(SG.ch===2)return IMGS.bg_field_rain||IMGS.bg_field_alley||IMGS.bg;
   if(SG.ch===3)return IMGS.bg_field_snow||IMGS.bg_field_alley||IMGS.bg;
+  if(SG.ch===4)return IMGS.bg_field_night||IMGS.bg_field_dusk||IMGS.bg_field_alley||IMGS.bg;
   if(SG.id===3)return IMGS.bg_field_ginkgo||IMGS.bg_field_alley||IMGS.bg;
   if(SG.id===4||SG.endless)return IMGS.bg_field_dusk||IMGS.bg_field_alley||IMGS.bg;
   return IMGS.bg_field_alley||IMGS.bg;
@@ -799,6 +846,7 @@ function useSkill(t){
     if(aimSkill){ ui.info.textContent="'바다' 향 — 뿌릴 지점을 탭하세요!"; addFx('text',W/2,120,'지점을 탭!'); }
     updSkills(); return; }
   skCool[t]=SKILLS[t].cd; SFX.skill();
+  placedOf(t).forEach(b=>{ b.tower.skillT=1.2; }); // 스킬 발동 포즈
   if(t==='kkito'){ gSlowT=3; addFx('text',W/2,120,'귀 쫑긋! 전장 슬로우'); }
   if(t==='migae'){ hasteT=5; addFx('text',W/2,120,'뽈뽈뽈—! 폭식 모드'); }
   if(t==='boneul'){ shieldT=5; placedOf('boneul').forEach(b=>{ b.tower.hp=bMax(b.tower); }); addFx('text',W/2,120,'쿨쿨... 체력 회복!'); }
@@ -1047,12 +1095,14 @@ function showSelect(){
   ['result','lobby','shop','dex','weeklb'].forEach(id=>$(id).classList.add('hidden'));
   $('select').classList.remove('hidden');
   $('selBtnN').textContent=SAVE.buttons;
-  const ch2open=(SAVE.stars.s4||0)>0, ch3open=(SAVE.stars.s10||0)>0;
+  const ch2open=(SAVE.stars.s4||0)>0, ch3open=(SAVE.stars.s10||0)>0, ch4open=(SAVE.stars.s16||0)>0;
   $('chTab1').classList.toggle('on',selCh===1);
   $('chTab2').classList.toggle('on',selCh===2);
   $('chTab3').classList.toggle('on',selCh===3);
+  $('chTab4').classList.toggle('on',selCh===4);
   $('chTab2').disabled=!ch2open;
   $('chTab3').disabled=!ch3open;
+  $('chTab4').disabled=!ch4open;
   $('hardTgl').classList.toggle('hidden',!ch2open); // 하드: 1장 클리어로 해금
   $('hardTgl').textContent=hardOn?'🔥 하드 ON':'하드 OFF';
   $('hardTgl').classList.toggle('on',hardOn);
@@ -1087,6 +1137,7 @@ function showSelect(){
 $('chTab1').onclick=()=>{ selCh=1; showSelect(); };
 $('chTab2').onclick=()=>{ selCh=2; showSelect(); };
 $('chTab3').onclick=()=>{ selCh=3; showSelect(); };
+$('chTab4').onclick=()=>{ selCh=4; showSelect(); };
 async function showWeekLb(){
   $('select').classList.add('hidden'); $('weeklb').classList.remove('hidden');
   const R=wRule(), wk=weekKey(), box=$('wlbList');
@@ -1201,11 +1252,13 @@ $('shareClose').onclick=()=>$('shareModal').classList.add('hidden');
 // ============ 게임 로직 ============
 const CTIP={d:'빨라요! 끼토의 감속이 특효예요',g:'라칠친 할머니가 주우면 도토리가 돼요',n:'단단해요! 마킹하고 화력을 모으세요',
   u:'빗길에서 폭주해요! 빗길 밖에서 요격하세요',w:'터지면 물방울 2개로 갈라져요 — 광역·도트가 좋아요',
-  s:'스스로 회복해요! 화력을 모아 단숨에 잡으세요',i:'얼음이라 감속이 안 통해요 — 순수 화력으로!',sb:'구를수록 커져요 — 입구에서 일찍 잡으세요'};
-const chMul=()=>SG.ch===2?1.35:SG.ch===3?1.75:1; // 챕터 난이도 계수 — 메타 성장(단추·유물·진화)에 맞춰 상승
-const chSpd=()=>SG.ch===2?1.05:SG.ch===3?1.1:1;
-const endlessHp=()=>{ const n=Math.max(0,waveIdx); return (1+.10*n)*Math.pow(1.045,n); }; // 복리 — 완성 조합도 결국 뚫린다
-const endlessSpd=()=>1+Math.min(.6,.025*Math.max(0,waveIdx));
+  s:'스스로 회복해요! 화력을 모아 단숨에 잡으세요',i:'얼음이라 감속이 안 통해요 — 순수 화력으로!',sb:'구를수록 커져요 — 입구에서 일찍 잡으세요',
+  m:'땅속에 숨으면 못 때려요 — 나온 순간에 집중!',h:'날아서 보늘을 넘어가요 — 화력으로 막으세요',tb:'터지면 먼지 3개 — 뒤쪽에 감속을 두세요',
+  mg:'빌라에 닿으면 도토리를 훔쳐가요!',fg:'근처 주민 사거리가 줄어요 — 멀리서 잡으세요'};
+const chMul=()=>SG.ch===2?1.35:SG.ch===3?1.75:SG.ch===4?1.9:1; // 챕터 난이도 계수 — 메타 성장(단추·유물·진화)에 맞춰 상승
+const chSpd=()=>SG.ch===2?1.05:SG.ch===3?1.1:SG.ch===4?1.15:1;
+const endlessHp=()=>{ const n=Math.max(0,waveIdx); return (1+.10*n)*Math.pow(1.045,n)*(n>20?Math.pow(1.04,n-20):1); }; // 20웨이브 이후 2차 복리 — 반드시 끝난다 // 복리 — 완성 조합도 결국 뚫린다
+const endlessSpd=()=>1+Math.min(.8,.03*Math.max(0,waveIdx));
 const hpScale=()=>(SG.endless?endlessHp():chMul())*(hardOn&&!SG.endless?1.5:1)*rc('hpMul',1);
 function spawn(type,wp=0){
   const E=ENEMIES[type];
@@ -1216,6 +1269,7 @@ function spawn(type,wp=0){
     banner(`${ENEMIES[type].name} 등장!`); ui.info.textContent=`${ENEMIES[type].name} — ${CTIP[type]}`; }
   if(type==='boss'){ banner('왕꼬릿 구름 등장!!',true); SFX.boss(); shakeT=.5;
     placedOf('kkito').forEach(b=>addFx('bubble',center(b.c,b.r).x,center(b.c,b.r).y-90,'귀, 귀가 쭈뼛해!!')); }
+  if(type==='nboss'){ banner('왕두더지 등장!!',true); SFX.boss(); shakeT=.5; }
   if(type==='rboss'){ banner('먹구름 왕꼬릿 등장!!',true); SFX.boss(); shakeT=.5;
     placedOf('bookgeo').forEach(b=>addFx('bubble',center(b.c,b.r).x,center(b.c,b.r).y-70,'습기가... 심상치 않네요.')); }
 }
@@ -1242,12 +1296,13 @@ function rewardOf(en){
   if(SG.weekly&&wRule().id==='storm')r=Math.round(r*1.5);
   return r;
 }
-const hurt=(en,amt)=>{ if(en.inv>0)return; en.hp-=amt; // 보스 '들이쉬기' 무적 관통 방지
+const hurt=(en,amt)=>{ if(en.inv>0||en.under)return; en.hp-=amt; // 보스 '들이쉬기' 무적 관통 방지
   if(amt>=1){ en.flash=.13; en.punch=.2; // 단발 타격만 리액션 (지속 피해 스팸 방지)
     if(fx.length<70)addFx('dmg',en.x+(Math.random()*12-6),en.y-ENEMIES[en.type].size/2-4,String(Math.round(amt))); } };
 function defeat(en,collector){
   en.dead=true; const r=collector==='lachilchin'?0:rewardOf(en);
   if(en.type==='w'){ spawnAt('wd',en); spawnAt('wd',en); addFx('text',en.x,en.y-30,'퐁! 갈라졌다'); } // 물풍선 분열
+  if(en.type==='tb'){ for(let i=0;i<3;i++)spawnAt('d',en); addFx('text',en.x,en.y-30,'봉투가 터졌다!'); } // 쓰레기 봉투 분열
   if(r){ acorns+=r; earnedA+=r; addFx('text',en.x,en.y-26,'+'+r); SFX.coin(); coinsFrom(en.x,en.y,Math.min(4,1+Math.floor(r/7))); }
   stat.kill++;
   addFx('die',en.x,en.y,en.type); // 찌부→팡 사망 연출
@@ -1274,6 +1329,7 @@ function rangeOf(b){ const t=b.tower,L=TOWERS[t.type].lv[t.lv]; let r=L.range||0
   if(t.type==='kkito'){ if(hasRelic('pearl'))r+=.5; if(t.evo===0)r=4+(hasRelic('pearl')?.5:0); }
   if(t.type==='migae'&&t.evo===1)r=3.5;
   if(t.type==='bookgeo'){ if(t.evo===1)r+=.3; if(synHas(b,'antenna'))r+=.4; }
+  if(r){ const p=center(b.c,b.r); if(enemies.some(e=>!e.dead&&e.type==='fg'&&(e.x-p.x)**2+(e.y-p.y)**2<=(1.5*TILE)**2))r*=.7; } // 안개 뭉치 오라
   return r; }
 const bMax=t=>TOWERS.boneul.lv[t.lv].hp*gm('boneul')*(t.evo===0?3:1)*(hasRelic('blanket')?1.3:1);
 function pickTarget(list,pri){ let best=null;
@@ -1319,6 +1375,13 @@ function update(dt){
     const E=ENEMIES[en.type];
     if(en.inv>0)en.inv-=dt;
     if(en.flash>0)en.flash-=dt; if(en.punch>0)en.punch-=dt; if(en.born>0)en.born-=dt;
+    if(en.type==='m'||en.type==='nboss'){ // 두더지: 주기적으로 땅속 (표적 불가·감속 면역), 왕두더지는 앞으로 점프
+      en.digT=(en.digT??(en.type==='m'?2.5:10))-dt;
+      if(en.under){ en.underT-=dt;
+        if(en.underT<=0){ en.under=false; addFx('dust',en.x,en.y+E.size/2);
+          if(en.type==='nboss'){ spawnAt('d',en); spawnAt('d',en); const nw=Math.min(waypoints.length-2,en.wp+2);
+            en.wp=nw; en.x=waypoints[nw].x; en.y=waypoints[nw].y; addFx('text',en.x,en.y-60,'왕두더지가 튀어나왔다!'); shakeT=.25; } } }
+      else if(en.digT<=0){ en.digT=en.type==='m'?3.4:10; en.under=true; en.underT=en.type==='m'?1.1:1.5; addFx('dust',en.x,en.y+E.size/2); } }
     if(en.type==='s'&&en.hp<en.max&&!en.dead)en.hp=Math.min(en.max,en.hp+2*dt); // 눈사람 자가 회복
     if(en.dot){ en.dot.t-=dt; hurt(en,en.dot.dps*dt); // '바다' 향기 도트
       if(en.dot.t<=0)en.dot=null;
@@ -1338,7 +1401,9 @@ function update(dt){
       addFx('text',en.x,en.y-64,'쏴아아—'); } }
     const dir=en.rev>0?-1:1; if(en.rev>0)en.rev-=dt;
     const tgt=waypoints[en.wp+dir];
-    if(!tgt&&dir>0){ en.dead=true; life--; shakeT=.3; owwT=1.0; SFX.leak(); addFx('bad',en.x,en.y); updHud();
+    if(!tgt&&dir>0){ en.dead=true;
+      if(en.type==='mg'){ const st=Math.min(acorns,30); acorns-=st; addFx('text',en.x,en.y-30,`까치가 도토리 ${st}개를 훔쳐갔다!`); SFX.deny(); updHud(); continue; } // 까치: 쾌적도 대신 강탈
+      life--; shakeT=.3; owwT=1.0; SFX.leak(); addFx('bad',en.x,en.y); updHud();
       ui.life.classList.remove('hurt'); void ui.life.offsetWidth; ui.life.classList.add('hurt');
       if(life<=3&&life>0&&!crisisDone){ crisisDone=true; crisisT=1.5; owwT=1.6; // 위기 연출: 슬로모션 + 전원 경악
         banner('⚠ 쾌적도 위기!',true); buzz(80); }
@@ -1346,7 +1411,7 @@ function update(dt){
     if(!tgt){ en.rev=0; continue; }
     // 바리케이드
     const bar=barrAt(en.x,en.y+((tgt.y>en.y)?14:(tgt.y<en.y)?-14:0)+0*0)||barrAt(en.x+((tgt.x>en.x)?14:(tgt.x<en.x)?-14:0),en.y);
-    if(bar&&dir>0){
+    if(bar&&dir>0&&en.type!=='h'&&!en.under){ // 말벌 떼는 날아서, 두더지는 땅속으로 통과
       if(shieldT<=0)bar.tower.hp-=4*dt;
       hurt(en,TOWERS.boneul.lv[bar.tower.lv].thorn*(bar.tower.evo===0?1.5:1)*dt);
       if(bar.tower.evo===1&&(bar.tower.kbT||0)<=0&&en.type!=='boss'){ bar.tower.kbT=2; // 탄성 배치기
@@ -1357,7 +1422,7 @@ function update(dt){
       continue;
     }
     const aura=auraAt(en.x,en.y);
-    if(en.type==='i')aura.slow=1; // 고드름: 감속 면역
+    if(en.type==='i'||en.under)aura.slow=1; // 고드름·땅속: 감속 면역
     en.slowed=aura.slow<1; en.marked=aura.mark>0;
     let spm=en.spdMul||1;
     const tc=Math.floor((en.x-OX)/TILE)+1,tr=Math.floor(en.y/TILE)+1;
@@ -1374,7 +1439,7 @@ function update(dt){
   }
   // 타워 동작
   for(const b of blocks.concat(barrs)){ const t=b.tower; if(!t)continue;
-    if(t.kick>0)t.kick-=dt*3.2; if(t.winT>0)t.winT-=dt;
+    if(t.kick>0)t.kick-=dt*3.2; if(t.winT>0)t.winT-=dt; if(t.skillT>0)t.skillT-=dt;
     if(t.drop>0){ t.drop-=dt; if(t.drop<=0){ t.land=.26; const pc=center(b.c,b.r); addFx('dust',pc.x,(b.r)*TILE-6); SFX.pop(); } } // 배치 착지
     if(t.land>0)t.land-=dt;
     if(t.freeze>0)t.freeze-=dt;
@@ -1383,19 +1448,19 @@ function update(dt){
     if(t.type==='boneul'){ if(t.kbT>0)t.kbT-=dt;
       if(synHas(b,'back'))t.hp=Math.min(bMax(t),t.hp+2*dt);
       const S2=(1.2*TILE)**2; // 할큄: 스치는 적에게 지속 피해
-      for(const en of enemies)if(!en.dead&&(en.x-p.x)**2+(en.y-p.y)**2<=S2){
+      for(const en of enemies)if(!en.dead&&!en.under&&(en.x-p.x)**2+(en.y-p.y)**2<=S2){
         hurt(en,(2+t.lv)*dt);
         if(en.hp<=0&&!en.dead){ defeat(en); t.winT=.7; } } }
     if(t.type==='kkito'){ t.cool-=dt; // 귀 튕기기: 약한 단일 공격
       if(t.cool<=0){ const R2=(rangeOf(b)*TILE)**2;
-        const pool=enemies.filter(en=>!en.dead&&(en.x-p.x)**2+(en.y-p.y)**2<=R2);
+        const pool=enemies.filter(en=>!en.dead&&!en.under&&(en.x-p.x)**2+(en.y-p.y)**2<=R2);
         if(pool.length){ const best=pickTarget(pool,0); t.cool=1.2; t.kick=1; t.dir=Math.sign(best.x-p.x)||1; SFX.shoot();
           hurt(best,(2+t.lv)*gm('kkito')); addFx('proj',p.x,p.y-46,null,best);
           if(best.hp<=0&&!best.dead){ defeat(best); t.winT=.7; } } } }
     if(t.type==='migae'){
       t.cool-=dt; if(t.cool>0)continue;
       const R2=(rangeOf(b)*TILE)**2;
-      const pool=enemies.filter(en=>!en.dead&&(en.x-p.x)**2+(en.y-p.y)**2<=R2);
+      const pool=enemies.filter(en=>!en.dead&&!en.under&&(en.x-p.x)**2+(en.y-p.y)**2<=R2);
       if(pool.length){ t.cool=L.rate*rateMul(b)*(synHas(b,'combi')?.85:1); t.kick=1; SFX.shoot();
         const shots=t.evo===0?Math.min(3,pool.length):1; // 개미 행렬: 3연장
         for(let s=0;s<shots;s++){ const best=pickTarget(pool,t.pri); pool.splice(pool.indexOf(best),1);
@@ -1410,7 +1475,7 @@ function update(dt){
     if(t.type==='bookgeo'){
       t.cool-=dt; if(t.cool>0)continue;
       const R=rangeOf(b),R2=(R*TILE)**2; let hit=false;
-      for(const en of enemies)if(!en.dead&&(en.x-p.x)**2+(en.y-p.y)**2<=R2){
+      for(const en of enemies)if(!en.dead&&!en.under&&(en.x-p.x)**2+(en.y-p.y)**2<=R2){
         hurt(en,L.dmg*(t.evo===1?4:1)*gm('bookgeo')*(1+auraAt(en.x,en.y).mark)*(en.type==='n'&&hasRelic('charm')?1.25:1)); hit=true;
         if(t.evo===0)en.dot={dps:3,t:2+(hasRelic('euca')?1:0)}; // '바다' 조향사
         if(en.hp<=0&&!en.dead){ defeat(en); t.winT=.7; } }
@@ -1429,7 +1494,7 @@ function update(dt){
           if(fr){ for(const en of enemies)if(!en.dead&&(en.x-fr.x)**2+(en.y-fr.y)**2<=(1.2*TILE)**2)hurt(en,25);
             addFx('ring',fr.x,fr.y,null,{r:1.2*TILE}); reapDead('lachilchin'); } }
         addFx('grab',grab.x,grab.y,null,{tx:p.x,ty:p.y}); addFx('text',p.x,p.y-T.h-6,'+'+gn); coinsFrom(p.x,p.y-T.h*.5,gn>=10?2:1); updHud(); }
-      else { const tp=enemies.filter(en=>!en.dead&&(en.x-p.x)**2+(en.y-p.y)**2<=R2); // 주울 게 없으면 집게로 콕
+      else { const tp=enemies.filter(en=>!en.dead&&!en.under&&(en.x-p.x)**2+(en.y-p.y)**2<=R2); // 주울 게 없으면 집게로 콕
         if(tp.length){ const best=pickTarget(tp,0); t.cool=L.rate; t.kick=1; t.dir=Math.sign(best.x-p.x)||1; SFX.shoot();
           hurt(best,[3,4,6][t.lv]); addFx('proj',p.x,p.y-30,null,best);
           if(best.hp<=0&&!best.dead){ defeat(best); t.winT=.7; } } }
@@ -1437,7 +1502,7 @@ function update(dt){
     if(t.type==='ramda'){
       t.cool-=dt; // 도토리 투척: 약한 단일 공격
       if(t.cool<=0){ const R2=(L.range*TILE)**2;
-        const pool=enemies.filter(en=>!en.dead&&(en.x-p.x)**2+(en.y-p.y)**2<=R2);
+        const pool=enemies.filter(en=>!en.dead&&!en.under&&(en.x-p.x)**2+(en.y-p.y)**2<=R2);
         if(pool.length){ const best=pickTarget(pool,0); t.cool=2.5; t.kick=1; t.dir=Math.sign(best.x-p.x)||1;
           hurt(best,(3+t.lv)*gm('ramda')); addFx('proj',p.x,p.y-30,null,best);
           if(best.hp<=0&&!best.dead){ defeat(best); t.winT=.7; } } }
@@ -1488,7 +1553,7 @@ function draw(){
   { const bgi=bgFor();
     if(bgi){ const sc=W/bgi.width, sh=H/sc, sy=Math.max(0,(bgi.height-sh)/2);
       ctx.drawImage(bgi,0,sy,bgi.width,sh,0,0,W,H);
-      ctx.fillStyle='rgba(253,251,245,.60)'; ctx.fillRect(0,0,W,H); } }
+      ctx.fillStyle=SG.ch===4?'rgba(253,251,245,.40)':'rgba(253,251,245,.60)'; ctx.fillRect(0,0,W,H); } }
   ctx.strokeStyle='rgba(90,74,58,.07)'; ctx.lineWidth=1;
   for(let c=0;c<=COLS;c++){ ctx.beginPath(); ctx.moveTo(OX+c*TILE,0); ctx.lineTo(OX+c*TILE,H); ctx.stroke(); }
   for(let r=0;r<=ROWS;r++){ ctx.beginPath(); ctx.moveTo(0,r*TILE); ctx.lineTo(W,r*TILE); ctx.stroke(); }
@@ -1577,12 +1642,18 @@ function draw(){
   // 타워
   function drawTower(b){ const t=b.tower; if(!t)return;
     const T=TOWERS[t.type],p=center(b.c,b.r);
-    const frame=owwT>0?IMGS[t.type+'_hit']:t.winT>0?IMGS[t.type+'_win']
-      :(t.kick>.4&&IMGS[t.type+'_act'])?IMGS[t.type+'_act']:IMGS[t.type];
+    const F=k=>IMGS[t.type+k], ev=t.evo!==null&&F('_evo'+t.evo)?'_evo'+t.evo:null; // 진화 외형이 있으면 대기·액션은 진화 시트
+    const frame=(owwT>0?F('_hit'):t.winT>0?F('_win')
+      :(!ev&&t.skillT>0&&F('_skill'))?F('_skill')
+      :(!ev&&t.land>0&&F('_land'))?F('_land')
+      :t.kick>.7?(ev?F(ev+'_act'):F('_act'))
+      :(!ev&&t.kick>.3&&F('_thru'))?F('_thru')
+      :(!ev&&t.cool>0&&t.cool<=.15&&F('_wind'))?F('_wind')
+      :(ev?F(ev):null))||F('');
     const bob=Math.sin(time*(2.7+((b.c*7+b.r*5)%5)*.18)+b.c*2.3+b.r*3.1)*1.5,kick=Math.max(0,Math.min(1,t.kick));
     const scale=1+t.lv*.09+(t.evo!==null?.12:0),h=T.h*scale;
     // 시트 공통 스케일: 대기 프레임 높이를 기준으로 모든 포즈를 같은 배율로 — 팔 벌린 포즈가 폭만 넓어지고 몸 크기는 유지
-    const base=IMGS[t.type], px=base?h/base.height:1;
+    const base=IMGS[t.type], px=base?h/((frame&&frame.norm)||base.height):1;
     const w=frame?frame.width*px:h*.8, fh=frame?frame.height*px:h;
     // 공격 반동: 발사 직후 목표 쪽으로 기울며 쭉 늘었다가 스프링처럼 복귀
     const rec=kick>0?Math.exp(-3.5*(1-kick))*Math.cos((1-kick)*7):0;
@@ -1619,6 +1690,8 @@ function draw(){
   // 골칫거리
   function drawEnemy(en){
     const E=ENEMIES[en.type],hopping=HOPPER[en.type];
+    if(en.under){ ctx.fillStyle='#8a6a48'; ctx.beginPath(); ctx.ellipse(en.x,en.y+E.size/2-2,E.size*.42,7,0,0,7); ctx.fill(); // 땅속: 흙더미만
+      ctx.fillStyle='#6e5238'; ctx.beginPath(); ctx.ellipse(en.x,en.y+E.size/2-6,E.size*.3,5,0,0,7); ctx.fill(); return; }
     const ph=hopping?Math.abs(Math.sin(time*(6+(en.wob%2))+en.wob)):0; // 발걸음 위상 (개체별 주기)
     const wob=hopping?-ph*3.2:Math.sin(time*4+en.wob)*2;
     const sq=hopping?1.07-.13*ph:1+Math.sin(time*6+en.wob)*.04; // 착지 시 찌부·공중에서 쭉
@@ -1628,7 +1701,9 @@ function draw(){
     if(en.punch>0)ctx.scale(1+en.punch*1.1,1+en.punch*1.1); // 피격 움찔
     if(en.born>0){ const q=1-en.born/.38, c1=1.70158, s=Math.max(.05,1+(c1+1)*Math.pow(q-1,3)+c1*Math.pow(q-1,2)); // 등장: 튀어나오며 오버슛
       ctx.scale(s,s); }
-    const spr=IMGS['en_'+en.type];
+    let sk='en_'+en.type; // 걷기 2프레임이 있으면 홉 위상(지상형) / 숨쉬기 위상(구름·보스)으로 교대
+    if(IMGS[sk+'_a']&&IMGS[sk+'_b']&&en.type!=='g'&&en.type!=='sb')sk+=(hopping?ph>.5:Math.sin(time*2.4+en.wob)>0)?'_b':'_a';
+    const spr=IMGS[sk];
     if(spr){ // 전용 스프라이트 (없으면 아래 코드 드로잉 폴백)
       const gs=en.type==='sb'?1+.09*Math.min(6,en.gz||0):1;
       const hh=E.size*gs, ww=hh*spr.width/spr.height;
@@ -1637,7 +1712,7 @@ function draw(){
       const fl=!rot&&en.fdx<0?-1:1; // 이동 방향 따라 좌우 반전
       ctx.scale(sq*fl,2-sq);
       ctx.drawImage(spr,-ww/2,-hh/2,ww,hh);
-      if(en.flash>0){ const wi=whiteOf('en_'+en.type);
+      if(en.flash>0){ const wi=whiteOf(sk);
         if(wi){ ctx.globalAlpha=Math.min(1,en.flash/.13)*.8; ctx.drawImage(wi,-ww/2,-hh/2,ww,hh); ctx.globalAlpha=1; } }
       ctx.scale(1/(sq*fl),1/(2-sq));
       if(rot)ctx.rotate(-rot);
@@ -1753,7 +1828,7 @@ function draw(){
       ctx.beginPath(); ctx.arc(en.x+E.size/2-2,en.y-E.size/2+2,3.5,0,7); ctx.fill(); }
     if(en.slowed){ ctx.beginPath(); ctx.arc(en.x,en.y,E.size/2+6,0,7);
       ctx.strokeStyle='rgba(106,120,200,.65)'; ctx.setLineDash([4,4]); ctx.lineWidth=1.8; ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth=1; }
-    const isBoss=en.type==='boss'||en.type==='rboss'||en.type==='wboss';
+    const isBoss=en.type==='boss'||en.type==='rboss'||en.type==='wboss'||en.type==='nboss';
     if(isBoss||en.hp<en.max||en.marked){ // HP바: 다친 적·보스만 (R4 다크 트랙)
       const bw=isBoss?46:26,bx=en.x-bw/2,by=en.y-E.size/2-13;
       ctx.fillStyle='rgba(64,36,25,.72)';
@@ -1761,7 +1836,7 @@ function draw(){
       ctx.fillStyle=en.marked?'#9aa6ff':'#ff8a6a';
       ctx.beginPath(); ctx.roundRect(bx+1,by+1,(bw-2)*Math.max(0,en.hp/en.max),3,1.5); ctx.fill(); }
     if(SAVE.cb){ // 색약 보조: 형태 기호 뱃지
-      const sym={k:'≋',d:'●',g:'▲',n:'■',boss:'♛'}[en.type];
+      const sym={k:'≋',d:'●',g:'▲',n:'■',boss:'♛',rboss:'♛',wboss:'♛',nboss:'♛',m:'◆',h:'✶',tb:'▮',mg:'◗',fg:'☁'}[en.type];
       const sx=en.x-E.size/2-4, sy=en.y-E.size/2-4;
       ctx.fillStyle='#fdfbf5'; ctx.strokeStyle='#222'; ctx.lineWidth=1.2;
       ctx.beginPath(); ctx.arc(sx,sy,7,0,7); ctx.fill(); ctx.stroke();
