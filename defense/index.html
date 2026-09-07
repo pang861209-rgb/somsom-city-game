@@ -648,6 +648,7 @@ function sliceSheet(c,want){ // 연결 성분(픽셀 덩어리) 기준 자동 �
   }
   return parts;
 }
+let TSCALE=.85, ESCALE=.92; // 전역 표시 크기 — 주민이 많아져도 판이 읽히게 (히트박스·사거리 무관)
 const SHEET_POSE=['','_act','_win','_hit']; // 시트 포즈 순서: 대기·액션·승리·피격
 const SHEET_POSE2=['_wind','_thru','_land','_skill']; // 모션 확장 시트(sheet2_*): 윈드업·팔로스루·착지·스킬
 const medH=parts=>parts.map(q=>q.height).sort((a,b)=>a-b)[Math.floor(parts.length/2)];
@@ -1656,7 +1657,7 @@ function draw(){
       :(!ev&&t.cool>0&&t.cool<=.15&&F('_wind'))?F('_wind')
       :(ev?F(ev):null))||F('');
     const bob=Math.sin(time*(2.7+((b.c*7+b.r*5)%5)*.18)+b.c*2.3+b.r*3.1)*1.5,kick=Math.max(0,Math.min(1,t.kick));
-    const scale=1+t.lv*.09+(t.evo!==null?.12:0),h=T.h*scale;
+    const scale=(1+t.lv*.07+(t.evo!==null?.10:0))*TSCALE,h=T.h*scale;
     // 시트 공통 스케일: 대기 프레임 높이를 기준으로 모든 포즈를 같은 배율로 — 팔 벌린 포즈가 폭만 넓어지고 몸 크기는 유지
     const base=IMGS[t.type], px=base?h/((frame&&frame.norm)||base.height):1;
     const w=frame?frame.width*px:h*.8, fh=frame?frame.height*px:h;
@@ -1711,7 +1712,7 @@ function draw(){
     const spr=IMGS[sk];
     if(spr){ // 전용 스프라이트 (없으면 아래 코드 드로잉 폴백)
       const gs=en.type==='sb'?1+.09*Math.min(6,en.gz||0):1;
-      const hh=E.size*gs, ww=hh*spr.width/spr.height;
+      const hh=E.size*gs*ESCALE, ww=hh*spr.width/spr.height;
       const rot=en.type==='g'?time*6%6.28:en.type==='sb'?time*4%6.28:0;
       if(rot)ctx.rotate(rot);
       const fl=!rot&&en.fdx<0?-1:1; // 이동 방향 따라 좌우 반전
