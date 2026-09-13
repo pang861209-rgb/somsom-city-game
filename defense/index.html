@@ -837,13 +837,14 @@ function buildSkills(){
 function updSkills(){
   for(const t of SG.roster){ const b=$('sk_'+t); if(!b)continue;
     const has=placedOf(t).length>0; b.classList.toggle('hidden',!has);
-    if(has){ const cd=skCool[t]||0; b.disabled=cd>0;
-      b.textContent=cd>0?`${SKILLS[t].ico} ${Math.ceil(cd)}s`
+    if(has){ const cd=skCool[t]||0; b.disabled=cd>0||waveIdx<0;
+      b.textContent=waveIdx<0?`${SKILLS[t].ico} 🔒`:cd>0?`${SKILLS[t].ico} ${Math.ceil(cd)}s`
         :aimSkill===t?`${SKILLS[t].ico} 지점 탭!`:`${SKILLS[t].ico} ${SKILLS[t].label}`; }
   }
 }
 function placedOf(type){ return blocks.concat(barrs).filter(b=>b.tower&&b.tower.type===type); }
 function useSkill(t){
+  if(waveIdx<0){ SFX.deny(); addFx('text',W/2,120,'웨이브를 시작하면 쓸 수 있어요'); return; } // 준비 단계 스킬 잠금
   if((skCool[t]||0)>0||!placedOf(t).length)return;
   if(t==='bookgeo'){ aimSkill=aimSkill?null:'bookgeo'; // 지점 조준 스킬
     if(aimSkill){ ui.info.textContent="'바다' 향 — 뿌릴 지점을 탭하세요!"; addFx('text',W/2,120,'지점을 탭!'); }
@@ -860,10 +861,11 @@ function useSkill(t){
 
 // ============ 웨이브 ============
 function startWave(){
+  if(waveIdx<0)skCool.ramda=SKILLS.ramda.cd; // 줍줍 +150은 첫 웨이브부터 쿨다운 후 사용
   waveIdx++; state='WAVE'; ui.waveBtn.classList.add('hidden');
   ui.info.textContent=`웨이브 ${waveIdx+1} — 골목을 지켜라!`;
   if(tutStep){ tutStep=0; SAVE.tut=1; save(); updHud(); }
-  SFX.wave(); banner(`웨이브 ${waveIdx+1}`);
+  SFX.wave(); banner(`웨이브 ${waveIdx+1}`); updSkills();
   if(SG.pud){ // 웅덩이 이동 — 잠긴 주민은 이번 웨이브 동안 활동 불가
     pudIdx=waveIdx%SG.pud.length; let flooded=0;
     for(const b of blocks)if(b.tower){ const on=isPud(b.c,b.r);
@@ -1363,7 +1365,7 @@ function update(dt){
   if(!SG||state==='PAUSE')return;
   if(gSlowT>0)gSlowT-=dt; if(hasteT>0)hasteT-=dt; if(owwT>0)owwT-=dt; if(rainT>0)rainT-=dt;
   if(stunT>0)stunT-=dt; if(shieldT>0)shieldT-=dt; if(crewT>0)crewT-=dt;
-  for(const k in skCool)if(skCool[k]>0)skCool[k]-=dt;
+  if(waveIdx>=0)for(const k in skCool)if(skCool[k]>0)skCool[k]-=dt; // 첫 웨이브 전(타이머 없는 준비)엔 쿨다운 정지
   updSkills();
   if(state==='PREP'&&waveIdx>=0){ prepT-=dt;
     if(!selCard) ui.info.textContent=`다음 웨이브(${previewTxt(waveIdx+1)})까지 ${Math.ceil(prepT)}초`;
