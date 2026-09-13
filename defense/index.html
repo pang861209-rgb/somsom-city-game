@@ -12,7 +12,8 @@
     --line:#e3d0ac; --txt:#5a4130; --mut:#a08a70; --cta:#ffb35c; --cta-d:#5a2f1c; --amber:#b06a2a;
     --shdw:0 3px 0 rgba(124,74,45,.18); }
   body { background:#2b1a11; font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; }
-  #app { width:min(420px,100vw); height:680px; position:relative; background:#fdfbf5; border-radius:12px; overflow:hidden; user-select:none; }
+  #fit { position:relative; width:420px; height:752px; } /* 뷰포트 맞춤 스케일 래퍼 (JS가 크기 지정) */
+  #app { width:420px; height:752px; position:relative; background:#fdfbf5; border-radius:12px; overflow:hidden; user-select:none; transform-origin:0 0; }
   canvas { position:absolute; left:0; top:80px; width:100%; height:520px; display:block; }
   button { border:2px solid rgba(124,74,45,.35); background:var(--cream); border-radius:12px; font-family:inherit; font-weight:800; color:var(--txt); box-shadow:var(--shdw); cursor:pointer; }
   button:active { transform:translateY(3px); box-shadow:none; }
@@ -60,8 +61,18 @@
   #resultChar { font-size:13px; color:var(--txt); background:var(--cream); border:2px solid var(--line); border-radius:14px; padding:9px 15px; max-width:300px; line-height:1.6; box-shadow:var(--shdw); }
   #waveInfo { position:absolute; left:10px; top:52px; font-size:11px; font-weight:700; color:#ffe9cc; background:rgba(50,27,19,.72); border:1px solid rgba(255,239,216,.22); border-radius:20px; padding:4px 12px; z-index:5; }
 
-  #skills { position:absolute; right:10px; bottom:104px; display:flex; gap:6px; z-index:6; flex-wrap:wrap; justify-content:flex-end; max-width:280px; }
+  /* 액션 바: 필드(80~600px) 아래 전용 띠 — 필드 위에 떠 있던 웨이브/필살기 버튼을 여기로 (필드 가림 0) */
+  #actbar { position:absolute; left:0; top:600px; width:100%; height:56px; display:flex; align-items:center; gap:6px; padding:0 6px; z-index:6;
+    background:linear-gradient(rgba(50,27,19,.97), rgba(64,36,25,.96)); border-top:1.5px solid rgba(255,239,216,.16); }
+  #skills { display:flex; gap:3px; flex:1; min-width:0; justify-content:flex-end; flex-wrap:nowrap; }
   .skillBtn { padding:8px 12px; font-size:11px; font-weight:800; border-radius:20px; background:rgba(50,27,19,.86); color:#ffefd8; border:1.5px solid rgba(255,239,216,.4); box-shadow:0 3px 8px rgba(40,20,12,.3); }
+  .skillBtn { width:44px; height:44px; padding:0; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; font-size:9px; line-height:1; position:relative; overflow:hidden; flex:none; }
+  .skillBtn>span { position:relative; z-index:1; }
+  .skillBtn .ico { font-size:17px; line-height:1; }
+  .skillBtn .lb { max-width:42px; overflow:hidden; white-space:nowrap; }
+  .skillBtn::after { content:''; position:absolute; inset:0; z-index:0; pointer-events:none; background:conic-gradient(rgba(0,0,0,.55) calc(var(--cd,0)*100%), transparent 0); } /* 쿨다운 시계 오버레이 */
+  .skillBtn.aim { border-color:var(--cta); animation:aimPulse .7s infinite; }
+  @keyframes aimPulse { 50%{ box-shadow:0 0 0 3px rgba(255,179,92,.45); } }
   .skillBtn:active { transform:none; background:rgba(90,47,28,.9); }
   .skillBtn:disabled { transform:none; background:rgba(50,27,19,.55); }
 
@@ -76,7 +87,7 @@
   .card .nm { font-size:8.5px; font-weight:800; color:var(--txt); }
   .card .c { display:flex; align-items:center; gap:2px; font-size:9px; font-weight:800; color:#b08a3a; }
   .card .c img { width:9px; height:9px; }
-  #waveBtn { position:absolute; left:10px; bottom:104px; z-index:6; padding:11px 15px; font-size:13px; white-space:nowrap; background:var(--cta); border-color:var(--cta-d); color:#4a2416; box-shadow:0 4px 0 var(--cta-d); border-radius:14px; }
+  #waveBtn { flex:none; padding:10px 12px; font-size:12px; white-space:nowrap; background:var(--cta); border-color:var(--cta-d); color:#4a2416; box-shadow:0 4px 0 var(--cta-d); border-radius:14px; }
   #waveBtn:active { transform:translateY(4px); box-shadow:none; }
 
   .screen { position:absolute; inset:0; background:radial-gradient(120% 90% at 50% 0%, #fbf3e0 0%, var(--paper) 55%, #efdfc0 100%); z-index:20; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:13px; text-align:center; padding:24px; }
@@ -134,14 +145,14 @@
   .lobRow button { padding:8px 10px; font-size:11px; white-space:nowrap; background:#fdf1d9; }
   .lobRow button.max { background:var(--cta); border-color:var(--cta-d); color:#4a2416; box-shadow:0 3px 0 var(--cta-d); }
 
-  #popup { position:absolute; left:24px; right:24px; bottom:108px; background:rgba(43,23,15,.95); border:1.5px solid rgba(255,239,216,.28); border-radius:16px; box-shadow:0 8px 22px rgba(30,15,8,.45); padding:12px 14px; z-index:10; }
+  #popup { position:absolute; left:24px; right:24px; bottom:164px; background:rgba(43,23,15,.95); border:1.5px solid rgba(255,239,216,.28); border-radius:16px; box-shadow:0 8px 22px rgba(30,15,8,.45); padding:12px 14px; z-index:10; }
   #popup .row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
   #popup .nm { font-weight:800; font-size:15px; color:#ffefd8; }
   #popup .st { font-size:11.5px; color:#e2c9a8; line-height:1.5; flex:1; }
   #popup .btns { display:flex; gap:8px; }
   #popup button { flex:1; padding:9px 0; font-size:12.5px; box-shadow:0 3px 0 rgba(20,10,6,.55); border-color:rgba(124,74,45,.4); }
   #upBtn { background:var(--cta); border-color:var(--cta-d); color:#4a2416; }
-  #evoPop { position:absolute; left:20px; right:20px; bottom:108px; background:rgba(43,23,15,.96); border:1.5px solid rgba(255,239,216,.3); border-radius:16px; box-shadow:0 8px 22px rgba(30,15,8,.45); padding:12px; z-index:11; }
+  #evoPop { position:absolute; left:20px; right:20px; bottom:164px; background:rgba(43,23,15,.96); border:1.5px solid rgba(255,239,216,.3); border-radius:16px; box-shadow:0 8px 22px rgba(30,15,8,.45); padding:12px; z-index:11; }
   #evoPop h3 { font-size:14px; color:#ffefd8; text-align:center; margin-bottom:9px; }
   .evoOpt { width:100%; text-align:left; padding:9px 11px; margin-bottom:7px; font-size:12px; display:block; }
   .evoOpt b { color:var(--amber); display:block; font-size:13px; margin-bottom:2px; }
@@ -152,7 +163,7 @@
 </style>
 </head>
 <body>
-<div id="app">
+<div id="fit"><div id="app">
   <canvas id="cv"></canvas>
 
   <div id="hud">
@@ -165,12 +176,14 @@
   </div>
   <div id="waveInfo"></div>
   <div id="banner"><span id="bannerTxt"></span></div>
-  <div id="skills"></div>
+  <div id="actbar">
+    <button id="waveBtn">웨이브 시작</button>
+    <div id="skills"></div>
+  </div>
 
   <div id="dock">
     <div id="cards"></div>
   </div>
-  <button id="waveBtn">웨이브 시작</button>
 
   <div id="popup" class="hidden">
     <div class="row"><span class="nm" id="pNm"></span><span class="st" id="pSt"></span></div>
@@ -287,9 +300,13 @@
     <div class="sub">길게 눌러 저장하거나 공유하세요</div>
     <button id="shareClose" style="padding:10px 26px;">닫기</button>
   </div>
-</div>
+</div></div>
 
 <script>
+// 뷰포트 맞춤: 앱(420×752)을 화면에 맞게 균일 축소 — 작은 폰에서 스크롤·찌그러짐 없이 전체가 보이게
+function fitApp(){ const s=Math.min(1,window.innerWidth/420,(window.innerHeight-8)/752); const f=document.getElementById('fit');
+  f.style.width=(420*s)+'px'; f.style.height=(752*s)+'px'; document.getElementById('app').style.transform=`scale(${s})`; }
+fitApp(); addEventListener('resize',fitApp); addEventListener('orientationchange',()=>setTimeout(fitApp,60));
 'use strict';
 // ============ 기획서 v0.3 데이터 (선언형) ============
 const TILE=52, COLS=8, ROWS=10, OX=2;
@@ -470,12 +487,12 @@ const SYNS=[
  {id:'calmrush',a:'migae',b:'bookgeo',n:'느긋과 성급',d:'미개 공격력 +25%'},
 ];
 const SKILLS={
- migae:{cd:18,dur:5,ico:'⚡',label:'뽈뽈 폭식'},
- kkito:{cd:20,dur:3,ico:'🐰',label:'전장 슬로우'},
- boneul:{cd:25,dur:5,ico:'🛡️',label:'낮잠 회복'},
- lachilchin:{cd:30,dur:5,ico:'🧺',label:'줍기 크루'},
- ramda:{cd:30,dur:0,ico:'🌰',label:'줍줍 +150'},
- bookgeo:{cd:30,dur:0,ico:'🌊',label:"'바다' 향"},
+ migae:{cd:18,dur:5,ico:'⚡',label:'뽈뽈 폭식',short:'폭식'},
+ kkito:{cd:20,dur:3,ico:'🐰',label:'전장 슬로우',short:'슬로우'},
+ boneul:{cd:25,dur:5,ico:'🛡️',label:'낮잠 회복',short:'낮잠'},
+ lachilchin:{cd:30,dur:5,ico:'🧺',label:'줍기 크루',short:'크루'},
+ ramda:{cd:30,dur:0,ico:'🌰',label:'줍줍 +150',short:'+150'},
+ bookgeo:{cd:30,dur:0,ico:'🌊',label:"'바다' 향",short:'바다향'},
 };
 
 // ============ 저장 ============
@@ -837,7 +854,7 @@ function buildDock(){
 function buildSkills(){
   const box=$('skills'); box.innerHTML='';
   for(const t of rosterOf()){ const S=SKILLS[t];
-    const b=document.createElement('button'); b.className='skillBtn hidden'; b.id='sk_'+t;
+    const b=document.createElement('button'); b.className='skillBtn hidden'; b.id='sk_'+t; b.title=SKILLS[t].label; b.innerHTML='<span class="ico"></span><span class="lb"></span>';
     b.onclick=()=>useSkill(t); box.appendChild(b);
   }
 }
@@ -845,8 +862,9 @@ function updSkills(){
   for(const t of SG.roster){ const b=$('sk_'+t); if(!b)continue;
     const has=placedOf(t).length>0; b.classList.toggle('hidden',!has);
     if(has){ const cd=skCool[t]||0; b.disabled=cd>0||waveIdx<0;
-      b.textContent=waveIdx<0?`${SKILLS[t].ico} 🔒`:cd>0?`${SKILLS[t].ico} ${Math.ceil(cd)}s`
-        :aimSkill===t?`${SKILLS[t].ico} 지점 탭!`:`${SKILLS[t].ico} ${SKILLS[t].label}`; }
+      b.firstChild.textContent=waveIdx<0?'🔒':SKILLS[t].ico;
+      b.lastChild.textContent=waveIdx<0?'잠김':cd>0?`${Math.ceil(cd)}s`:aimSkill===t?'탭!':SKILLS[t].short;
+      b.style.setProperty('--cd',cd>0?(cd/SKILLS[t].cd).toFixed(3):0); b.classList.toggle('aim',aimSkill===t); }
   }
 }
 function placedOf(type){ return blocks.concat(barrs).filter(b=>b.tower&&b.tower.type===type); }
