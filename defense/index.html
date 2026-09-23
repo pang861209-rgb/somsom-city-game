@@ -106,6 +106,8 @@
   #titleRow { display:flex; align-items:center; gap:8px; }
   #titleBottom #startBtn { font-size:17px; padding:12px 48px; border-radius:16px; background:#ffb35c; border-color:#5a2f1c; color:#4a2416; box-shadow:0 4px 0 #5a2f1c; }
   #titleBottom #startBtn:active { transform:translateY(4px); box-shadow:none; }
+  #bgmBtn.on { color:#ffd79a; border-color:rgba(255,179,92,.8); } /* 솜솜시티 테마곡 재생 중 */
+  #bgmBtn.off { opacity:.6; text-decoration:line-through; }
   .ghostBtn { padding:7px 13px; font-size:11px; background:rgba(255,247,232,.14); color:#ffefd8; border-color:rgba(255,239,216,.55); box-shadow:none; border-radius:20px; }
   .ghostBtn:active { transform:none; background:rgba(255,247,232,.3); }
   #hubLink { font-size:12px; font-weight:700; color:#ffe6bf; text-decoration:none; opacity:.9; }
@@ -218,6 +220,7 @@
       <div id="titleRow">
         <button id="haptBtn" class="ghostBtn"></button>
         <button id="cbBtn" class="ghostBtn"></button>
+        <button id="bgmBtn" class="ghostBtn" aria-label="솜솜시티 노래 켜기·끄기">🎵 노래</button>
         <a id="hubLink" href="https://pang861209-rgb.github.io/somsom-city/">🏘 마을로</a>
       </div>
       <span id="verTag">R5 · 4챕터 22스테이지 · 주간 챌린지</span>
@@ -303,6 +306,8 @@
   </div>
 </div></div>
 
+<!-- 솜솜시티 테마곡: 허브(somsom-city)의 공용 플레이어. 허브·다른 게임과 같은 곡을 이어서 튼다 -->
+<script src="../../somsom-city/assets/bgm.js" data-btn="#bgmBtn" data-vol="0.35"></script>
 <script>
 // 뷰포트 맞춤: 앱(420×752)을 화면에 맞게 균일 축소 — 작은 폰에서 스크롤·찌그러짐 없이 전체가 보이게
 function fitApp(){ const s=Math.min(1,window.innerWidth/420,(window.innerHeight-8)/752); const f=document.getElementById('fit');
@@ -543,6 +548,8 @@ function gradeCostOf(t){ const g=SAVE.grades[t]||0; if(g>=4)return null;
 
 // ============ 사운드 (WebAudio 합성 — 게임1 방식) · 햅틱 ============
 const AU={ctx:null,mute:!!SAVE.mute,last:0};
+const bgmMute=()=>{ if(window.SomsomBgm&&SomsomBgm.setGameMuted)SomsomBgm.setGameMuted(AU.mute); }; // 사운드 끄기 = 노래도 끄기
+bgmMute(); if(!window.SomsomBgm)document.getElementById('bgmBtn').classList.add('hidden');
 function ac(){ if(!AU.ctx){ try{ AU.ctx=new (window.AudioContext||window.webkitAudioContext)(); bgmStart(); }catch(e){} }
   if(AU.ctx&&AU.ctx.state==='suspended')AU.ctx.resume(); // iOS: 제스처 후 resume 필요
   return AU.ctx; }
@@ -573,7 +580,7 @@ const SFX={
  star(){ tone(1047,0,.12,'triangle',.15); },
 };
 let bgmTimer=null; // 잔잔한 가을 아르페지오 루프
-function bgmStart(){ if(bgmTimer)return;
+function bgmStart(){ if(bgmTimer||window.SomsomBgm)return; // 테마곡이 있으면 합성 배경음은 끈다 (못 불러오면 예전 아르페지오로)
   const seq=[392,494,587,494,440,523,659,523,349,440,523,440,392,494,587,740]; let i=0;
   bgmTimer=setInterval(()=>{ if(AU.mute||!AU.ctx||state==='TITLE'||document.hidden)return;
     tone(seq[i%16]/2,0,.5,'triangle',.04); if(i%2===0)tone(seq[(i+2)%16],0,.3,'sine',.026); i++; },420); }
@@ -1124,7 +1131,7 @@ $('resumeBtn').onclick=()=>{ $('pause').classList.add('hidden'); state=pausePrev
 $('quitBtn').onclick=()=>{ $('pause').classList.add('hidden'); state='TITLE'; showSelect(); };
 $('endBtn').onclick=()=>{ $('pause').classList.add('hidden'); state=pausePrev||'WAVE'; finish(false); // 지금까지 기록으로 마무리 (무한·주간 기록·은행 적립 유지)
   if(!/신기록/.test($('resTitle').textContent))$('resTitle').textContent='여기서 마무리했어요'; };
-$('pMute').onclick=()=>{ AU.mute=!AU.mute; SAVE.mute=AU.mute; save(); updPause(); if(!AU.mute)SFX.coin(); };
+$('pMute').onclick=()=>{ AU.mute=!AU.mute; SAVE.mute=AU.mute; save(); updPause(); bgmMute(); if(!AU.mute)SFX.coin(); };
 $('pHapt').onclick=()=>{ SAVE.hapt=!SAVE.hapt; save(); updPause(); if(SAVE.hapt)buzz(25); };
 $('pCb').onclick=()=>{ SAVE.cb=!SAVE.cb; save(); updPause(); };
 $('retryBtn').onclick=()=>loadStage(stageIdx);
