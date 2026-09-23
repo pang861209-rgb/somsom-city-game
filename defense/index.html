@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<script src="https://pang861209-rgb.github.io/somsom-city/village.js"></script>
 <title>솜솜시티: 당근빌라 방범대 (M1)</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥕</text></svg>">
 <style>
@@ -1054,6 +1055,7 @@ function hubReport(win,stars,rec){
   try{
     const st=JSON.parse(localStorage.getItem('somsom_stats')||'{}');
     st.coins=(st.coins||0)+Math.round(earnedA/4); // 판 획득 도토리의 1/4을 마을 공용 도토리로
+    if(window.SV) SV.add('defense', Math.round(earnedA/4), (SG.roster||[])[0]||'');   // 마을 창고 (허브 village.js)
     st.chars=st.chars||{};
     for(const t of SG.roster) if(placedOf(t).length){ st.chars[t]=(st.chars[t]||0)+1; st.last=t; }
     localStorage.setItem('somsom_stats',JSON.stringify(st));
