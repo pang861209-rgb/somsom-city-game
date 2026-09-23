@@ -131,7 +131,26 @@
   .stageRow .info { flex:1; }
   .stageRow .snm { font-size:14px; font-weight:800; color:var(--txt); }
   .stageRow .sdc { font-size:10.5px; color:var(--mut); }
-  .stageRow .st { font-size:13px; color:#f0a428; letter-spacing:1px; font-weight:800; }
+  .stageRow .st { font-size:13px; color:#f0a428; letter-spacing:1px; font-weight:800; display:flex; flex-direction:column; align-items:flex-end; gap:1px; }
+  .stageRow .st .sb { font-size:10px; color:var(--mut); letter-spacing:0; font-weight:700; font-variant-numeric:tabular-nums; }
+  /* R7 골목 점수 · 순위 */
+  #scorePill { background:var(--cta); color:#4a2416; border-color:#5a2f1c; font-variant-numeric:tabular-nums; }
+  #scorePill.bump { animation:bump .3s ease-out; }
+  .scoreBox { margin-top:8px; padding:9px 12px; border-radius:12px; background:rgba(255,179,92,.16); border:1.5px solid rgba(176,106,42,.35); display:flex; flex-direction:column; gap:3px; }
+  .scoreBox .big { font-size:17px; font-weight:900; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .scoreBox .brk { font-size:10.5px; color:var(--mut); line-height:1.5; }
+  .scoreBox .rk { font-size:12px; font-weight:800; color:var(--amber); }
+  .lbTabs { display:flex; gap:5px; flex-wrap:wrap; justify-content:center; max-width:340px; }
+  .lbTabs button { padding:6px 10px; font-size:11px; border-radius:18px; box-shadow:none; }
+  .lbTabs button.on { background:var(--ink); color:#ffefd8; border-color:var(--ink); }
+  .lbRow { width:100%; display:flex; align-items:center; gap:9px; border:2px solid var(--line); border-radius:12px; background:var(--card); padding:7px 12px; }
+  .lbRow.me { border-color:var(--cta); background:#fff3dd; }
+  .lbRow .rk { width:30px; font-weight:900; color:var(--amber); text-align:center; }
+  .lbRow .nm { flex:1; min-width:0; text-align:left; font-size:13px; font-weight:800; color:var(--txt); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .lbRow .nm small { display:block; font-size:10px; font-weight:700; color:var(--mut); }
+  .lbRow b { font-variant-numeric:tabular-nums; color:var(--ink); }
+  #slbName { display:flex; gap:6px; align-items:center; }
+  #slbName input { width:150px; padding:9px 10px; border-radius:10px; border:2px solid var(--line); font:inherit; font-size:13px; background:var(--card); color:var(--txt); }
   .rowSpecial { border:none; color:#ffefd8; box-shadow:0 4px 10px rgba(70,35,20,.3); }
   .rowSpecial .snm { color:#fff4e0; } .rowSpecial .sdc { color:rgba(255,239,216,.75); }
   .rowSpecial .st { color:#ffd894; }
@@ -153,7 +172,7 @@
   #popup .nm { font-weight:800; font-size:15px; color:#ffefd8; }
   #popup .st { font-size:11.5px; color:#e2c9a8; line-height:1.5; flex:1; }
   #popup .btns { display:flex; gap:8px; }
-  #popup button { flex:1; padding:9px 0; font-size:12.5px; box-shadow:0 3px 0 rgba(20,10,6,.55); border-color:rgba(124,74,45,.4); }
+  #popup button { flex:1; padding:9px 0; font-size:12px; box-shadow:0 3px 0 rgba(20,10,6,.55); border-color:rgba(124,74,45,.4); }
   #upBtn { background:var(--cta); border-color:var(--cta-d); color:#4a2416; }
   #evoPop { position:absolute; left:20px; right:20px; bottom:164px; background:rgba(43,23,15,.96); border:1.5px solid rgba(255,239,216,.3); border-radius:16px; box-shadow:0 8px 22px rgba(30,15,8,.45); padding:12px; z-index:11; }
   #evoPop h3 { font-size:14px; color:#ffefd8; text-align:center; margin-bottom:9px; }
@@ -174,6 +193,7 @@
     <span class="pill" id="wavePill">WAVE -</span>
     <span class="pill"><img id="acornIco" alt="도토리"><b id="acornN">0</b></span>
     <span class="pill" id="lifePill">❤ 10/10</span>
+    <span class="pill" id="scorePill" hidden title="골목 점수">0</span>
     <button id="speedBtn">1×</button>
     <button id="autoBtn" title="자동 다음 웨이브">▶</button>
   </div>
@@ -190,7 +210,7 @@
 
   <div id="popup" class="hidden">
     <div class="row"><span class="nm" id="pNm"></span><span class="st" id="pSt"></span></div>
-    <div class="btns"><button id="upBtn"></button><button id="sellBtn"></button><button id="closeBtn">닫기</button></div>
+    <div class="btns"><button id="upBtn"></button><button id="sellBtn"></button><button id="moveBtn"></button><button id="closeBtn">닫기</button></div>
   </div>
 
   <div id="evoPop" class="hidden">
@@ -241,9 +261,19 @@
       <button id="lobbyBtn" style="padding:10px 13px; font-size:12px;">주민 강화</button>
       <button id="shopBtn" style="padding:10px 13px; font-size:12px;">유물 상점</button>
       <button id="dexBtn" style="padding:10px 13px; font-size:12px;">케미 도감</button>
+      <button id="selRankBtn" style="padding:10px 13px; font-size:12px;">🏆 순위</button>
       <span class="tag">🔘 <b id="selBtnN">0</b></span>
     </div>
     <button id="selBack" style="padding:8px 16px; font-size:12px; background:transparent; box-shadow:none; border-color:rgba(124,74,45,.3); color:#8a6a4d;">← 타이틀로</button>
+  </div>
+
+  <div id="stagelb" class="screen hidden">
+    <h1>골목 순위</h1>
+    <div class="sub" id="slbMode"></div>
+    <div id="slbTabs" class="lbTabs"></div>
+    <div id="slbList" style="width:100%; max-width:330px; max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
+    <div id="slbName" class="hidden"><input id="slbNameIn" maxlength="8" placeholder="순위에 쓸 이름 (8자)" autocomplete="off" enterkeyhint="done"><button id="slbNameOk" class="primary" style="padding:9px 14px; font-size:12px;">올리기</button></div>
+    <button id="slbBack" style="padding:11px 24px;">돌아가기</button>
   </div>
 
   <div id="weeklb" class="screen hidden">
@@ -284,6 +314,7 @@
       <button id="nextBtn" class="primary" style="padding:11px 20px;">다음 스테이지</button>
       <button id="listBtn" style="padding:11px 20px;">목록</button>
       <button id="shareBtn" style="padding:11px 16px;">📸 자랑하기</button>
+      <button id="rankBtn" style="padding:11px 16px;">🏆 순위</button>
     </div>
   </div>
 
@@ -778,6 +809,14 @@ let gSlowT=0,hasteT=0,owwT=0,stunT=0,shieldT=0,crewT=0,skCool={},tTimer=0,tLeft=
 let pickups=[],seenE=new Set(),announced=new Set(),fragN=0,aimSkill=null;
 let hardOn=false,lifeMax=10,pudIdx=0,rainT=0,selCh=1;
 let crisisT=0,crisisDone=false,autoW=false;
+// ── R7 골목 점수: 처치 + 연쇄(2초 안 이어 잡기, ×1.1씩 최대 ×2) + 빨리 부르기 + 무피해 연속 + 남은 쾌적도 ──
+let SC=null, moveSel=null, movedPrep=false; // 점수 상태 · 자리 바꾸기(쉬는 시간마다 1명)
+const SC_CHAIN=2, SC_EARLY=20, SC_CLEAN=100, SC_LIFE=300;
+function scReset(){ SC={kill:0,chain:0,early:0,clean:0,life:0,combo:0,lastK:-99,streak:0,leaks:0,prep:0}; }
+function scTotal(){ return SC?Math.round(SC.kill+SC.chain+SC.early+SC.clean+SC.life):0; }
+const scRanked=()=>!!SG&&!SG.endless&&!SG.weekly;
+function scBump(){ const el=document.getElementById('scorePill'); if(!el||el.hidden)return;
+  el.textContent=scTotal().toLocaleString(); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
 
 const cellAt=(c,r)=>(r>=1&&r<=ROWS&&c>=1&&c<=COLS)?SG.map[r-1][c-1]:'.';
 const center=(c,r)=>({x:OX+(c-1)*TILE+TILE/2,y:(r-1)*TILE+TILE/2});
@@ -805,7 +844,7 @@ function loadStage(i){
   if(SG.weekly&&wRule().id==='rich'){ acorns*=2; lifeMax=3+(hasRelic('flag')?2:0); life=lifeMax; }
   pudIdx=0; rainT=0; crisisT=0; crisisDone=false; waveIdx=-1; enemies=[];spawnQ=[];fx=[];stinks=[];slimes=[];
   selCard=null;selTower=null; gSlowT=hasteT=owwT=stunT=shieldT=crewT=0; tTimer=8; skCool={};
-  stat={kill:0,g:0}; earnedA=0; pickups=[]; seenE=new Set(); announced=new Set(); fragN=0; aimSkill=null;
+  stat={kill:0,g:0}; scReset(); moveSel=null; movedPrep=false; earnedA=0; pickups=[]; seenE=new Set(); announced=new Set(); fragN=0; aimSkill=null;
   buildDock(); buildSkills();
   state='PREP'; $('select').classList.add('hidden'); $('result').classList.add('hidden');
   ui.waveBtn.textContent='웨이브 시작'; ui.waveBtn.classList.remove('hidden');
@@ -835,9 +874,10 @@ function coinsFrom(x,y,n){ // 도토리가 HUD 카운터로 날아가는 연출 
       cp:{x:x+(Math.random()*70-35),y:y-50-Math.random()*40}}); } }
 function updHud(){
   ui.wave.textContent = SG&&SG.endless ? `WAVE ${Math.max(1,waveIdx+1)} ∞`
-    : waveIdx<0?`WAVE -/${SG?SG.waves.length:0}`:`WAVE ${Math.min(waveIdx+1,SG.waves.length)}/${SG.waves.length}`;
+    : (scRanked()?'W ':'WAVE ')+(waveIdx<0?`-/${SG?SG.waves.length:0}`:`${Math.min(waveIdx+1,SG.waves.length)}/${SG.waves.length}`);
   if(Math.abs(acorns-dispA)>250||state==='TITLE'){ dispA=acorns; ui.acorn.textContent=acorns; } // 로드·큰 점프는 즉시, 나머진 loop에서 카운트업
   ui.life.textContent=`❤ ${life}/${lifeMax}`;
+  { const sp=document.getElementById('scorePill'); sp.hidden=!scRanked(); if(!sp.hidden)sp.textContent=scTotal().toLocaleString(); }
   document.querySelectorAll('.card').forEach(el=>{
     el.classList.toggle('poor',acorns<TOWERS[el.dataset.t].cost);
     el.classList.toggle('sel',selCard===el.dataset.t);
@@ -894,6 +934,10 @@ function useSkill(t){
 
 // ============ 웨이브 ============
 function startWave(){
+  if(SC){ if(state==='PREP'&&waveIdx>=0){ const e=Math.max(0,Math.round(PREP_TIME-SC.prep))*SC_EARLY; // 쉬는 시간을 덜 쓸수록
+      if(e){ SC.early+=e; if(scRanked())addFx('text',W/2,96,`빨리 부르기 +${e}`); scBump(); } }
+    SC.prep=0; SC.leaks=0; }
+  moveSel=null;
   if(waveIdx<0)skCool.ramda=SKILLS.ramda.cd; // 줍줍 +150은 첫 웨이브부터 쿨다운 후 사용
   waveIdx++; state='WAVE'; ui.waveBtn.classList.add('hidden');
   ui.info.textContent=`웨이브 ${waveIdx+1} — 골목을 지켜라!`;
@@ -926,6 +970,9 @@ function endWave(){
   const wb=WAVE_BONUS+(hasRelic('bank')?8:0);
   acorns+=wb; earnedA+=wb; addFx('text',W/2,60,`웨이브 클리어! +${wb}`); SFX.clear();
   { const vp=center(villa.c,villa.r); coinsFrom(vp.x,vp.y-30,5); } // 당근빌라에서 보너스 도토리 쏟아짐
+  if(SC){ if(SC.leaks===0){ SC.streak++; const c=SC_CLEAN*SC.streak; SC.clean+=c; if(scRanked())addFx('text',W/2,80,`무피해 ${SC.streak}연속 +${c}`); }
+    else SC.streak=0; scBump(); }
+  movedPrep=false;
   if(!SG.endless&&waveIdx>=SG.waves.length-1)return finish(true);
   state='PREP';
   if(autoW){ prepT=2; acorns+=SKIP_BONUS+(hasRelic('clock')?5:0); } // 자동 다음 웨이브 — 바로 시작 보너스 포함
@@ -942,7 +989,9 @@ function finish(win){
   if(win){ const d=new Date(), dk=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
     if(SAVE.daily!==dk){ SAVE.daily=dk; SAVE.buttons+=1; daily=1; } }
   const stars=win?(life>=lifeMax?3:life>=Math.ceil(lifeMax*.6)?2:1):0;
-  track('stage_end',{s:SG.id||99,win:win?1:0,stars,wave:waveIdx,hard:hardOn?1:0});
+  if(SC&&win){ SC.life=life*SC_LIFE; scBump(); }
+  const score=scTotal(); let scoreHtml='', bk=null, newPB=false;
+  track('stage_end',{s:SG.id||99,win:win?1:0,stars,wave:waveIdx,hard:hardOn?1:0,sc:score});
   let earned=0;
   if(SG.weekly){ // 주간 챌린지: 주차별 기록 + 리더보드
     const rec=Math.max(0,waveIdx), wk=weekKey(), R=wRule();
@@ -975,20 +1024,28 @@ function finish(win){
     if(win){ const tbl=hardOn?[0,2,3,4]:[0,1,2,3]; // 하드는 단추 보상 상향
       earned=Math.max(0,tbl[stars]-tbl[prev])+(first?2:0);
       SAVE.cleared[k]=1; store[k]=Math.max(prev,stars); SAVE.buttons+=earned; }
+    bk=k; SAVE.sbest=SAVE.sbest||{}; const pb=SAVE.sbest[k]||0; newPB=win&&score>pb;
+    if(newPB)SAVE.sbest[k]=score;
     save();
+    const f=v=>Math.round(v).toLocaleString();
+    scoreHtml=`<div class="scoreBox"><span class="big">골목 점수 ${f(score)}${newPB&&pb?' · 최고 기록!':''}</span>`
+      +`<span class="brk">처치 ${f(SC.kill)} · 연쇄 +${f(SC.chain)} · 빨리 부르기 +${f(SC.early)} · 무피해 +${f(SC.clean)} · 쾌적도 +${f(SC.life)}</span>`
+      +`<span class="rk" id="resRank">${win?(pb&&!newPB?`내 최고 ${f(pb)} · `:'')+'순위 확인 중…':'막아내면 순위에 올라요'}</span></div>`;
     $('stars').innerHTML=[0,1,2].map(i=>`<span>${win&&i<stars?'★':'☆'}</span>`).join('');
     [...$('stars').children].forEach((el,i)=>setTimeout(()=>{ el.classList.add('on'); if(win&&i<stars)SFX.star(); },400+i*380));
     $('resTitle').textContent=(win?(stars===3?'완벽한 방범이었어요!':'당근 빌라를 지켰다!'):'골목이 꼬릿꼬릿해졌다…')+(hardOn?' 🔥':'');
     $('resSub').innerHTML=(win?`남은 쾌적도 ${life}/${lifeMax} → ${stars}★`+(earned?`<br>🔘 단추 +${earned} — 주민 강화에 써요!`:''):'조합과 자리를 바꿔 다시!')
-      +(daily?`<br>☀️ 오늘의 첫 승리 🔘+1`:'')+`<br>치운 골칫거리 ${stat.kill}${stat.g?` · 주운 은행 ${stat.g}`:''}`;
-    lastRes={title:`${SG.name} ${win?'클리어!':'도전 중'}`,big:win?'★'.repeat(stars):'다음엔 꼭!',small:`치운 골칫거리 ${stat.kill}`};
+      +(daily?`<br>☀️ 오늘의 첫 승리 🔘+1`:'')+`<br>치운 골칫거리 ${stat.kill}${stat.g?` · 주운 은행 ${stat.g}`:''}`+scoreHtml;
+    lastRes={title:`${SG.name} ${win?'클리어!':'도전 중'}`,big:win?'★'.repeat(stars):'다음엔 꼭!',small:`골목 점수 ${score.toLocaleString()} · 치운 골칫거리 ${stat.kill}`};
     if(win){ SFX.win(); confetti(16+stars*10); buzz(60); } else SFX.lose();
   }
   const roster=SG.roster.filter(t=>placedOf(t).length), who=roster.length?roster[Math.floor(Math.random()*roster.length)]:SG.roster[0];
   lastWho=who;
   $('resultChar').textContent=`${TOWERS[who].name}: "${LINES[who][win?'win':'lose']}"`;
   $('nextBtn').classList.toggle('hidden',SG.endless||!win||stageIdx>=STAGES.length-1);
+  $('rankBtn').classList.toggle('hidden',!scRanked()); lbCtx={key:bk,ch:SG.ch,m:hardOn?'h':'s',from:'result'};
   $('result').classList.remove('hidden');
+  if(bk&&win)lbAfterWin(bk);
   hubReport(win, stars, SG.endless&&!SG.weekly?Math.max(0,waveIdx):0);
 }
 
@@ -1063,9 +1120,16 @@ function showPopup(b){
   else { $('upBtn').textContent=`강화 🌰${nxt.up}`; $('upBtn').disabled=acorns<nxt.up; }
   $('sellBtn').textContent=`회수 +${Math.floor(t.spent*REFUND)}`;
   $('sellBtn').disabled=!!(SG&&SG.weekly&&wRule().id==='nosell');
+  const mvOk=state==='PREP'&&(waveIdx<0||!movedPrep);
+  $('moveBtn').textContent=state!=='PREP'?'쉬는 시간에':mvOk?'↔ 옮기기':'이번엔 옮김';
+  $('moveBtn').disabled=!mvOk;
   ui.popup.classList.remove('hidden');
 }
 function hidePopup(){ selTower=null; ui.popup.classList.add('hidden'); $('evoPop').classList.add('hidden'); }
+$('moveBtn').onclick=()=>{ if(!selTower||state!=='PREP')return; // 자리 바꾸기: 레벨·진화 그대로, 쉬는 시간마다 1명
+  moveSel=selTower; const nm=TOWERS[moveSel.tower.type].name; hidePopup(); selCard=null;
+  document.querySelectorAll('.card.sel').forEach(c=>c.classList.remove('sel'));
+  ui.info.textContent=`${nm} — 옮길 칸을 누르세요 (제자리를 누르면 취소)`; SFX.coin(); };
 $('upBtn').onclick=()=>{ const t=selTower.tower,nxt=TOWERS[t.type].lv[t.lv+1];
   if(!nxt&&t.evo===null&&EVOS[t.type]&&acorns>=EVO_COST){ openEvo(); return; }
   if(nxt&&acorns>=nxt.up){ acorns-=nxt.up; t.spent+=nxt.up; t.lv++;
@@ -1106,6 +1170,15 @@ cv.addEventListener('pointerdown',e=>{
   for(let i=0;i<pickups.length;i++){ const p=pickups[i]; // 도토리 탭 줍기 (+1 보너스)
     if((x-p.x)**2+(y-p.y)**2<=24*24){ acorns+=p.v+1; earnedA+=p.v+1; SFX.coin(); buzz(8);
       addFx('text',p.x,p.y-16,'+'+(p.v+1)); pickups.splice(i,1); updHud(); return; } }
+  if(moveSel){ const {c,r}=tileFromXY(x,y), mv=moveSel, t=mv.tower; moveSel=null; hidePopup();
+    if(state!=='PREP'||!t)return;
+    if(mv.c===c&&mv.r===r){ ui.info.textContent='옮기기를 취소했어요'; return; }
+    if(!canPlace(t.type,c,r)){ SFX.deny(); addFx('text',x,y-14,'여기엔 못 옮겨요'); ui.info.textContent='옮기기를 취소했어요'; return; }
+    if(TOWERS[t.type].slot==='='){ mv.c=c; mv.r=r; }
+    else { blocks.find(b=>b.c===c&&b.r===r).tower=t; mv.tower=null; }
+    if(waveIdx>=0)movedPrep=true;
+    t.drop=.36; t.land=0; const p=center(c,r); addFx('pop',p.x,p.y); SFX.place();
+    checkSyns(); updSkills(); updHud(); ui.info.textContent=`${TOWERS[t.type].name} 자리를 옮겼어요`; return; }
   const {c,r}=tileFromXY(x,y), s=slotAt(c,r);
   hidePopup();
   if(s&&s.tower){ showPopup(s); return; }
@@ -1138,7 +1211,7 @@ $('retryBtn').onclick=()=>loadStage(stageIdx);
 $('nextBtn').onclick=()=>loadStage(stageIdx+1);
 $('listBtn').onclick=()=>{ state='TITLE'; showSelect(); };
 function showSelect(){
-  ['result','lobby','shop','dex','weeklb'].forEach(id=>$(id).classList.add('hidden'));
+  ['result','lobby','shop','dex','weeklb','stagelb'].forEach(id=>$(id).classList.add('hidden'));
   $('select').classList.remove('hidden');
   $('selBtnN').textContent=SAVE.buttons;
   const ch2open=(SAVE.stars.s4||0)>0, ch3open=(SAVE.stars.s10||0)>0, ch4open=(SAVE.stars.s16||0)>0;
@@ -1160,7 +1233,7 @@ function showSelect(){
     const lock=hardOn?!canHard:!unlocked;
     const st=hardOn?(SAVE.hstars['h'+s.id]||0):(SAVE.stars['s'+s.id]||0);
     const el=document.createElement('div'); el.className='stageRow'+(lock?' locked':'');
-    el.innerHTML=`<span class="no">${s.id}</span><span class="info"><div class="snm">${s.name}${hardOn?' 🔥':''}</div><div class="sdc">${hardOn&&!canHard?'보통 난이도로 먼저 클리어하세요':s.desc}</div></span><span class="st">${'★'.repeat(st)}${'☆'.repeat(3-st)}</span>`;
+    el.innerHTML=`<span class="no">${s.id}</span><span class="info"><div class="snm">${s.name}${hardOn?' 🔥':''}</div><div class="sdc">${hardOn&&!canHard?'보통 난이도로 먼저 클리어하세요':s.desc}</div></span><span class="st"><span>${'★'.repeat(st)}${'☆'.repeat(3-st)}</span>${(SAVE.sbest||{})[(hardOn?'h':'s')+s.id]?`<span class="sb">🏅${SAVE.sbest[(hardOn?'h':'s')+s.id].toLocaleString()}</span>`:''}</span>`;
     if(!lock)el.onclick=()=>loadStage(i);
     box.appendChild(el);
   });
@@ -1201,6 +1274,70 @@ async function showWeekLb(){
   }catch(e){ box.innerHTML='<div class="sub">랭킹을 불러오지 못했어요 (오프라인?)</div>'; }
 }
 $('wlbBack').onclick=showSelect;
+
+// ============ R7 골목 순위 — 닉네임마다 문서 하나(defense_best/{이름}), 스테이지별 최고 점수 맵 ============
+const LB_COL='defense_best';
+let lbCache={t:0,rows:null}, lbCtx={key:null,ch:1,m:'s',from:'select'}, lbTab='all';
+const escH=v=>String(v).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+const gradeSum=()=>Object.values(SAVE.grades||{}).reduce((a,v)=>a+(+v||0),0);
+const myName=()=>{ const n=(localStorage.getItem('somsom_name')||'').trim(); return n&&!/[\/]/.test(n)?n.slice(0,12):''; };
+async function lbFetch(force){
+  if(!force&&lbCache.rows&&Date.now()-lbCache.t<30000)return lbCache.rows;
+  const rows=[]; let tok='';
+  for(let pg=0;pg<5;pg++){
+    const r=await fetch(`${FS_BASE}/${LB_COL}?pageSize=300&key=${FS_KEY}`+(tok?`&pageToken=${encodeURIComponent(tok)}`:''));
+    if(!r.ok)throw new Error('http '+r.status);
+    const j=await r.json();
+    for(const d of j.documents||[]){ const fl=d.fields||{}; let b={}; try{ b=JSON.parse((fl.b&&fl.b.stringValue)||'{}'); }catch(e){}
+      rows.push({n:(fl.n&&fl.n.stringValue)||'?',b,g:+((fl.g&&fl.g.integerValue)||0)}); }
+    tok=j.nextPageToken||''; if(!tok)break; }
+  lbCache={t:Date.now(),rows}; return rows; }
+async function lbSubmit(){ // 내 최고 기록을 서버 문서와 합쳐(큰 값) 덮어쓰기
+  const nm=myName(); if(!nm)return 'noname';
+  const url=`${FS_BASE}/${LB_COL}/${encodeURIComponent(nm)}?key=${FS_KEY}`;
+  let srv={}; try{ const r=await fetch(url); if(r.ok){ const j=await r.json(); srv=JSON.parse((j.fields&&j.fields.b&&j.fields.b.stringValue)||'{}'); } }catch(e){}
+  const b=Object.assign({},srv); for(const [k,v] of Object.entries(SAVE.sbest||{}))b[k]=Math.max(b[k]||0,v);
+  try{ const r=await fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({fields:{n:{stringValue:nm},b:{stringValue:JSON.stringify(b)},g:{integerValue:String(gradeSum())},t:{integerValue:String(Date.now())}}})});
+    lbCache.t=0; return r.ok?'ok':'denied'; }catch(e){ return 'offline'; } }
+function lbKeys(tab,m){ if(tab==='all')return STAGES.map(s=>m+s.id);
+  if(/^ch\d$/.test(tab))return STAGES.filter(s=>s.ch===+tab[2]).map(s=>m+s.id); return [tab]; }
+function lbRank(rows,keys){ // 서버 목록 + 내 기기 기록(서버 반영 전이어도 보이게, 큰 값)
+  const nm=myName()||'나', srvMe=rows.find(r=>r.n===nm), meB=Object.assign({},srvMe?srvMe.b:{});
+  for(const [k,v] of Object.entries(SAVE.sbest||{}))meB[k]=Math.max(meB[k]||0,v);
+  const all=rows.filter(r=>r.n!==nm).concat([{n:nm,b:meB,g:gradeSum(),me:1}]);
+  return all.map(r=>({n:r.n,g:r.g,me:!!r.me,s:keys.reduce((t,k)=>t+(r.b[k]||0),0),c:keys.filter(k=>r.b[k]).length}))
+    .filter(r=>r.s>0).sort((x,y)=>y.s-x.s); }
+async function lbAfterWin(k){ const el=()=>document.getElementById('resRank');
+  const res=await lbSubmit();
+  try{ const rk=lbRank(await lbFetch(true),[k]), i=rk.findIndex(r=>r.me);
+    if(el())el().textContent=(res==='noname'?'이름을 정하면 순위에 올라가요 · ':res!=='ok'?'순위 서버 준비 중 · ':'')+(i>=0?`이 스테이지 ${i+1}위 / ${rk.length}명`:''); }
+  catch(e){ if(el())el().textContent=res==='noname'?'이름을 정하면 순위에 올라가요':'순위 서버 준비 중 — 기록은 이 기기에 저장됐어요'; } }
+async function showStageLb(ctx){
+  if(ctx)lbCtx=Object.assign({},lbCtx,ctx);
+  lbTab=lbCtx.key||'ch'+(lbCtx.ch||1);
+  ['select','result'].forEach(id=>$(id).classList.add('hidden')); $('stagelb').classList.remove('hidden');
+  renderStageLb(); }
+async function renderStageLb(){
+  const m=lbCtx.m||'s', ch=lbCtx.ch||1, box=$('slbList');
+  $('slbMode').textContent=(m==='h'?'🔥 하드 · ':'')+'스테이지마다 가장 높은 골목 점수로 겨뤄요';
+  const tabs=[['all','전체'],['ch'+ch,`${ch}장 합산`]].concat(STAGES.filter(s=>s.ch===ch).map(s=>[m+s.id,'S'+s.id]));
+  $('slbTabs').innerHTML=tabs.map(([k,l])=>`<button data-k="${k}" class="${k===lbTab?'on':''}">${l}</button>`).join('');
+  $('slbTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{ lbTab=b.dataset.k; renderStageLb(); });
+  $('slbName').classList.toggle('hidden',!!myName());
+  box.innerHTML='<div class="sub">불러오는 중...</div>';
+  let rows=[], note='';
+  try{ rows=await lbFetch(); }catch(e){ note='<div class="sub">순위 서버 준비 중이에요 — 지금은 내 기록만 보여요</div>'; }
+  const keys=lbKeys(lbTab,m), rk=lbRank(rows,keys), sum=keys.length>1;
+  box.innerHTML=note+(rk.length?rk.slice(0,30).map((r,i)=>`<div class="lbRow${r.me?' me':''}"><span class="rk">${i<3?['🥇','🥈','🥉'][i]:i+1}</span>`
+      +`<span class="nm">${escH(r.n)}${r.me&&!myName()?' (이름 없음)':''}<small>등급 ${r.g}${sum?` · ${r.c}/${keys.length} 스테이지`:''}</small></span><b>${r.s.toLocaleString()}</b></div>`).join('')
+    :'<div class="sub">아직 기록이 없어요 — 스테이지를 막아내면 첫 이름이 올라가요!</div>'); }
+$('slbNameOk').onclick=async()=>{ const v=$('slbNameIn').value.trim().slice(0,8);
+  if(!v||/[\/]/.test(v)){ SFX.deny(); return; }
+  localStorage.setItem('somsom_name',v); SFX.coin(); await lbSubmit(); lbCache.t=0; renderStageLb(); };
+$('slbBack').onclick=()=>{ $('stagelb').classList.add('hidden'); if(lbCtx.from==='result')$('result').classList.remove('hidden'); else showSelect(); };
+$('rankBtn').onclick=()=>showStageLb({from:'result'});
+$('selRankBtn').onclick=()=>showStageLb({key:null,ch:selCh,m:hardOn?'h':'s',from:'select'});
 $('hardTgl').onclick=()=>{ hardOn=!hardOn; SFX.coin(); showSelect(); };
 function showShop(){
   $('select').classList.add('hidden'); $('shop').classList.remove('hidden');
@@ -1359,6 +1496,12 @@ function defeat(en,collector){
   if(en.type==='tb'){ for(let i=0;i<3;i++)spawnAt('d',en); addFx('text',en.x,en.y-30,'봉투가 터졌다!'); } // 쓰레기 봉투 분열
   if(r){ acorns+=r; earnedA+=r; addFx('text',en.x,en.y-26,'+'+r); SFX.coin(); coinsFrom(en.x,en.y,Math.min(4,1+Math.floor(r/7))); }
   stat.kill++;
+  if(SC){ const base=ENEMIES[en.type].reward*10*(en.elite?2:1); // 챕터 보상 배율과 무관한 기본 점수
+    SC.combo=time-SC.lastK<=SC_CHAIN?SC.combo+1:1; SC.lastK=time;
+    const mult=Math.min(2,1+.1*(SC.combo-1));
+    SC.kill+=base; SC.chain+=base*(mult-1);
+    if(scRanked()&&SC.combo>=3&&(SC.combo===3||SC.combo%3===0)&&fx.length<70)addFx('text',en.x,en.y-40,`연쇄 ×${mult.toFixed(1)}!`);
+    scBump(); }
   addFx('die',en.x,en.y,en.type); // 종류별 사망 연출
   if(en.type==='k')stinks.push({x:en.x,y:en.y,t:2}); // 꼬릿 구름: 냄새 장판 2초 (근처 주민 공속 -20%)
   if(en.elite==='split'){ spawnAt('d',en); spawnAt('d',en); addFx('text',en.x,en.y-40,'골목대장이 갈라졌다!'); } // 엘리트 분열
@@ -1416,7 +1559,7 @@ function update(dt){
   if(stunT>0)stunT-=dt; if(shieldT>0)shieldT-=dt; if(crewT>0)crewT-=dt;
   if(waveIdx>=0)for(const k in skCool)if(skCool[k]>0)skCool[k]-=dt; // 첫 웨이브 전(타이머 없는 준비)엔 쿨다운 정지
   updSkills();
-  if(state==='PREP'&&waveIdx>=0){ prepT-=dt;
+  if(state==='PREP'&&waveIdx>=0){ prepT-=dt; if(SC)SC.prep+=dt;
     if(!selCard) ui.info.textContent=`다음 웨이브(${previewTxt(waveIdx+1)})까지 ${Math.ceil(prepT)}초`;
     if(prepT<=0)startWave(); }
   if(state!=='WAVE'&&state!=='PREP')return;
@@ -1460,7 +1603,7 @@ function update(dt){
     const dir=en.rev>0?-1:1; if(en.rev>0)en.rev-=dt;
     const tgt=waypoints[en.wp+dir];
     if(!tgt&&dir>0){ en.dead=true;
-      if(en.type==='mg'){ const st=Math.min(acorns,30); acorns-=st; addFx('text',en.x,en.y-30,`까치가 도토리 ${st}개를 훔쳐갔다!`); SFX.deny(); updHud(); continue; } // 까치: 쾌적도 대신 강탈
+      if(SC)SC.leaks++; if(en.type==='mg'){ const st=Math.min(acorns,30); acorns-=st; addFx('text',en.x,en.y-30,`까치가 도토리 ${st}개를 훔쳐갔다!`); SFX.deny(); updHud(); continue; } // 까치: 쾌적도 대신 강탈
       life--; shakeT=.3; owwT=1.0; SFX.leak(); addFx('bad',en.x,en.y); updHud();
       ui.life.classList.remove('hurt'); void ui.life.offsetWidth; ui.life.classList.add('hurt');
       if(life<=3&&life>0&&!crisisDone){ crisisDone=true; crisisT=1.5; owwT=1.6; // 위기 연출: 슬로모션 + 전원 경악
@@ -1699,6 +1842,8 @@ function draw(){
       const x=OX+(c-1)*TILE,y=(r-1)*TILE;
       ctx.strokeStyle='#4a7a3a'; ctx.setLineDash([5,4]); ctx.lineWidth=2;
       ctx.strokeRect(x+4,y+4,TILE-8,TILE-8); ctx.setLineDash([]); ctx.lineWidth=1; }
+  if(moveSel&&moveSel.tower){ const p=center(moveSel.c,moveSel.r); ctx.save(); ctx.strokeStyle='#ffb35c'; ctx.lineWidth=2.5;
+    ctx.setLineDash([6,4]); ctx.lineDashOffset=-time*20; ctx.strokeRect(p.x-TILE/2+3,p.y-TILE/2+3,TILE-6,TILE-6); ctx.restore(); }
   if(selTower&&selTower.tower){ const p=center(selTower.c,selTower.r),R=rangeOf(selTower);
     if(R){ ctx.beginPath(); ctx.arc(p.x,p.y,R*TILE,0,7);
       ctx.fillStyle='rgba(210,114,42,.12)'; ctx.fill();
