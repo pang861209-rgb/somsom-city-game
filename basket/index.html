@@ -16,9 +16,10 @@
   :root{--ink:#3a2418;--ink2:#2b1a11;--paper:#f7edda;--cream:#fff8ec;--line:#e3d0ac;--txt:#5a4130;--mut:#a08a70;
     --cta:#ffb35c;--cta-d:#8a4a22;--gold:#f2c14b;--red:#e0503c;--shdw:0 3px 0 rgba(124,74,45,.22);}
   html,body{height:100%;}
-  body{background:#2b1a11;font-family:'Gowun Dodum','Apple SD Gothic Neo','Noto Sans KR',sans-serif;display:flex;
+  body{background:#e8d9bb url(../assets/basket/bg.webp) center/cover no-repeat;font-family:'Gowun Dodum','Apple SD Gothic Neo','Noto Sans KR',sans-serif;display:flex;
     justify-content:center;align-items:center;overflow:hidden;word-break:keep-all;-webkit-font-smoothing:antialiased;
     touch-action:none;overscroll-behavior:none;}
+  body::before{content:'';position:fixed;inset:0;background:rgba(250,242,226,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
   #fit{position:relative;width:420px;height:760px;}
   #app{position:absolute;left:0;top:0;width:420px;height:760px;background:#f6ecd8;overflow:hidden;transform-origin:0 0;
     user-select:none;-webkit-user-select:none;border-radius:14px;}
@@ -79,7 +80,7 @@
     padding:9px 18px;box-shadow:0 5px 14px rgba(40,20,12,.35);opacity:0;}
   #toast span.show{animation:toastIn 2s ease-out;}
   @keyframes toastIn{0%{opacity:0;transform:translateY(10px)}12%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-8px)}}
-  #hint{position:absolute;left:0;right:0;top:420px;text-align:center;z-index:6;pointer-events:none;transition:opacity .5s;}
+  #hint{position:absolute;left:0;right:0;top:300px;text-align:center;z-index:6;pointer-events:none;transition:opacity .5s;}
   #hint span{display:inline-block;font-size:14px;font-weight:800;color:#5a4130;background:rgba(255,248,236,.93);border-radius:14px;
     padding:10px 16px;border:2px solid rgba(124,74,45,.25);line-height:1.5;}
   #targetBar{position:absolute;left:0;right:0;top:128px;text-align:center;z-index:9;}
@@ -155,21 +156,25 @@
   .fc .cost.can{background:#e07a2a;}
 
   /* 결과 */
-  #resScore{font-family:'Black Han Sans',sans-serif;font-size:52px;text-align:center;color:#6b3d22;line-height:1;}
+  #result .card{gap:8px;padding:14px 16px;}
+  #result .card h2{font-size:21px;}
+  #resGoals .gRow{font-size:12px;} #resGoals > div:first-child{padding:8px 11px!important;gap:4px!important;}
+  #resScore{font-family:'Black Han Sans',sans-serif;font-size:44px;text-align:center;color:#6b3d22;line-height:1;}
   #resBadge{align-self:center;font-size:12.5px;font-weight:900;color:#fff;background:#e0503c;border-radius:10px;padding:3px 12px;}
-  #resBig{display:flex;align-items:center;gap:12px;background:var(--cream);border-radius:16px;padding:10px 12px;border:2px solid rgba(124,74,45,.18);}
-  #resBig img{width:58px;height:58px;object-fit:contain;}
+  #resBig{display:flex;align-items:center;gap:12px;background:var(--cream);border-radius:16px;padding:7px 12px;border:2px solid rgba(124,74,45,.18);}
+  #resBig img{width:44px;height:44px;object-fit:contain;}
   #resBig .t{font-size:12px;color:var(--mut);font-weight:800;}
   #resBig .t b{display:block;font-size:17px;color:#5a3520;}
   #resStats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
   #resStats div{background:var(--cream);border-radius:12px;padding:7px 4px;text-align:center;font-size:10.5px;color:var(--mut);font-weight:800;}
   #resStats b{display:block;font-size:16px;color:#5a3520;}
-  #resAcorn{display:flex;flex-direction:column;gap:4px;background:#fff1dc;border-radius:14px;padding:10px 12px;font-size:12.5px;font-weight:800;color:#6b4a30;}
+  #resAcorn{display:flex;flex-direction:column;gap:2px;background:#fff1dc;border-radius:14px;padding:8px 12px;font-size:12px;font-weight:800;color:#6b4a30;}
   #resAcorn .ln{display:flex;}
   #resAcorn .ln span:last-child{margin-left:auto;}
   #resAcorn .tot{border-top:1.5px dashed rgba(124,74,45,.3);padding-top:5px;margin-top:2px;font-size:14px;color:#b06a2a;}
   #resNear{text-align:center;font-size:13px;font-weight:800;color:#b06a2a;}
-  #againBtn{font-size:19px;font-family:'Black Han Sans',sans-serif;font-weight:400;padding:14px;}
+  #againBtn{font-size:19px;font-family:'Black Han Sans',sans-serif;font-weight:400;padding:12px;}
+  #result .row .btn{padding:9px;font-size:13.5px;}
 
   /* 이어하기 */
   #reviveTimer{height:6px;border-radius:6px;background:rgba(124,74,45,.15);overflow:hidden;}
@@ -252,6 +257,7 @@
       <h2>함께할 친구</h2>
       <div class="sub">합치기로 게이지를 채워 스킬을 써요 · 보유 도토리 <b id="frAcorn">0</b>개</div>
       <div id="friendGrid"></div>
+      <button class="btn" id="frLv"></button>
       <button class="btn primary" id="frGo">이 친구와 시작</button>
       <button class="btn" id="frClose">닫기</button>
     </div>
@@ -322,8 +328,7 @@
     <div class="card">
       <h2 id="resTitle">바구니 완성!</h2>
       <div id="resScore">0</div>
-      <div id="resBadge" class="hidden">최고 기록!</div>
-      <div id="resNear"></div>
+      <div style="display:flex;justify-content:center;align-items:center;gap:8px;"><span id="resBadge" class="hidden">최고 기록!</span><span id="resNear"></span></div>
       <div id="resBig"><img id="resBigImg" alt=""><div class="t">이번 판 가장 큰 열매<b id="resBigName"></b></div></div>
       <div id="resStats"></div>
       <div id="resAcorn"></div>
@@ -395,19 +400,19 @@ const DEX_SAY=[
 ];
 const CH_ORDER=['lachilchin','kkito','ramda','migae','boneul','bookgeo'];
 const CH={
- lachilchin:{n:'라칠친 할머니',cost:0,  sk:'은행 줍기',  skd:'바구니 속 은행·도토리를 모두 주워 담아요', ps:'은행·도토리 합치기 점수 2배'},
- kkito:     {n:'끼토',        cost:0,  sk:'귀 흔들기',  skd:'바구니를 흔들어 열매를 뒤섞어요',       ps:'스킬 게이지가 20% 빨리 차요'},
- ramda:     {n:'람다',        cost:120,sk:'황금 도토리',skd:'다음 열매가 어떤 열매와도 합쳐지는 황금 도토리로!', ps:'판이 끝나면 도토리 25% 더'},
+ lachilchin:{n:'라칠친 할머니',cost:0,  sk:'은행 줍기',  skd:'바구니 속 은행·도토리를 모두 주워 담아요', ps:'주운 열매 하나당 도토리 +1'},
+ kkito:     {n:'끼토',        cost:0,  sk:'귀 흔들기',  skd:'바구니를 흔들고, 가까운 같은 열매끼리 끌어당겨요',       ps:'스킬 게이지가 20% 빨리 차요'},
+ ramda:     {n:'람다',        cost:120,sk:'황금 도토리',skd:'닿은 열매의 짝을 어디서든 끌어와 합치는 황금 도토리 2개!', ps:'판이 끝나면 도토리 25% 더'},
  migae:     {n:'미개',        cost:220,sk:'뽈뽈 운반',  skd:'고른 열매 하나를 들고 나가요',          ps:'연쇄 이어지는 시간 +0.4초'},
- boneul:    {n:'보늘',        cost:350,sk:'꾹 눌러 눕기',skd:'4초 동안 꾹 눌러 담고 넘침을 멈춰요',  ps:'넘침을 1초 더 버텨요'},
- bookgeo:   {n:'북거씨',      cost:500,sk:'숙성 향수',  skd:'고른 열매 하나를 한 단계 키워요',       ps:'다음 열매를 2개까지 미리 봐요'},
+ boneul:    {n:'보늘',        cost:350,sk:'뒹굴 청소',  skd:'바구니 맨 위 열매 3개를 굴려서 치워요',  ps:'넘침을 1초 더 버텨요'},
+ bookgeo:   {n:'북거씨',      cost:500,sk:'숙성 향수',  skd:'고른 열매와 같은 열매를 전부 둘씩 짝지어 합쳐요', ps:'다음 열매를 2개까지 미리 봐요'},
 };
 const LINES={
  lachilchin:{start:'아이구 그래~ 오늘도 바구니 가득 채워 보자.',skill:'쏙쏙~ 할미가 주워 가마.',big:'아이구, 실하다 실해!',danger:'어이쿠, 넘치겠다!'},
  kkito:{start:'가스 불은 잠갔고… 바구니는 내가 채울게!',skill:'귀 흔들기! 으아아!',big:'해, 해냈어!',danger:'넘, 넘친다! 어떡해!'},
  ramda:{start:'오늘은 대박 열매 나올 것 같은 느낌!',skill:'황금 도토리 투척!',big:'완전 희귀템이야!',danger:'내 열매들 다 쏟아져!'},
  migae:{start:'뽈뽈뽈—!',skill:'뽈뽈! (영차영차)',big:'뽈!! (더듬이가 하트)',danger:'뽈?! (더듬이 쭈뼛)'},
- boneul:{start:'눕기 좋은 바구니네~',skill:'꾹~ 이러고 좀 누워 있을게.',big:'뭐, 별거 아니네~',danger:'죽기밖에 더 하겠냐~'},
+ boneul:{start:'눕기 좋은 바구니네~',skill:'뒹굴~ 위에 있는 건 내가 치울게.',big:'뭐, 별거 아니네~',danger:'죽기밖에 더 하겠냐~'},
  bookgeo:{start:'서두르지 않아도, 가득 채울 수 있어요.',skill:'향긋하게… 조금만 익혀 볼게요.',big:'천천히 했는데 커졌네요.',danger:'괜찮아요, 천천히…'},
 };
 
@@ -511,14 +516,15 @@ function newGame(){
   const ch=SAVE.sel;
   Object.assign(G,{state:'play',ch,score:0,shown:0,cur:0,queue:[],dropX:W/2,targetX:W/2,cool:0,overT:0,grace:0,
     chain:0,lastMerge:-9,maxChain:0,merges:0,maxLv:0,gauge:0,skillUses:0,revived:false,slowT:0,ts:1,shakeT:0,shakeM:0,
-    t:0,pressT:0,boneulT:0,goalAcorns:0,discAcorns:0,newBest:false,mood:'',moodT:0,say:'',sayT:0,gold:false,targeting:null,
-    dropCount:0,dropMark:0,flash:0,dangerT:0,rng:Math.random,sim:false,danger:0});
+    t:0,pressT:0,boneulT:0,goalAcorns:0,discAcorns:0,newBest:false,mood:'',moodT:0,say:'',sayT:0,gold:false,gold2:false,bonusAcorns:0,tip:0,targeting:null,
+    dropCount:0,dropMark:0,jolts:[],joltT:0,magnetT:0,flash:0,dangerT:0,rng:Math.random,sim:false,danger:0});
   bodies=[]; parts=[]; texts=[];
-  G.queue=[rollDrop(),rollDrop(),rollDrop()]; G.cur=0; G.cur=rollDrop(true);
+  G.queue=[rollDrop(),rollDrop(),rollDrop()]; G.cur=rollDrop(true);
+  if(SAVE.games<3){ G.cur=0; G.queue=[0,1,1]; } // 처음 몇 판은 은행·은행·도토리·도토리로 시작 — 첫 합치기를 5초 안에
   $('hud').classList.remove('hidden'); updHud(true); updSkill(); updNext(); updAcorn();
   $('skillImg').src=csrc(ch); $('skillLbl').textContent=CH[ch].sk;
   speak(LINES[ch].start,2.2);
-  if(SAVE.tut<2){ showHint('끌어서 위치를 정하고, 손을 떼면 떨어져요<br><b>같은 열매</b>끼리 닿으면 합쳐져요!'); }
+  G.tip=SAVE.games===0?1:0; if(G.tip)showHint('화면을 <b>끌어서</b> 위치를 정하고<br><b>손을 떼면</b> 떨어져요');
   bgmStart();
 }
 function rollDrop(first){
@@ -588,8 +594,12 @@ function processMerges(){
   if(!mergeQ.length)return;
   const q=mergeQ; mergeQ=[];
   for(const [a,b] of q){
-    if(a.gold||b.gold){ // 황금 도토리: 닿은 열매를 한 단계 키움
+    if(a.gold||b.gold){ // 황금 도토리: 닿은 열매의 짝을 바구니 어디서든 끌어와 합침 (짝이 없으면 한 단계 키움)
       const t=a.gold?b:a, gd=a.gold?a:b;
+      let mate=null, md=1e9;
+      for(const o of bodies){ if(o.dead||o.gold||o===t||o.lv!==t.lv)continue; const d=Math.hypot(o.x-t.x,o.y-t.y); if(d<md){ md=d; mate=o; } }
+      if(mate){ mate.dead=true; parts.push({kind:'beam',x:mate.x,y:mate.y,tx:t.x,ty:t.y,life:0,max:.45});
+        flyTo(mate,t.x,t.y); if(t.lv>=MAXLV){ cakeParty(t,mate); continue; } spawnMerged(t.lv,t.x,t.y,t,mate,false); continue; }
       if(t.lv>=MAXLV){ cakeParty(t,gd); continue; }
       spawnMerged(t.lv, t.x, t.y, t, gd, true); continue;
     }
@@ -609,7 +619,7 @@ function chainTick(){
 }
 function spawnMerged(lv,x,y,a,b,golden){
   const nl=lv+1, mul=chainTick();
-  let pts=PTS[lv]*mul*(G.ch==='lachilchin'&&lv<=1?2:1); if(golden)pts=PTS[lv]*mul;
+  let pts=PTS[lv]*mul; 
   addScore(Math.round(pts),x,y-10,nl);
   const nb=makeBody(nl,x,y,{grow:.55,a:(a.a+b.a)/2});
   const vx=((a.x-a.px)+(b.x-b.px))/2, vy=((a.y-a.py)+(b.y-b.py))/2; nb.px=x-vx*.5; nb.py=y-vy*.5;
@@ -617,7 +627,8 @@ function spawnMerged(lv,x,y,a,b,golden){
   burst(x,y,FR[nl].c,8+nl*2,FR[nl].r); ring(x,y,FR[nl].r*1.4,FR[nl].c);
   SFX.merge(nl,G.chain);
   G.merges++; SAVE.totalMerges=(SAVE.totalMerges||0)+1; goalCheck('merge',G.merges);
-  gainGauge(3+lv*.7);
+  if(G.tip===2){ G.tip=3; showHint('합쳐졌어요! 같은 열매끼리 닿으면<br>한 단계 큰 열매가 돼요'); setTimeout(()=>{ if(G.tip===3){ hideHint(); G.tip=0; } },2600); }
+  gainGauge(1.3+lv*.5);
   if(nl>=6){ shake(2+nl*.6,.25); G.flash=Math.min(.5,.12+nl*.03); }
   if(nl>G.maxLv){ G.maxLv=nl; goalCheck('make',nl);
     if(nl>SAVE.dexMax){ SAVE.dexMax=nl; discover(nl); }
@@ -638,8 +649,13 @@ function addScore(p,x,y,lv){
   if(G.score>SAVE.best&&SAVE.best>0&&!G.newBest){ G.newBest=true; toast('최고 기록 경신!'); SFX.goal(); }
   goalCheck('score',G.score);
 }
-function gainGauge(v){ if(G.gauge>=100)return; G.gauge=Math.min(100,G.gauge+v*(G.ch==='kkito'?1.2:1));
-  if(G.gauge>=100){ SFX.coin(); } updSkill(); }
+// 스킬 게이지: 쓸 때마다 다음 충전이 25%씩 느려짐 (한 판 3~5회 목표)
+function gainGauge(v){ if(G.gauge>=100)return;
+  G.gauge=Math.min(100,G.gauge+v*(G.ch==='kkito'?1.2:1)*friendMul()/(1+.25*G.skillUses));
+  if(G.gauge>=100){ SFX.coin(); if(!SAVE.skillTip){ SAVE.skillTip=1; persist(); toast('스킬 준비! 왼쪽 위 친구 얼굴을 눌러요'); } } updSkill(); }
+function flv(c){ return (SAVE.flv&&SAVE.flv[c])||1; }
+function friendMul(){ return 1+.08*(flv(G.ch)-1); } // 레벨당 스킬 충전 +8%
+const LV_COST=[0,0,100,200,350,500]; // Lv2~5로 올리는 값
 
 // ================= 스킬 =================
 function useSkill(){
@@ -647,7 +663,7 @@ function useSkill(){
   const c=G.ch;
   if(c==='migae'||c==='bookgeo'){
     if(!bodies.some(b=>!b.dead&&(c==='migae'||b.lv<MAXLV))){ SFX.deny(); return; }
-    G.targeting=c; $('targetTxt').textContent=c==='migae'?'들고 나갈 열매를 탭하세요':'키울 열매를 탭하세요';
+    G.targeting=c; $('targetTxt').textContent=c==='migae'?'들고 나갈 열매를 탭하세요':'합칠 열매를 탭하세요 (같은 열매 전부)';
     $('targetBar').classList.remove('hidden'); return; }
   fireSkill(c,null);
 }
@@ -657,25 +673,38 @@ function fireSkill(c,target){
   if(c==='lachilchin'){
     let n=0; for(const b of bodies){ if(!b.dead&&!b.gold&&b.lv<=1){ b.dead=true; n++;
       addScore(PTS[b.lv]*2,b.x,b.y,b.lv); flyTo(b,G.dropX,150); } }
+    G.bonusAcorns=(G.bonusAcorns||0)+n;
     bodies=bodies.filter(b=>!b.dead); toast(n?`은행·도토리 ${n}개 쏙쏙!`:'주울 게 없네~');
   } else if(c==='kkito'){
-    for(let k=0;k<3;k++)setTimeout(()=>{ for(const b of bodies){ const s=Math.max(.35,1.2-b.r/110);
-      b.py=b.y+(.35+Math.random()*.35)*s; b.px=b.x-(Math.random()-.5)*.7*s; } shake(6,.25); },k*260);
-    toast('귀 흔들기!');
+    G.jolts=[0,.26,.52]; G.magnetT=1.5; toast('귀 흔들기! 가까운 짝꿍끼리 끌려와요');
   } else if(c==='ramda'){
-    G.queue.unshift(G.cur); G.cur=-1; G.gold=true; toast('황금 도토리! 아무 열매와 합쳐져요');
+    G.queue.unshift(G.cur); G.cur=-1; G.gold=true; G.gold2=true; toast('황금 도토리 2개! 닿은 열매의 짝을 끌어와요');
   } else if(c==='boneul'){
-    G.pressT=4; G.boneulT=4; toast('꾹~ 4초 동안 넘침 멈춤');
+    const top=bodies.filter(b=>!b.dead&&!b.gold).sort((a,b)=>(a.y-a.r)-(b.y-b.r)).slice(0,3);
+    for(const b of top){ b.dead=true; addScore(PTS[b.lv],b.x,b.y,b.lv); flyTo(b,b.x<W/2?-70:W+70,BOX.T+40); }
+    bodies=bodies.filter(b=>!b.dead); G.boneulT=2.5; shake(5,.3); toast('뒹굴~ 맨 위 열매 3개 치움');
   } else if(c==='migae'&&target){
     target.dead=true; flyTo(target,W+60,120); bodies=bodies.filter(b=>!b.dead); toast(`${FR[target.lv].n}을(를) 들고 나갔어요`);
   } else if(c==='bookgeo'&&target){
-    target.dead=true; bodies=bodies.filter(b=>!b.dead);
-    const nb=makeBody(target.lv+1,target.x,target.y,{grow:.6,a:target.a}); nb.age=1.2; nb.pop=1;
-    burst(target.x,target.y,'#bfe3ff',16,target.r); ring(target.x,target.y,target.r*1.6,'#8cc8f0');
-    if(nb.lv>G.maxLv){ G.maxLv=nb.lv; goalCheck('make',nb.lv); if(nb.lv>SAVE.dexMax){ SAVE.dexMax=nb.lv; discover(nb.lv); } }
-    toast(`${FR[target.lv+1].n}(으)로 숙성!`);
+    // 고른 열매와 같은 열매를 전부 둘씩 짝지어 합침 (짝이 하나도 없으면 한 단계 키움)
+    const lv=target.lv; let same=bodies.filter(b=>!b.dead&&!b.gold&&b.lv===lv), pairs=0;
+    if(same.length<2){ target.dead=true; bodies=bodies.filter(b=>!b.dead);
+      const nb=makeBody(lv+1,target.x,target.y,{grow:.6,a:target.a}); nb.age=1.2; nb.pop=1;
+      burst(target.x,target.y,'#bfe3ff',14,target.r); ring(target.x,target.y,target.r*1.6,'#8cc8f0');
+      if(lv+1>G.maxLv){ G.maxLv=lv+1; goalCheck('make',lv+1); if(lv+1>SAVE.dexMax){ SAVE.dexMax=lv+1; discover(lv+1); } }
+      toast(`짝이 없어서 ${FR[lv+1].n}(으)로 숙성!`); return; }
+    same.sort((a,b)=>b.y-a.y);
+    while(same.length>=2){ const a=same.shift(); let bi=0,bd=1e9;
+      same.forEach((o,i)=>{ const d=Math.hypot(o.x-a.x,o.y-a.y); if(d<bd){ bd=d; bi=i; } });
+      const m=same.splice(bi,1)[0]; a.dead=m.dead=true; pairs++;
+      parts.push({kind:'beam',x:m.x,y:m.y,tx:a.x,ty:a.y,life:0,max:.5}); flyTo(m,a.x,a.y);
+      if(lv>=MAXLV)cakeParty(a,m); else spawnMerged(lv,a.x,a.y,a,m,false); }
+    bodies=bodies.filter(b=>!b.dead);
+    toast(`${FR[lv].n} ${pairs*2}개가 짝지어 합쳐졌어요!`);
   }
 }
+function jolt(){ for(const b of bodies){ const s=Math.max(.35,1.2-b.r/110);
+  b.py=b.y+(.2+Math.random()*.25)*s; b.px=b.x-(Math.random()-.5)*.6*s; } shake(6,.25); SFX.thud(3); }
 function endTargeting(){ G.targeting=null; $('targetBar').classList.add('hidden'); }
 $('targetCancel').addEventListener('click',e=>{ e.stopPropagation(); endTargeting(); });
 function flyTo(b,tx,ty){ parts.push({kind:'fly',lv:b.lv,x:b.x,y:b.y,sx:b.x,sy:b.y,tx,ty,r:b.r,a:b.a,life:0,max:.55}); }
@@ -685,7 +714,8 @@ function burst(x,y,col,n,r){ for(let i=0;i<n;i++){ const an=Math.random()*Math.P
   parts.push({kind:Math.random()<.35?'leaf':'dot',x:x+Math.cos(an)*r*.5,y:y+Math.sin(an)*r*.5,vx:Math.cos(an)*sp,vy:Math.sin(an)*sp-80,
     life:0,max:.5+Math.random()*.5,col:Math.random()<.3?'#fff8ec':col,sz:2+Math.random()*4,rot:Math.random()*6,vr:(Math.random()-.5)*10}); } }
 function ring(x,y,r,col){ parts.push({kind:'ring',x,y,r,col,life:0,max:.4}); }
-function shake(m,t){ G.shakeM=Math.max(G.shakeM,m); G.shakeT=Math.max(G.shakeT,t); }
+const REDUCE=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+function shake(m,t){ if(REDUCE)return; G.shakeM=Math.max(G.shakeM,m); G.shakeT=Math.max(G.shakeT,t); }
 function mood(m,t){ G.mood=m; G.moodT=t; }
 function speak(s,t){ G.say=s; G.sayT=t; }
 let toastQ=[], toastBusy=false;
@@ -747,8 +777,8 @@ function drop(){
   const b=G.gold?makeBody(1,x,DROP_Y,{gold:true}):makeBody(G.cur,x,DROP_Y);
   b.py=DROP_Y-1.5;
   SFX.drop(G.gold?1:G.cur); G.dropCount++; G.dropMark=G.t;
-  G.gold=false; G.cur=takeNext(); G.cool=.42; updNext();
-  if(SAVE.tut<2&&G.dropCount>=3){ hideHint(); }
+  if(G.gold&&G.gold2){ G.gold2=false; } else { G.gold=false; G.cur=takeNext(); } G.cool=.42; updNext();
+  if(G.tip===1){ G.tip=2; showHint('같은 은행 <b>바로 옆</b>에 떨어뜨려 보세요!<br>반짝이는 열매가 짝꿍이에요'); }
 }
 $('skillBtn').addEventListener('click',e=>{ e.stopPropagation(); ac(); useSkill(); });
 
@@ -765,11 +795,19 @@ function update(dt){
     for(const b of bodies){ b.age+=pdt; if(b.grow<1)b.grow=Math.min(1,b.grow+pdt*3.2); b.sq*=Math.pow(.001,pdt); if(b.pop)b.pop=Math.max(0,b.pop-pdt*3.5); }
   }
   G.pressT=Math.max(0,G.pressT-pdt); G.boneulT=Math.max(0,G.boneulT-pdt);
+  if(G.magnetT>0){ G.magnetT-=pdt; // 끼토 스킬: 가까운 같은 열매끼리 서로 끌어당김
+    for(let i=0;i<bodies.length;i++){ const a=bodies[i]; if(a.dead||a.gold)continue;
+      for(let j=i+1;j<bodies.length;j++){ const b=bodies[j]; if(b.dead||b.lv!==a.lv||b.gold)continue;
+        const dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy)||1, gap=d-(a.r+b.r); if(gap>32+a.r*.3)continue;
+        const k=Math.min(1.1,gap+.5)/d; a.x+=dx*k; a.y+=dy*k; b.x-=dx*k; b.y-=dy*k;
+        if(Math.random()<.2)parts.push({kind:'dot',x:a.x+dx*.5,y:a.y+dy*.5,vx:0,vy:-30,life:0,max:.4,col:'#f4b6cf',sz:3,rot:0,vr:0}); } } }
+  if(G.jolts&&G.jolts.length){ G.joltT=(G.joltT||0)+pdt; while(G.jolts.length&&G.joltT>=G.jolts[0]){ G.jolts.shift(); jolt(); } if(!G.jolts.length)G.joltT=0; }
   // 넘침 판정
   let over=false, top=1e9;
-  for(const b of bodies){ if(b.gold)continue; const t=b.y-b.r*b.grow; if(t<top)top=t;
+  for(const b of bodies){ if(b.gold||b.age<=1.1)continue; const t=b.y-b.r*b.grow; if(t<top)top=t;
     if(b.age>1.1&&t<DANGER_Y&&Math.abs(b.y-b.py)<.8)over=true; }
   G.danger=Math.max(0,Math.min(1,(DANGER_Y+70-top)/70));
+  if(G.danger>.5&&!SAVE.dangerTip&&!G.sim){ SAVE.dangerTip=1; persist(); toast('빨간 선 위에 열매가 오래 있으면 넘쳐요!'); }
   const limit=2.6+(G.ch==='boneul'?1:0);
   if(G.boneulT>0||G.grace>0){ G.overT=Math.max(0,G.overT-pdt*2); }
   else if(over)G.overT+=pdt; else G.overT=Math.max(0,G.overT-pdt*1.5);
@@ -806,6 +844,8 @@ function draw(){
     ctx.beginPath(); ctx.arc(x,ly,r,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.restore();
   }
   for(const b of bodies)drawBody(b);
+  if(G.state==='play'&&!G.targeting&&G.cool<=0&&!G.gold){ ctx.save(); ctx.strokeStyle='#fff6c8'; ctx.lineWidth=3; ctx.globalAlpha=.45+.25*Math.sin(G.t*5);
+    for(const b of bodies){ if(b.lv!==G.cur||b.gold)continue; ctx.beginPath(); ctx.arc(b.x,b.y,b.r*b.grow+2,0,Math.PI*2); ctx.stroke(); } ctx.restore(); }
   // 날아가는 열매 (스킬)
   for(const p of parts){ if(p.kind!=='fly')continue; const k=p.life/p.max, e=k*k;
     const x=p.sx+(p.tx-p.sx)*e, y=p.sy+(p.ty-p.sy)*k-Math.sin(k*Math.PI)*60;
@@ -887,7 +927,8 @@ function drawBody(b){
 function drawParts(){
   for(const p of parts){ const k=p.life/p.max; if(p.kind==='fly')continue;
     ctx.save(); ctx.globalAlpha=1-k;
-    if(p.kind==='ring'){ ctx.strokeStyle=p.col; ctx.lineWidth=5*(1-k)+1; ctx.beginPath(); ctx.arc(p.x,p.y,p.r*(.4+k*.8),0,Math.PI*2); ctx.stroke(); }
+    if(p.kind==='beam'){ ctx.strokeStyle='#ffd35a'; ctx.lineWidth=6*(1-k)+1; ctx.setLineDash([2,8]); ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.tx,p.ty); ctx.stroke(); }
+    else if(p.kind==='ring'){ ctx.strokeStyle=p.col; ctx.lineWidth=5*(1-k)+1; ctx.beginPath(); ctx.arc(p.x,p.y,p.r*(.4+k*.8),0,Math.PI*2); ctx.stroke(); }
     else if(p.kind==='leaf'){ ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle=p.col; ctx.beginPath(); ctx.ellipse(0,0,p.sz*1.6,p.sz*.8,0,0,Math.PI*2); ctx.fill(); }
     else { ctx.fillStyle=p.col; ctx.beginPath(); ctx.arc(p.x,p.y,p.sz*(1-k*.5),0,Math.PI*2); ctx.fill(); }
     ctx.restore(); }
@@ -943,7 +984,8 @@ function showResult(){
   let streakB=0; const dk=dayKey();
   if(SAVE.lastDay!==dk){ const y=new Date(); y.setDate(y.getDate()-1); const yk=y.getFullYear()*10000+(y.getMonth()+1)*100+y.getDate();
     SAVE.streak=SAVE.lastDay===yk?(SAVE.streak||0)+1:1; SAVE.lastDay=dk; streakB=Math.min(50,SAVE.streak*10); }
-  const earned=base+bonus+streakB; SAVE.acorns+=earned;
+  const grand=G.bonusAcorns||0;
+  const earned=base+bonus+streakB+grand; SAVE.acorns+=earned;
   SAVE.games++; SAVE.maxChain=Math.max(SAVE.maxChain||0,G.maxChain); SAVE.tut=Math.max(SAVE.tut,SAVE.games>=1?2:1);
   SAVE.recs.push({s:G.score,lv:G.maxLv,c:G.ch,d:Date.now()}); SAVE.recs.sort((a,b)=>b.s-a.s); SAVE.recs=SAVE.recs.slice(0,5);
   persist(); hubReport(earned+G.goalAcorns+G.discAcorns);
@@ -955,12 +997,19 @@ function showResult(){
   $('resBigImg').src=fsrc(G.maxLv); $('resBigName').textContent=`${FR[G.maxLv].n} (${G.maxLv+1}단계)`+(G.maxLv<MAXLV?` · 다음은 ${FR[G.maxLv+1].n}`:'');
   $('resStats').innerHTML=`<div><b>${G.merges}</b>합치기</div><div><b>${G.maxChain}</b>최대 연쇄</div><div><b>${G.skillUses}</b>스킬</div>`;
   const ln=(a,b)=>`<div class="ln"><span>${a}</span><span>+${b}</span></div>`;
-  $('resAcorn').innerHTML=ln('점수 도토리',base)+(bonus?ln('람다 보너스',bonus):'')+(streakB?ln(`출석 ${SAVE.streak}일째`,streakB):'')+(G.discAcorns?ln('새 열매 발견',G.discAcorns):'')+
+  $('resAcorn').innerHTML=ln('점수 도토리',base)+(bonus?ln('람다 보너스',bonus):'')+(grand?ln('할머니가 주운 열매',grand):'')+(streakB?ln(`출석 ${SAVE.streak}일째`,streakB):'')+(G.discAcorns?ln('새 열매 발견',G.discAcorns):'')+
     (G.goalAcorns?ln('오늘의 목표',G.goalAcorns):'')+`<div class="ln tot"><span>받은 도토리</span><span>+${earned+G.discAcorns+G.goalAcorns} · 보유 ${SAVE.acorns}</span></div>`;
   // 해금 가능한 친구 안내
   const can=CH_ORDER.find(c=>!SAVE.unlocked[c]&&SAVE.acorns>=CH[c].cost);
+  // 다음 목표까지 진행 막대: 잠긴 친구가 있으면 해금, 다 열렸으면 지금 친구 레벨 업
+  const nx=CH_ORDER.find(c=>!SAVE.unlocked[c]); let goalTxt='', need=0;
+  if(nx){ need=CH[nx].cost; goalTxt=`${CH[nx].n} 데려오기`; }
+  else if(flv(G.ch)<5){ need=LV_COST[flv(G.ch)+1]; goalTxt=`${CH[G.ch].n} Lv.${flv(G.ch)+1}`; }
+  const pct=need?Math.min(100,Math.round(SAVE.acorns/need*100)):100;
+  const prog=need?`<div style="margin-top:8px;font-size:12px;font-weight:800;color:#6b4a30;display:flex;"><span>다음 목표 · ${goalTxt}</span><span style="margin-left:auto">${Math.min(SAVE.acorns,need)} / ${need}</span></div>
+    <div style="height:8px;border-radius:8px;background:rgba(124,74,45,.15);overflow:hidden;margin-top:4px;"><i style="display:block;height:100%;width:${pct}%;background:${pct>=100?'#e07a2a':'#b08a3a'}"></i></div>`:'';
   $('resGoals').innerHTML=`<div id="goalMini2" style="background:var(--cream);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;">${goalsHTML()}</div>`+
-    (can?`<div class="sub" style="margin-top:8px;color:#e07a2a;font-weight:900;">도토리가 모였어요! ${CH[can].n}을(를) 데려올 수 있어요</div>`:'');
+    prog+(can?`<div class="sub" style="margin-top:6px;color:#e07a2a;font-weight:900;">도토리가 모였어요! ${CH[can].n}을(를) 데려올 수 있어요</div>`:'');
   $('result').classList.remove('hidden');
   if(isBest){ SFX.goal(); }
 }
@@ -984,14 +1033,14 @@ const SCREENS=['title','friends','how','dex','rec','pause','revive','result'];
 function show(id){ for(const s of SCREENS)$(s).classList.toggle('hidden',s!==id); }
 function goTitle(){ G.state='title'; $('hud').classList.add('hidden'); hideHint(); bodies=[]; parts=[]; texts=[]; show('title'); renderTitle(); }
 function renderTitle(){
-  const c=SAVE.sel; $('fcImg').src=csrc(c); $('fcName').textContent=CH[c].n; $('fcSkill').textContent='스킬 · '+CH[c].sk;
+  const c=SAVE.sel; $('fcImg').src=csrc(c); $('fcName').textContent=CH[c].n+(flv(c)>1?` Lv.${flv(c)}`:''); $('fcSkill').textContent='스킬 · '+CH[c].sk;
   $('goalMini').innerHTML=goalsHTML();
   $('titleStat').innerHTML=SAVE.games?`최고 ${SAVE.best.toLocaleString()}점 · <img src="${A}i_acorn.webp" alt=""> ${SAVE.acorns}`+(SAVE.streak>1?` · 출석 ${SAVE.streak}일째`:''):'';
   const can=CH_ORDER.some(k=>!SAVE.unlocked[k]&&SAVE.acorns>=CH[k].cost);
   $('fcNew').innerHTML=can?'<span class="new">새 친구!</span>':'';
 }
 function startGame(){ ac(); for(const s of SCREENS)$(s).classList.add('hidden'); newGame(); }
-$('startBtn').addEventListener('click',()=>{ SFX.tap(); if(SAVE.games===0&&!SAVE.howSeen){ SAVE.howSeen=1; persist(); openHow(true); return; } startGame(); });
+$('startBtn').addEventListener('click',()=>{ SFX.tap(); startGame(); });
 $('friendChip').addEventListener('click',()=>{ ac(); SFX.tap(); openFriends('title'); });
 let frFrom='title', frPick=null;
 function openFriends(from){ frFrom=from; frPick=SAVE.sel; renderFriends(); show('friends'); }
@@ -1000,11 +1049,17 @@ function renderFriends(){
   $('friendGrid').innerHTML=CH_ORDER.map(c=>{ const d=CH[c], lock=!SAVE.unlocked[c], can=SAVE.acorns>=d.cost;
     return `<button class="fc${lock?' lock':''}${frPick===c?' sel':''}" data-c="${c}">
       ${lock?`<span class="cost${can?' can':''}"><img src="${A}i_acorn.webp" alt="">${d.cost}</span>`:''}
-      <div class="im"><img src="${csrc(c)}" alt=""></div><b>${d.n}</b><span class="sk">${d.sk}</span><span class="ds">${d.skd}</span><span class="ps">+ ${d.ps}</span></button>`; }).join('');
+      <div class="im"><img src="${csrc(c)}" alt=""></div><b>${d.n}${lock?'':` <small style="color:#b06a2a">Lv.${flv(c)}</small>`}</b><span class="sk">${d.sk}</span><span class="ds">${d.skd}</span><span class="ps">+ ${d.ps}</span></button>`; }).join('');
   const d=CH[frPick], lock=!SAVE.unlocked[frPick];
   $('frGo').textContent=lock?(SAVE.acorns>=d.cost?`도토리 ${d.cost}개로 데려오기`:`도토리 ${d.cost}개 필요`):'이 친구와 시작';
   $('frGo').disabled=lock&&SAVE.acorns<d.cost;
+  const L=flv(frPick), lb=$('frLv'); lb.classList.toggle('hidden',lock);
+  if(L>=5){ lb.textContent=`Lv.5 최고 레벨 · 스킬 충전 +32%`; lb.disabled=true; }
+  else { const c=LV_COST[L+1]; lb.textContent=`Lv.${L} → Lv.${L+1} 레벨 업 · 도토리 ${c} (스킬 충전 +8%)`; lb.disabled=SAVE.acorns<c; }
 }
+$('frLv').addEventListener('click',()=>{ const c=frPick, L=flv(c); if(L>=5)return; const cost=LV_COST[L+1];
+  if(SAVE.acorns<cost){ SFX.deny(); return; } SAVE.acorns-=cost; SAVE.flv=SAVE.flv||{}; SAVE.flv[c]=L+1; persist(); SFX.goal();
+  toast(`${CH[c].n} Lv.${L+1}! 스킬이 더 빨리 차요`); renderFriends(); });
 $('friendGrid').addEventListener('click',e=>{ const b=e.target.closest('.fc'); if(!b)return; frPick=b.dataset.c; SFX.tap(); renderFriends(); });
 $('frGo').addEventListener('click',()=>{
   const c=frPick, d=CH[c];
@@ -1064,6 +1119,7 @@ window.__basket={G,get bodies(){return bodies;},FR,SAVE,newGame,drop,update,clam
   simulate(opts){ // 렌더 없이 한 판을 빠르게 돌린다
     opts=opts||{}; const strat=opts.strat||'greedy', maxDrops=opts.maxDrops||1500;
     const keepSave=JSON.stringify(SAVE);
+    if(opts.ch)SAVE.sel=opts.ch;
     newGame(); G.sim=true; G.rng=mulberry32(opts.seed||1); G.queue=[rollDrop(),rollDrop(),rollDrop()]; G.cur=rollDrop();
     let drops=0, simT=0;
     const origGO=G;
@@ -1071,20 +1127,29 @@ window.__basket={G,get bodies(){return bodies;},FR,SAVE,newGame,drop,update,clam
       if(G.state==='revive'){ finishSim(); break; }
       if(G.state!=='play')break;
       if(G.cool<=0){
-        if(opts.skill&&G.gauge>=100&&!['migae','bookgeo'].includes(G.ch))fireSkill(G.ch,null);
+        if(opts.skill&&G.gauge>=100){ if(!['migae','bookgeo'].includes(G.ch))fireSkill(G.ch,null); else { const t=botTarget(G.ch); if(t)fireSkill(G.ch,t); } }
         G.dropX=G.targetX=pickX(strat); drop(); drops++; G.slowT=0; G.ts=1;
         if(document.getElementById('discover'))document.getElementById('discover').classList.add('hidden');
       }
       for(let k=0;k<(opts.wait||200);k++){ update(1/120); simT+=1/120; if(G.state!=='play')break; if(G.cool<=0&&k>=(opts.minWait||130))break; }
     }
-    const res={score:G.score,maxLv:G.maxLv,drops,merges:G.merges,maxChain:G.maxChain,time:Math.round(simT)};
+    const res={score:G.score,maxLv:G.maxLv,drops,merges:G.merges,maxChain:G.maxChain,time:Math.round(simT),skills:G.skillUses};
     Object.assign(SAVE,JSON.parse(keepSave)); persist();
     return res;
     function finishSim(){ G.state='over'; }
   }};
+function botTarget(c){ // 봇용 스킬 대상: 미개는 가장 높이 쌓인 열매, 북거씨는 한 단계 위 짝이 있는 가장 큰 열매
+  const live=bodies.filter(b=>!b.dead&&!b.gold);
+  if(c==='migae'){ let t=null; for(const b of live)if(!t||b.y-b.r<t.y-t.r)t=b; return t; }
+  let t=null, ts=-1; for(const b of live){ const n=live.filter(o=>o.lv===b.lv).length; const sc=Math.floor(n/2)*(b.lv+2);
+    if(sc>ts){ ts=sc; t=b; } } return t;
+}
 function pickX(strat){
   const r=curR();
   if(strat==='random')return BOX.L+r+G.rng()*(BOX.R-BOX.L-2*r);
+  if(G.gold){ let bx=null,bs=-1; for(const b of bodies){ if(b.lv>=MAXLV||Math.abs(landY(b.x,r)-(b.y-b.r-r))>=6)continue;
+      const pair=bodies.some(o=>o!==b&&o.lv===b.lv); const sc=(pair?50:0)+b.lv;
+      if(pair&&sc>bs){ bs=sc; bx=b.x; } } if(bx!=null)return clampX(bx); }
   // greedy: 같은 단계 열매 위, 아니면 가장 낮은 곳 (사람처럼 약간의 오차)
   let best=null, bs=-1e9;
   for(let x=BOX.L+r;x<=BOX.R-r;x+=6){
