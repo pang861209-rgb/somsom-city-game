@@ -109,6 +109,11 @@
   #logo .m{font-family:'Black Han Sans',sans-serif;font-size:44px;line-height:1.02;color:#7a3f1c;margin-top:6px;
     text-shadow:0 3px 0 #fff8ec,0 0 16px rgba(255,248,236,.9);}
   #logo .m em{font-style:normal;color:#e07a2a;}
+  #titleStat{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:rgba(255,248,236,.9);border-radius:12px;padding:4px 12px;
+    font-size:12.5px;font-weight:800;color:#6b4a30;border:1.5px solid rgba(124,74,45,.2);}
+  #titleStat:empty{display:none;}
+  #titleStat img{width:12px;height:15px;}
+  #friendChip .new{font-size:11px;font-weight:900;color:#fff;background:#e0503c;border-radius:8px;padding:2px 7px;margin-right:4px;animation:glow 1.2s infinite;}
   #titleBottom{position:relative;width:100%;padding:0 18px 22px;display:flex;flex-direction:column;gap:10px;}
   #friendChip{display:flex;align-items:center;gap:10px;background:rgba(255,248,236,.95);border:2px solid rgba(124,74,45,.28);border-radius:16px;
     padding:8px 12px 8px 8px;box-shadow:var(--shdw);cursor:pointer;}
@@ -227,9 +232,9 @@
   <!-- 타이틀 -->
   <div id="title" class="screen">
     <div id="titleArt"></div>
-    <div id="logo"><div class="s">솜솜시티 · 합치기 퍼즐</div><div class="m ttl">할머니네<br><em>가을 바구니</em></div></div>
+    <div id="logo"><div class="s">솜솜시티 · 합치기 퍼즐</div><div class="m ttl">할머니네<br><em>가을 바구니</em></div><div id="titleStat"></div></div>
     <div id="titleBottom">
-      <div id="friendChip"><img id="fcImg" alt=""><div class="t"><b id="fcName">끼토</b><span id="fcSkill"></span></div><span class="chg">친구 바꾸기 ›</span></div>
+      <div id="friendChip"><img id="fcImg" alt=""><div class="t"><b id="fcName">끼토</b><span id="fcSkill"></span></div><span id="fcNew"></span><span class="chg">친구 바꾸기 ›</span></div>
       <button class="btn primary" id="startBtn">바구니 채우러 가기</button>
       <div id="goalMini"></div>
       <div id="titleBtns">
@@ -541,6 +546,7 @@ function physStep(dt){
     for(const b of bodies){ if(b.dead)continue;
       let vx=(b.x-b.px)*DAMP, vy=(b.y-b.py)*DAMP;
       const sp=Math.hypot(vx,vy), mx=b.r*.45; if(sp>mx){ vx*=mx/sp; vy*=mx/sp; }
+      if(vy<-1.2)vy=-1.2; // 위로 튀어 화면 밖으로 나가지 않게
       b.px=b.x; b.py=b.y; b.x+=vx; b.y+=vy+g;
       b.a+=vx/b.r*.9;
     }
@@ -654,7 +660,7 @@ function fireSkill(c,target){
     bodies=bodies.filter(b=>!b.dead); toast(n?`은행·도토리 ${n}개 쏙쏙!`:'주울 게 없네~');
   } else if(c==='kkito'){
     for(let k=0;k<3;k++)setTimeout(()=>{ for(const b of bodies){ const s=Math.max(.35,1.2-b.r/110);
-      b.py=b.y+(3.2+Math.random()*2.4)*s; b.px=b.x-(Math.random()-.5)*4*s; } shake(6,.25); },k*220);
+      b.py=b.y+(.35+Math.random()*.35)*s; b.px=b.x-(Math.random()-.5)*.7*s; } shake(6,.25); },k*260);
     toast('귀 흔들기!');
   } else if(c==='ramda'){
     G.queue.unshift(G.cur); G.cur=-1; G.gold=true; toast('황금 도토리! 아무 열매와 합쳐져요');
@@ -980,6 +986,9 @@ function goTitle(){ G.state='title'; $('hud').classList.add('hidden'); hideHint(
 function renderTitle(){
   const c=SAVE.sel; $('fcImg').src=csrc(c); $('fcName').textContent=CH[c].n; $('fcSkill').textContent='스킬 · '+CH[c].sk;
   $('goalMini').innerHTML=goalsHTML();
+  $('titleStat').innerHTML=SAVE.games?`최고 ${SAVE.best.toLocaleString()}점 · <img src="${A}i_acorn.webp" alt=""> ${SAVE.acorns}`+(SAVE.streak>1?` · 출석 ${SAVE.streak}일째`:''):'';
+  const can=CH_ORDER.some(k=>!SAVE.unlocked[k]&&SAVE.acorns>=CH[k].cost);
+  $('fcNew').innerHTML=can?'<span class="new">새 친구!</span>':'';
 }
 function startGame(){ ac(); for(const s of SCREENS)$(s).classList.add('hidden'); newGame(); }
 $('startBtn').addEventListener('click',()=>{ SFX.tap(); if(SAVE.games===0&&!SAVE.howSeen){ SAVE.howSeen=1; persist(); openHow(true); return; } startGame(); });
