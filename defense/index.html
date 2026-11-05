@@ -88,7 +88,7 @@
   .card .nm { font-size:8.5px; font-weight:800; color:var(--txt); }
   .card .c { display:flex; align-items:center; gap:2px; font-size:9px; font-weight:800; color:#b08a3a; }
   .card .c img { width:9px; height:9px; }
-  #waveBtn { flex:none; padding:10px 12px; font-size:12px; white-space:nowrap; background:var(--cta); border-color:var(--cta-d); color:#4a2416; box-shadow:0 4px 0 var(--cta-d); border-radius:14px; }
+  #waveBtn { flex:none; padding:10px 12px; font-size:12px; white-space:nowrap; background:var(--cta); border-color:var(--cta-d); color:#4a2416; box-shadow:0 4px 0 var(--cta-d); border-radius:16px; }
   #waveBtn:active { transform:translateY(4px); box-shadow:none; }
 
   .screen { position:absolute; inset:0; background:radial-gradient(120% 90% at 50% 0%, #fbf3e0 0%, var(--paper) 55%, #efdfc0 100%); z-index:20; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:13px; text-align:center; padding:24px; }
@@ -121,10 +121,10 @@
   .tag { font-size:11px; font-weight:800; color:var(--amber); background:#f6ecd4; border:1.5px solid var(--line); border-radius:20px; padding:3px 12px; }
   #stars { font-size:34px; letter-spacing:6px; color:#f0a428; text-shadow:0 2px 0 rgba(176,106,42,.35); }
 
-  .stageRow { width:100%; max-width:320px; display:flex; align-items:center; gap:10px; border:2px solid var(--line); border-radius:14px; background:var(--card); box-shadow:var(--shdw); padding:10px 13px; cursor:pointer; text-align:left; }
+  .stageRow { width:100%; max-width:320px; display:flex; align-items:center; gap:10px; border:2px solid var(--line); border-radius:16px; background:var(--card); box-shadow:var(--shdw); padding:10px 13px; cursor:pointer; text-align:left; }
   .stageRow:not(.locked):active { transform:translateY(2px); box-shadow:none; }
   .stageRow.locked { opacity:.5; box-shadow:none; background:#f4ead4; }
-  .chTab { padding:8px 13px; font-size:12px; border-radius:20px; background:transparent; border-color:rgba(124,74,45,.3); box-shadow:none; color:#8a6a4d; }
+  .chTab { min-height:30px; padding:0 13px; font-size:12px; border-radius:999px; background:transparent; border-color:rgba(124,74,45,.3); box-shadow:none; color:#8a6a4d; }
   .chTab.on { background:var(--ink); border-color:var(--ink); color:#ffefd8; box-shadow:0 3px 0 rgba(124,74,45,.35); }
   #hardTgl.on { background:#e8642f; border-color:#8a3416; color:#fff1df; box-shadow:0 3px 0 #8a3416; }
   .stageRow .no { font-size:16px; font-weight:900; color:#4a2416; width:34px; height:34px; flex:none; display:flex; align-items:center; justify-content:center; background:var(--cta); border-radius:50%; box-shadow:0 2px 0 rgba(90,47,28,.45); }
@@ -142,7 +142,7 @@
   .scoreBox .brk { font-size:10.5px; color:var(--mut); line-height:1.5; }
   .scoreBox .rk { font-size:12px; font-weight:800; color:var(--amber); }
   .lbTabs { display:flex; gap:5px; flex-wrap:wrap; justify-content:center; max-width:340px; }
-  .lbTabs button { padding:6px 10px; font-size:11px; border-radius:18px; box-shadow:none; }
+  .lbTabs button { min-height:30px; padding:0 11px; font-size:11px; border-radius:999px; box-shadow:none; }
   .lbTabs button.on { background:var(--ink); color:#ffefd8; border-color:var(--ink); }
   .lbRow { width:100%; display:flex; align-items:center; gap:9px; border:2px solid var(--line); border-radius:12px; background:var(--card); padding:7px 12px; }
   .lbRow.me { border-color:var(--cta); background:#fff3dd; }
@@ -228,14 +228,14 @@
 
   <div id="popup" class="hidden">
     <div class="row"><span class="nm" id="pNm"></span><span class="st" id="pSt"></span></div>
-    <div class="btns"><button id="upBtn"></button><button id="sellBtn"></button><button id="moveBtn"></button><button id="closeBtn">닫기</button></div>
+    <div class="btns"><button id="upBtn"></button><button id="sellBtn"></button><button id="moveBtn"></button><button id="closeBtn" class="sui-pill">닫기</button></div>
   </div>
 
   <div id="evoPop" class="hidden">
     <h3>✨ 진화 방향을 골라요 <b style="color:#b08a3a;">🌰180</b></h3>
     <button class="evoOpt" id="evoA"></button>
     <button class="evoOpt" id="evoB"></button>
-    <button id="evoX" style="width:100%; padding:8px; font-size:12px;">닫기</button>
+    <button id="evoX" class="sui-pill" style="width:100%;">닫기</button>
   </div>
 
   <div id="title" class="screen">
@@ -268,11 +268,11 @@
   <div id="select" class="screen hidden">
     <h1>골목 어귀</h1>
     <div style="display:flex; gap:5px; flex-wrap:wrap; justify-content:center;">
-      <button id="chTab1" class="chTab">🍂 1장</button>
-      <button id="chTab2" class="chTab">☔ 2장</button>
-      <button id="chTab3" class="chTab">❄ 3장</button>
-      <button id="chTab4" class="chTab">🌙 4장</button>
-      <button id="hardTgl" class="chTab hidden">하드 OFF</button>
+      <button id="chTab1" class="chTab sui-chip">🍂 1장</button>
+      <button id="chTab2" class="chTab sui-chip">☔ 2장</button>
+      <button id="chTab3" class="chTab sui-chip">❄ 3장</button>
+      <button id="chTab4" class="chTab sui-chip">🌙 4장</button>
+      <button id="hardTgl" class="chTab sui-chip hidden">하드 OFF</button>
     </div>
     <div id="stageList" style="display:flex; flex-direction:column; gap:8px; width:100%; align-items:center; max-height:400px; overflow-y:auto;"></div>
     <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:center;">
@@ -1343,7 +1343,7 @@ async function renderStageLb(){
   const m=lbCtx.m||'s', ch=lbCtx.ch||1, box=$('slbList');
   $('slbMode').textContent=(m==='h'?'🔥 하드 · ':'')+'스테이지마다 가장 높은 골목 점수로 겨뤄요';
   const tabs=[['all','전체'],['ch'+ch,`${ch}장 합산`]].concat(STAGES.filter(s=>s.ch===ch).map(s=>[m+s.id,'S'+s.id]));
-  $('slbTabs').innerHTML=tabs.map(([k,l])=>`<button data-k="${k}" class="${k===lbTab?'on':''}">${l}</button>`).join('');
+  $('slbTabs').innerHTML=tabs.map(([k,l])=>`<button data-k="${k}" class="sui-chip${k===lbTab?' on':''}">${l}</button>`).join('');
   $('slbTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{ lbTab=b.dataset.k; renderStageLb(); });
   $('slbName').classList.toggle('hidden',!!myName());
   box.innerHTML='<div class="sub">불러오는 중...</div>';
