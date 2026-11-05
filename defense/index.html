@@ -12,7 +12,7 @@
   :root { --ink:#402419; --ink2:#321b13; --paper:#f7edda; --card:#fffdf4; --cream:#fff8ec;
     --line:#e3d0ac; --txt:#5a4130; --mut:#a08a70; --cta:#ffb35c; --cta-d:#5a2f1c; --amber:#b06a2a;
     --shdw:0 3px 0 rgba(124,74,45,.18); }
-  body { background:#2b1a11; font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+  body { background:#2b1a11; font-family:'Gowun Dodum','Apple SD Gothic Neo','Noto Sans KR',sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; }
   #fit { position:relative; width:420px; height:752px; } /* 뷰포트 맞춤 스케일 래퍼 (JS가 크기 지정) */
   #app { width:420px; height:752px; position:relative; background:#fdfbf5; border-radius:12px; overflow:hidden; user-select:none; transform-origin:0 0; }
   canvas { position:absolute; left:0; top:80px; width:100%; height:520px; display:block; }
@@ -183,14 +183,30 @@
   /* 일시정지·자랑 모달 — 판을 어둡게 깔고 카드만 밝게 */
   #pause, #shareModal { background:rgba(35,18,11,.68); backdrop-filter:blur(2.5px); -webkit-backdrop-filter:blur(2.5px); }
   #pause h1, #shareModal .sub { background:none; box-shadow:none; transform:none; padding:0; color:#fff3df; text-shadow:0 2px 6px rgba(0,0,0,.4); }
+  /* ═══ 솜솜 UI: 메뉴 화면은 밤 바탕 (2026-11 PO 정리 — 여섯 게임 통일). 타이틀·놀이판·필드 팝업은 그대로 ═══ */
+  .screen:not(#title) { --paper:#221E18; --card:#2B2620; --cream:#3A332A; --line:rgba(255,255,255,.12);
+    --txt:#EFE7D6; --mut:#A9A08C; --amber:#F2C14B; --shdw:none;
+    background:radial-gradient(120% 90% at 50% 0%, #2E2820 0%, #221E18 60%, #1B1813 100%) !important; }
+  .screen:not(#title) h1 { background:#2B2620; color:#F2C14B; box-shadow:0 10px 30px -14px rgba(0,0,0,.8); text-shadow:none; }
+  .screen:not(#title) .tag { background:rgba(242,193,75,.12); border-color:rgba(242,193,75,.3); color:#F2C14B; }
+  .screen:not(#title) .stageRow.locked { background:rgba(255,255,255,.04); }
+  .screen:not(#title) .stageRow.locked .no { background:#4A4236; color:#A9A08C; }
+  .screen:not(#title) .chTab { color:#CFC5B0; border-color:rgba(255,255,255,.16); }
+  .screen:not(#title) .chTab.on, .screen:not(#title) .lbTabs button.on { background:#F2C14B; border-color:#F2C14B; color:#221E18; box-shadow:none; }
+  .screen:not(#title) .lbRow.me { background:rgba(242,193,75,.14); }
+  .screen:not(#title) .lbRow b, .screen:not(#title) .scoreBox .big { color:#F2C14B; }
+  .screen:not(#title) .lobRow button { background:#3A332A; color:#EFE7D6; border-color:rgba(255,255,255,.16); }
+  .screen:not(#title) .lobRow button.max { background:var(--cta); color:#4a2416; }
+  .screen:not(#title) #resultChar { background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.12); color:#E6DCC6; }
 </style>
+<link rel="stylesheet" href="https://pang861209-rgb.github.io/somsom-city/ui/somsom-ui.css">   <!-- 솜솜 UI: 여섯 게임 공통 판 밖 모양 (허브) -->
 </head>
 <body>
 <div id="fit"><div id="app">
   <canvas id="cv"></canvas>
 
   <div id="hud">
-    <button id="pauseBtn" style="width:40px; height:38px; font-size:13px; padding:0; font-weight:700;">Ⅱ</button>
+    <button id="pauseBtn" class="sui-icon">Ⅱ</button>
     <span class="pill" id="wavePill">WAVE -</span>
     <span class="pill"><img id="acornIco" alt="도토리"><b id="acornN">0</b></span>
     <span class="pill" id="lifePill">❤ 10/10</span>
@@ -237,12 +253,12 @@
       <div id="logoSub">대나무숲에서 꼬릿 구름이 흘러온다!</div>
     </div>
     <div id="titleBottom">
-      <button id="startBtn" disabled>불러오는 중...</button>
+      <button id="startBtn" class="sui-cta" disabled>불러오는 중...</button>
       <div id="titleRow">
-        <button id="haptBtn" class="ghostBtn"></button>
-        <button id="cbBtn" class="ghostBtn"></button>
-        <button id="bgmBtn" class="ghostBtn" aria-label="솜솜시티 노래 켜기·끄기">🎵 노래</button>
-        <a id="hubLink" href="https://pang861209-rgb.github.io/somsom-city/">🏘 마을로</a>
+        <button id="haptBtn" class="sui-pill sui-sm ghostBtn"></button>
+        <button id="cbBtn" class="sui-pill sui-sm ghostBtn"></button>
+        <button id="bgmBtn" class="sui-pill sui-sm ghostBtn" aria-label="솜솜시티 노래 켜기·끄기">🎵 노래</button>
+        <a id="hubLink" class="sui-pill sui-sm" href="https://pang861209-rgb.github.io/somsom-city/">← 홈</a>
       </div>
       <span id="verTag">R5 · 4챕터 22스테이지 · 주간 챌린지</span>
     </div>
@@ -259,13 +275,13 @@
     </div>
     <div id="stageList" style="display:flex; flex-direction:column; gap:8px; width:100%; align-items:center; max-height:400px; overflow-y:auto;"></div>
     <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:center;">
-      <button id="lobbyBtn" style="padding:10px 13px; font-size:12px;">주민 강화</button>
-      <button id="shopBtn" style="padding:10px 13px; font-size:12px;">유물 상점</button>
-      <button id="dexBtn" style="padding:10px 13px; font-size:12px;">케미 도감</button>
-      <button id="selRankBtn" style="padding:10px 13px; font-size:12px;">🏆 순위</button>
+      <button id="lobbyBtn" class="sui-pill">주민 강화</button>
+      <button id="shopBtn" class="sui-pill">유물 상점</button>
+      <button id="dexBtn" class="sui-pill">케미 도감</button>
+      <button id="selRankBtn" class="sui-pill">🏆 순위</button>
       <span class="tag">🔘 <b id="selBtnN">0</b></span>
     </div>
-    <button id="selBack" style="padding:8px 16px; font-size:12px; background:transparent; box-shadow:none; border-color:rgba(124,74,45,.3); color:#8a6a4d;">← 타이틀로</button>
+    <button id="selBack" class="sui-pill">← 뒤로</button>
   </div>
 
   <div id="stagelb" class="screen hidden">
@@ -274,35 +290,35 @@
     <div id="slbTabs" class="lbTabs"></div>
     <div id="slbList" style="width:100%; max-width:330px; max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
     <div id="slbName" class="hidden"><input id="slbNameIn" maxlength="8" placeholder="순위에 쓸 이름 (8자)" autocomplete="off" enterkeyhint="done"><button id="slbNameOk" class="primary" style="padding:9px 14px; font-size:12px;">올리기</button></div>
-    <button id="slbBack" style="padding:11px 24px;">돌아가기</button>
+    <button id="slbBack" class="sui-pill">← 뒤로</button>
   </div>
 
   <div id="weeklb" class="screen hidden">
     <h1>주간 랭킹</h1>
     <div class="sub" id="wlbRule"></div>
     <div id="wlbList" style="width:100%; max-width:320px; max-height:400px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
-    <button id="wlbBack" style="padding:11px 24px;">돌아가기</button>
+    <button id="wlbBack" class="sui-pill">← 뒤로</button>
   </div>
 
   <div id="shop" class="screen hidden">
     <h1>도토리 상점</h1>
     <div class="sub">판에서 번 도토리의 일부가 쌓여요 (승리 35% · 패배 15%) · 판마다 3개까지 장착<br>보유 🌰<b id="shopA">0</b> · 장착 <b id="shopEq">0</b>/3</div>
     <div id="shopList" style="width:100%; max-width:330px; max-height:400px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
-    <button id="shopBack" style="padding:11px 24px;">돌아가기</button>
+    <button id="shopBack" class="sui-pill">← 뒤로</button>
   </div>
 
   <div id="dex" class="screen hidden">
     <h1>케미 도감</h1>
     <div class="sub">붙여 놓으면 발동하는 인접 시너지 · Lv3에서 갈리는 진화</div>
     <div id="dexList" style="width:100%; max-width:330px; max-height:430px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; text-align:left;"></div>
-    <button id="dexBack" style="padding:11px 24px;">돌아가기</button>
+    <button id="dexBack" class="sui-pill">← 뒤로</button>
   </div>
 
   <div id="lobby" class="screen hidden">
     <h1>주민 강화</h1>
     <div class="sub">별점으로 얻은 단추로 방범대를 키워요 · 보유 <b id="lobBtnN">0</b>🔘<br>같은 주민을 10판 쓸 때마다 강화비 -10% (나이테존)</div>
     <div id="lobbyList" style="display:flex; flex-direction:column; gap:8px; width:100%; align-items:center; max-height:390px; overflow-y:auto;"></div>
-    <button id="lobbyBack" style="padding:11px 24px;">돌아가기</button>
+    <button id="lobbyBack" class="sui-pill">← 뒤로</button>
   </div>
 
   <div id="result" class="screen hidden">
@@ -311,30 +327,30 @@
     <div id="resultChar"></div>
     <div class="sub" id="resSub"></div>
     <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
-      <button id="retryBtn" style="padding:11px 20px;">다시</button>
-      <button id="nextBtn" class="primary" style="padding:11px 20px;">다음 스테이지</button>
-      <button id="listBtn" style="padding:11px 20px;">목록</button>
-      <button id="shareBtn" style="padding:11px 16px;">📸 자랑하기</button>
-      <button id="rankBtn" style="padding:11px 16px;">🏆 순위</button>
+      <button id="retryBtn" class="sui-pill">🔁 한 판 더</button>
+      <button id="nextBtn" class="sui-cta primary" style="padding:11px 20px;">다음 스테이지</button>
+      <button id="listBtn" class="sui-pill">목록</button>
+      <button id="shareBtn" class="sui-pill">📸 자랑하기</button>
+      <button id="rankBtn" class="sui-pill">🏆 순위</button>
     </div>
   </div>
 
   <div id="pause" class="screen hidden">
     <h1>잠깐 쉬는 중</h1>
     <div style="display:flex; flex-direction:column; gap:8px; width:230px;">
-      <button id="resumeBtn" class="primary" style="padding:13px; font-size:15px;">계속하기</button>
-      <button id="pMute" style="padding:10px; font-size:12px;"></button>
-      <button id="pHapt" style="padding:10px; font-size:12px;"></button>
-      <button id="pCb" style="padding:10px; font-size:12px;"></button>
-      <button id="endBtn" style="padding:10px; font-size:12px;">🏁 여기까지 끝내기 (기록 저장)</button>
-      <button id="quitBtn" style="padding:11px; font-size:13px; color:#a05a4a;">포기하고 목록으로 (기록 없음)</button>
+      <button id="resumeBtn" class="sui-cta primary" style="padding:13px; font-size:15px;">계속하기</button>
+      <button id="pMute" class="sui-pill"></button>
+      <button id="pHapt" class="sui-pill"></button>
+      <button id="pCb" class="sui-pill"></button>
+      <button id="endBtn" class="sui-pill">🏁 여기까지 끝내기 (기록 저장)</button>
+      <button id="quitBtn" class="sui-pill">포기하고 목록으로 (기록 없음)</button>
     </div>
   </div>
 
   <div id="shareModal" class="screen hidden" style="gap:10px;">
     <img id="shareImg" alt="자랑 카드" style="width:78%; border-radius:14px; border:2px solid rgba(255,239,216,.5); box-shadow:0 10px 26px rgba(0,0,0,.45);">
     <div class="sub">길게 눌러 저장하거나 공유하세요</div>
-    <button id="shareClose" style="padding:10px 26px;">닫기</button>
+    <button id="shareClose" class="sui-pill">닫기</button>
   </div>
 </div></div>
 
