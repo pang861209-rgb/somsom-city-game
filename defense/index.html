@@ -198,6 +198,7 @@
   .screen:not(#title) .lobRow button { background:#3A332A; color:#EFE7D6; border-color:rgba(255,255,255,.16); }
   .screen:not(#title) .lobRow button.max { background:var(--cta); color:#4a2416; }
   .screen:not(#title) #resultChar { background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.12); color:#E6DCC6; }
+  #result .sui-cta { order:-1; flex:0 0 100%; } /* 결과 화면 공통 틀: 주황 버튼은 한 줄을 다 쓰고 맨 위, 알약은 그 아래 */
 </style>
 <link rel="stylesheet" href="https://pang861209-rgb.github.io/somsom-city/ui/somsom-ui.css">   <!-- 솜솜 UI: 여섯 게임 공통 판 밖 모양 (허브) -->
 </head>
@@ -206,8 +207,8 @@
   <canvas id="cv"></canvas>
 
   <div id="hud">
-    <button id="pauseBtn" class="sui-icon">Ⅱ</button>
-    <span class="pill" id="wavePill">WAVE -</span>
+    <button id="pauseBtn" class="sui-icon">❙❙</button>
+    <span class="pill" id="wavePill">웨이브 0</span>
     <span class="pill"><img id="acornIco" alt="도토리"><b id="acornN">0</b></span>
     <span class="pill" id="lifePill">❤ 10/10</span>
     <span class="pill" id="scorePill" hidden title="골목 점수">0</span>
@@ -260,7 +261,7 @@
         <button id="bgmBtn" class="sui-pill sui-sm ghostBtn" aria-label="솜솜시티 노래 켜기·끄기">🎵 노래</button>
         <a id="hubLink" class="sui-pill sui-sm" href="https://pang861209-rgb.github.io/somsom-city/">← 홈</a>
       </div>
-      <span id="verTag">R5 · 4챕터 22스테이지 · 주간 챌린지</span>
+      <span id="verTag">GAME 04 · 당근빌라 방범대</span>
     </div>
   </div>
 
@@ -328,7 +329,7 @@
     <div class="sub" id="resSub"></div>
     <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
       <button id="retryBtn" class="sui-pill">🔁 한 판 더</button>
-      <button id="nextBtn" class="sui-cta primary" style="padding:11px 20px;">다음 스테이지</button>
+      <button id="nextBtn" class="sui-cta primary">다음 스테이지</button>
       <button id="listBtn" class="sui-pill">목록</button>
       <button id="shareBtn" class="sui-pill">📸 자랑하기</button>
       <button id="rankBtn" class="sui-pill">🏆 순위</button>
@@ -890,11 +891,11 @@ function coinsFrom(x,y,n){ // 도토리가 HUD 카운터로 날아가는 연출 
     fx.push({kind:'coin',x:x+(Math.random()*20-10),y:y+(Math.random()*12-6),tgt:T,t:dur,max:dur,delay:i*.06,
       cp:{x:x+(Math.random()*70-35),y:y-50-Math.random()*40}}); } }
 function updHud(){
-  ui.wave.textContent = SG&&SG.endless ? `WAVE ${Math.max(1,waveIdx+1)} ∞`
-    : (scRanked()?'W ':'WAVE ')+(waveIdx<0?`-/${SG?SG.waves.length:0}`:`${Math.min(waveIdx+1,SG.waves.length)}/${SG.waves.length}`);
+  ui.wave.textContent = SG&&SG.endless ? `웨이브 ${Math.max(1,waveIdx+1)}`
+    : '웨이브 '+(waveIdx<0?`0/${SG?SG.waves.length:0}`:`${Math.min(waveIdx+1,SG.waves.length)}/${SG.waves.length}`);
   if(Math.abs(acorns-dispA)>250||state==='TITLE'){ dispA=acorns; ui.acorn.textContent=acorns; } // 로드·큰 점프는 즉시, 나머진 loop에서 카운트업
   ui.life.textContent=`❤ ${life}/${lifeMax}`;
-  { const sp=document.getElementById('scorePill'); sp.hidden=!scRanked(); if(!sp.hidden)sp.textContent=scTotal().toLocaleString(); }
+  { const sp=document.getElementById('scorePill'); sp.hidden=!scRanked(); if(!sp.hidden)sp.textContent='점수 '+scTotal().toLocaleString(); }
   document.querySelectorAll('.card').forEach(el=>{
     el.classList.toggle('poor',acorns<TOWERS[el.dataset.t].cost);
     el.classList.toggle('sel',selCard===el.dataset.t);
@@ -1060,6 +1061,8 @@ function finish(win){
   lastWho=who;
   $('resultChar').textContent=`${TOWERS[who].name}: "${LINES[who][win?'win':'lose']}"`;
   $('nextBtn').classList.toggle('hidden',SG.endless||!win||stageIdx>=STAGES.length-1);
+  { const nextOn=!$('nextBtn').classList.contains('hidden'); // 주황 버튼은 한 화면에 하나 — 다음 스테이지가 없으면 '한 판 더'가 주 버튼
+    $('retryBtn').classList.toggle('sui-cta',!nextOn); $('retryBtn').classList.toggle('sui-pill',nextOn); }
   $('rankBtn').classList.toggle('hidden',!scRanked()); lbCtx={key:bk,ch:SG.ch,m:hardOn?'h':'s',from:'result'};
   $('result').classList.remove('hidden');
   if(bk&&win)lbAfterWin(bk);
