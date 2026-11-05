@@ -111,7 +111,7 @@
   #bgmBtn.off { opacity:.6; text-decoration:line-through; }
   .ghostBtn { padding:7px 13px; font-size:11px; background:rgba(255,247,232,.14); color:#ffefd8; border-color:rgba(255,239,216,.55); box-shadow:none; border-radius:20px; }
   .ghostBtn:active { transform:none; background:rgba(255,247,232,.3); }
-  #hubLink { font-size:12px; font-weight:700; color:#ffe6bf; text-decoration:none; opacity:.9; }
+  #hubLink { position:absolute; top:10px; left:10px; z-index:3; } /* 여섯 게임 공통: ← 홈은 왼쪽 위 */
   #verTag { font-size:10px; font-weight:700; color:rgba(255,239,216,.55); letter-spacing:1px; }
   .hidden { display:none !important; }
   .screen h1 { font-family:inherit; font-size:22px; color:#fff4e0; line-height:1.35; font-weight:900; letter-spacing:1px;
@@ -198,6 +198,7 @@
   .screen:not(#title) .lobRow button { background:#3A332A; color:#EFE7D6; border-color:rgba(255,255,255,.16); }
   .screen:not(#title) .lobRow button.max { background:var(--cta); color:#4a2416; }
   .screen:not(#title) #resultChar { background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.12); color:#E6DCC6; }
+  #result .sui-cta { order:-1; flex:0 0 100%; } /* 결과 화면 공통 틀: 주황 버튼은 한 줄을 다 쓰고 맨 위, 알약은 그 아래 */
 </style>
 <link rel="stylesheet" href="https://pang861209-rgb.github.io/somsom-city/ui/somsom-ui.css">   <!-- 솜솜 UI: 여섯 게임 공통 판 밖 모양 (허브) -->
 </head>
@@ -206,8 +207,8 @@
   <canvas id="cv"></canvas>
 
   <div id="hud">
-    <button id="pauseBtn" class="sui-icon">Ⅱ</button>
-    <span class="pill" id="wavePill">WAVE -</span>
+    <button id="pauseBtn" class="sui-icon">❙❙</button>
+    <span class="pill" id="wavePill">웨이브 0</span>
     <span class="pill"><img id="acornIco" alt="도토리"><b id="acornN">0</b></span>
     <span class="pill" id="lifePill">❤ 10/10</span>
     <span class="pill" id="scorePill" hidden title="골목 점수">0</span>
@@ -247,6 +248,7 @@
       <span style="left:82%; animation-duration:11s; animation-delay:4.5s; font-size:16px;">🍂</span>
       <span style="left:15%; animation-duration:14s; animation-delay:8s;  font-size:14px;">🍂</span>
     </div>
+    <a id="hubLink" class="homeBtn" href="https://pang861209-rgb.github.io/somsom-city/" title="솜솜시티 홈">← 홈</a>
     <div id="logoWrap">
       <div id="logoTop">🥕 솜솜시티</div>
       <div id="logoMain">당근빌라<br>방범대</div>
@@ -258,9 +260,8 @@
         <button id="haptBtn" class="sui-pill sui-sm ghostBtn"></button>
         <button id="cbBtn" class="sui-pill sui-sm ghostBtn"></button>
         <button id="bgmBtn" class="sui-pill sui-sm ghostBtn" aria-label="솜솜시티 노래 켜기·끄기">🎵 노래</button>
-        <a id="hubLink" class="sui-pill sui-sm" href="https://pang861209-rgb.github.io/somsom-city/">← 홈</a>
       </div>
-      <span id="verTag">R5 · 4챕터 22스테이지 · 주간 챌린지</span>
+      <span id="verTag">GAME 04 · 당근빌라 방범대</span>
     </div>
   </div>
 
@@ -294,7 +295,7 @@
   </div>
 
   <div id="weeklb" class="screen hidden">
-    <h1>주간 랭킹</h1>
+    <h1>주간 순위</h1>
     <div class="sub" id="wlbRule"></div>
     <div id="wlbList" style="width:100%; max-width:320px; max-height:400px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
     <button id="wlbBack" class="sui-pill">← 뒤로</button>
@@ -328,7 +329,7 @@
     <div class="sub" id="resSub"></div>
     <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
       <button id="retryBtn" class="sui-pill">🔁 한 판 더</button>
-      <button id="nextBtn" class="sui-cta primary" style="padding:11px 20px;">다음 스테이지</button>
+      <button id="nextBtn" class="sui-cta primary">다음 스테이지</button>
       <button id="listBtn" class="sui-pill">목록</button>
       <button id="shareBtn" class="sui-pill">📸 자랑하기</button>
       <button id="rankBtn" class="sui-pill">🏆 순위</button>
@@ -338,12 +339,12 @@
   <div id="pause" class="screen hidden">
     <h1>잠깐 쉬는 중</h1>
     <div style="display:flex; flex-direction:column; gap:8px; width:230px;">
-      <button id="resumeBtn" class="sui-cta primary" style="padding:13px; font-size:15px;">계속하기</button>
+      <button id="resumeBtn" class="sui-cta primary">이어하기</button>
       <button id="pMute" class="sui-pill"></button>
       <button id="pHapt" class="sui-pill"></button>
       <button id="pCb" class="sui-pill"></button>
       <button id="endBtn" class="sui-pill">🏁 여기까지 끝내기 (기록 저장)</button>
-      <button id="quitBtn" class="sui-pill">포기하고 목록으로 (기록 없음)</button>
+      <button id="quitBtn" class="sui-pill">그만하기 (기록 없음)</button>
     </div>
   </div>
 
@@ -890,11 +891,11 @@ function coinsFrom(x,y,n){ // 도토리가 HUD 카운터로 날아가는 연출 
     fx.push({kind:'coin',x:x+(Math.random()*20-10),y:y+(Math.random()*12-6),tgt:T,t:dur,max:dur,delay:i*.06,
       cp:{x:x+(Math.random()*70-35),y:y-50-Math.random()*40}}); } }
 function updHud(){
-  ui.wave.textContent = SG&&SG.endless ? `WAVE ${Math.max(1,waveIdx+1)} ∞`
-    : (scRanked()?'W ':'WAVE ')+(waveIdx<0?`-/${SG?SG.waves.length:0}`:`${Math.min(waveIdx+1,SG.waves.length)}/${SG.waves.length}`);
+  ui.wave.textContent = SG&&SG.endless ? `웨이브 ${Math.max(1,waveIdx+1)}`
+    : '웨이브 '+(waveIdx<0?`0/${SG?SG.waves.length:0}`:`${Math.min(waveIdx+1,SG.waves.length)}/${SG.waves.length}`);
   if(Math.abs(acorns-dispA)>250||state==='TITLE'){ dispA=acorns; ui.acorn.textContent=acorns; } // 로드·큰 점프는 즉시, 나머진 loop에서 카운트업
   ui.life.textContent=`❤ ${life}/${lifeMax}`;
-  { const sp=document.getElementById('scorePill'); sp.hidden=!scRanked(); if(!sp.hidden)sp.textContent=scTotal().toLocaleString(); }
+  { const sp=document.getElementById('scorePill'); sp.hidden=!scRanked(); if(!sp.hidden)sp.textContent='점수 '+scTotal().toLocaleString(); }
   document.querySelectorAll('.card').forEach(el=>{
     el.classList.toggle('poor',acorns<TOWERS[el.dataset.t].cost);
     el.classList.toggle('sel',selCard===el.dataset.t);
@@ -1045,7 +1046,7 @@ function finish(win){
     if(newPB)SAVE.sbest[k]=score;
     save();
     const f=v=>Math.round(v).toLocaleString();
-    scoreHtml=`<div class="scoreBox"><span class="big">골목 점수 ${f(score)}${newPB&&pb?' · 최고 기록!':''}</span>`
+    scoreHtml=`<div class="scoreBox"><span class="big">골목 점수 ${f(score)}${newPB&&pb?' · 신기록!':''}</span>`
       +`<span class="brk">처치 ${f(SC.kill)} · 연쇄 +${f(SC.chain)} · 빨리 부르기 +${f(SC.early)} · 무피해 +${f(SC.clean)} · 쾌적도 +${f(SC.life)}</span>`
       +`<span class="rk" id="resRank">${win?(pb&&!newPB?`내 최고 ${f(pb)} · `:'')+'순위 확인 중…':'막아내면 순위에 올라요'}</span></div>`;
     $('stars').innerHTML=[0,1,2].map(i=>`<span>${win&&i<stars?'★':'☆'}</span>`).join('');
@@ -1060,6 +1061,8 @@ function finish(win){
   lastWho=who;
   $('resultChar').textContent=`${TOWERS[who].name}: "${LINES[who][win?'win':'lose']}"`;
   $('nextBtn').classList.toggle('hidden',SG.endless||!win||stageIdx>=STAGES.length-1);
+  { const nextOn=!$('nextBtn').classList.contains('hidden'); // 주황 버튼은 한 화면에 하나 — 다음 스테이지가 없으면 '한 판 더'가 주 버튼
+    $('retryBtn').classList.toggle('sui-cta',!nextOn); $('retryBtn').classList.toggle('sui-pill',nextOn); }
   $('rankBtn').classList.toggle('hidden',!scRanked()); lbCtx={key:bk,ch:SG.ch,m:hardOn?'h':'s',from:'result'};
   $('result').classList.remove('hidden');
   if(bk&&win)lbAfterWin(bk);
@@ -1265,7 +1268,7 @@ function showSelect(){
   { // 주간 챌린지 — 매주 룰 교체 + 리더보드
     const R=wRule(), wk=weekKey(), best=(SAVE.wbest||{})[wk]||0, eu=(SAVE.stars.s4||0)>0;
     const el=document.createElement('div'); el.className='stageRow rowSpecial rowWeekly'+(eu?'':' locked');
-    el.innerHTML=`<span class="no">📅</span><span class="info"><div class="snm">주간 챌린지</div><div class="sdc">${eu?`${R.n} — ${R.d}`:'스테이지 4 클리어로 해금'}</div></span><span class="st">${best?best+'W':''}</span><button id="wlbBtn" style="padding:6px 9px; font-size:10px; white-space:nowrap;">랭킹</button>`;
+    el.innerHTML=`<span class="no">📅</span><span class="info"><div class="snm">주간 챌린지</div><div class="sdc">${eu?`${R.n} — ${R.d}`:'스테이지 4 클리어로 해금'}</div></span><span class="st">${best?best+'W':''}</span><button id="wlbBtn" class="sui-pill sui-sm" style="white-space:nowrap;">순위</button>`;
     if(eu)el.onclick=()=>loadStage('W');
     el.querySelector('#wlbBtn').onclick=e=>{ e.stopPropagation(); showWeekLb(); };
     box.appendChild(el);
@@ -1289,7 +1292,7 @@ async function showWeekLb(){
     const top=Object.entries(bestBy).map(([n,s])=>({n,s})).sort((a,b2)=>b2.s-a.s).slice(0,10);
     box.innerHTML=top.length?top.map((r,i)=>`<div class="lobRow" style="padding:7px 12px;"><span style="width:24px; font-weight:800; color:#b06a2a;">${i+1}</span><span class="li"><div class="ln">${r.n}</div></span><b style="color:#5a4a3a;">${r.s}W</b></div>`).join('')
       :'<div class="sub">아직 이번 주 기록이 없어요 — 첫 주인공이 되어보세요!</div>';
-  }catch(e){ box.innerHTML='<div class="sub">랭킹을 불러오지 못했어요 (오프라인?)</div>'; }
+  }catch(e){ box.innerHTML='<div class="sub">순위를 불러오지 못했어요 (오프라인?)</div>'; }
 }
 $('wlbBack').onclick=showSelect;
 
